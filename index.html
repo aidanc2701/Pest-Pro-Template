@@ -181,7 +181,7 @@
 
   /* Keep these atomic during PDF/print pagination — never split mid-element,
      which is what was causing lines to get cut off and duplicated across pages */
-  table.pricing tr, .photo-cell, .sign-block, .totals {
+  table.pricing tr, .photo-cell, .sign-block, .totals, .terms li {
     break-inside: avoid;
     page-break-inside: avoid;
   }
@@ -1646,6 +1646,15 @@ async function savePDFFile(){
   btn.textContent = 'Generating PDF…';
   btn.disabled = true;
 
+  // html2canvas captures relative to the current scroll position, not the
+  // top of the page. If the user has scrolled down before clicking, the
+  // capture comes out offset -- rendering blank leading pages followed by
+  // content that starts partway down. Force the page to the top before
+  // capturing, and put the scroll position back afterward.
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  window.scrollTo(0, 0);
+
   try {
     if (document.fonts && document.fonts.ready) {
       await document.fonts.ready;
@@ -1666,6 +1675,9 @@ async function savePDFFile(){
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: document.documentElement.scrollWidth,
         onclone: (clonedDoc) => {
           clonedDoc.querySelectorAll(
             '.toolbar, #sidebarOverlay, #proposalSidebar, #modalOverlay, .add-row-btn, td.del, td.drag, th.drag-header, .term-del, .photo-del, #photoUploadInput, #togglePhotosBtn, .onetime-toggle, .optional-toggle, .terms-select-row, .warranty-select-row, .addon-mode-row, #configBanner'
@@ -1713,7 +1725,7 @@ async function savePDFFile(){
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
       pagebreak: {
         mode: ['css'],
-        avoid: ['tr', '.photo-cell', '.sign-block', '.totals', '#pricingInitialSection', '#recurringSection'],
+        avoid: ['tr', '.photo-cell', '.sign-block', '.totals', '#pricingInitialSection', '#recurringSection', '.terms li'],
         before: ['#inspectionNotesSection', '#termsSection', '#acceptanceSection']
       }
     };
@@ -1725,6 +1737,7 @@ async function savePDFFile(){
     btn.textContent = 'Export failed';
   } finally {
     restorePricingItemsAfterExport();
+    window.scrollTo(scrollX, scrollY);
     setTimeout(() => { btn.textContent = originalLabel; btn.disabled = false; }, 1800);
   }
 }
