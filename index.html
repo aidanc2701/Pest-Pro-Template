@@ -1,0 +1,2392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Commercial Proposal Template</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root{
+    --pp-green:#8FB94E;
+    --pp-green-dark:#4F7A26;
+    --pp-gray:#676767;
+    --pp-paper:#FFFEFB;
+    --pp-line:#E4E5DD;
+    --pp-ink:#1C231D;
+    --pp-tint:rgba(143,185,78,.09);
+    --pp-tint-strong:rgba(143,185,78,.15);
+
+    --bcu-blue:#7FAE3F;
+    --bcu-blue-dark:#4F7A26;
+    --bcu-sky:#676767;
+    --bcu-paper:#FFFFFC;
+    --bcu-line:#E6E8E0;
+    --bcu-tint:rgba(127,174,63,.09);
+    --bcu-tint-strong:rgba(127,174,63,.15);
+
+    --accent:var(--pp-green);
+    --accent-dark:var(--pp-green-dark);
+    --secondary:var(--pp-gray);
+    --paper:var(--pp-paper);
+    --line:var(--pp-line);
+    --ink:var(--pp-ink);
+    --accent-tint:var(--pp-tint);
+    --accent-tint-strong:var(--pp-tint-strong);
+    --serif:'Montserrat', Georgia, serif;
+    --sans:'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  body.brand-bcu{
+    --accent:var(--bcu-blue);
+    --accent-dark:var(--bcu-blue-dark);
+    --secondary:var(--bcu-sky);
+    --paper:var(--bcu-paper);
+    --line:var(--bcu-line);
+    --accent-tint:var(--bcu-tint);
+    --accent-tint-strong:var(--bcu-tint-strong);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:var(--serif);
+    color:var(--ink);
+    background:#E9E8E1;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(143,185,78,.07), transparent 40%),
+      radial-gradient(circle at 88% 92%, rgba(143,185,78,.06), transparent 40%);
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+  .toolbar{
+    position:sticky; top:0; z-index:50;
+    background:var(--accent-dark);
+    color:#fff;
+    padding:16px 32px;
+    display:flex; gap:32px; align-items:center; flex-wrap:wrap;
+    row-gap:12px;
+    font-family:var(--sans);
+    font-size:13px;
+    box-shadow:0 2px 14px rgba(0,0,0,.18);
+  }
+  .toolbar label{display:flex; align-items:center; gap:10px; opacity:.92; font-weight:500; letter-spacing:.2px;}
+  .toolbar select{
+    font-family:inherit; font-size:13px; padding:8px 14px;
+    border-radius:20px; border:1px solid rgba(255,255,255,.35);
+    background:rgba(255,255,255,.1); color:#fff; cursor:pointer;
+  }
+  .toolbar select option{color:#1C231D;}
+  .toolbar input[type="text"]{
+    font-family:inherit; font-size:13px; padding:8px 14px;
+    border-radius:20px; border:1px solid rgba(255,255,255,.35);
+    background:rgba(255,255,255,.1); color:#fff; width:170px;
+  }
+  .toolbar input[type="text"]::placeholder{color:rgba(255,255,255,.65);}
+  .toolbar button{
+    font-family:inherit; font-size:13px; cursor:pointer;
+    background:#fff; color:var(--accent-dark); font-weight:700; border:none;
+    padding:10px 22px; border-radius:20px; letter-spacing:.3px;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .toolbar button:hover{transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,.2);}
+  .toolbar .spacer{flex:1; min-width:12px;}
+
+  .sheet{
+    max-width:850px; margin:36px auto 90px; background:var(--paper);
+    box-shadow:0 1px 2px rgba(0,0,0,.04), 0 18px 48px -12px rgba(0,0,0,.18);
+    padding:64px 64px 56px;
+    border-radius:2px;
+    position:relative;
+    overflow:hidden;
+  }
+  .sheet:before{
+    content:""; position:absolute; top:0; left:0; right:0; height:12px;
+    background:linear-gradient(90deg, var(--accent) 0%, var(--accent-dark) 100%);
+  }
+  .sheet:after{
+    content:""; position:absolute; bottom:-60px; right:-60px; width:240px; height:240px;
+    background:radial-gradient(circle, var(--accent) 0%, transparent 70%);
+    opacity:.05; pointer-events:none;
+  }
+
+  .header{display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding-bottom:24px; margin-bottom:18px; position:relative; z-index:1;}
+  .brandmark{display:flex; flex-direction:column; align-items:flex-start; gap:6px;}
+  .brandmark .logo-row{display:flex; align-items:center; gap:14px;}
+  .brandmark .brand-sub{font-family:var(--sans); font-size:11.5px; color:var(--secondary); letter-spacing:.2px; margin-left:2px;}
+  .brandmark .logo-img{height:74px; width:auto; display:block;}
+  .brandmark .name{font-family:var(--sans);}
+  .brandmark .name .small{font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--secondary); margin-top:6px;}
+  .header .meta{text-align:right; font-family:var(--sans); font-size:12px; color:var(--secondary); line-height:1.7; min-width:160px; flex-shrink:0;}
+  .cred-badges{display:flex; gap:18px; justify-content:flex-end; align-items:center; flex-shrink:0;}
+  .cred-badges .cred-badge{height:72px; width:auto; flex-shrink:0; flex-grow:0; max-width:none; display:block; object-fit:contain;}
+  .cred-badges .cred-badge.npma{height:36px; width:135px;}
+
+  .info-bar{
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px 24px;
+    font-family:var(--sans); font-size:12px; color:var(--secondary);
+    margin-bottom:32px; position:relative; z-index:1;
+  }
+  .header .meta b{color:var(--ink); font-size:12.5px; font-weight:600;}
+  .header .meta span[contenteditable]{color:var(--ink); font-weight:600;}
+
+  h1.proposal-title{font-family:var(--serif); font-size:34px; margin:0 0 10px; color:var(--accent-dark); font-weight:500; letter-spacing:-.3px;}
+  .job-tag{
+    display:inline-block; font-family:var(--sans); font-size:10.5px;
+    letter-spacing:1.5px; text-transform:uppercase; background:var(--accent); color:#fff;
+    padding:6px 14px; border-radius:20px; margin-bottom:32px; font-weight:600;
+  }
+
+  .section{margin-bottom:36px; position:relative; z-index:1;}
+  .section h2{
+    font-family:var(--sans); font-size:11px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--accent-dark); border-bottom:1px solid var(--line);
+    padding:9px 12px; margin-bottom:18px; margin-left:-12px; margin-right:-12px; font-weight:600;
+    background:var(--accent-tint); border-radius:4px 4px 0 0;
+  }
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:22px 36px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-family:var(--sans); font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--secondary); margin-bottom:5px; font-weight:600;}
+  .field input, .field textarea, .field select{
+    width:100%; border:none; border-bottom:1px solid var(--line); background:transparent;
+    font-family:var(--sans); font-size:14.5px; color:var(--ink); padding:5px 2px;
+    transition:border-color .15s ease;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{outline:none; border-bottom:1.5px solid var(--accent);}
+  textarea{min-height:80px; line-height:1.6; font-family:var(--serif); font-size:14.5px; resize:none; overflow:hidden;}
+
+  .rich-text-field{
+    width:100%; min-height:80px; border:none; border-bottom:1px solid var(--line); background:transparent;
+    font-family:var(--serif); font-size:14.5px; line-height:1.6; color:var(--ink); padding:5px 2px;
+    transition:border-color .15s ease; white-space:pre-wrap; word-wrap:break-word;
+  }
+  .rich-text-field:focus{outline:none; border-bottom:1.5px solid var(--accent);}
+  .rich-text-field:empty:before{content:attr(data-placeholder); color:var(--secondary); opacity:.7;}
+  @media print{
+    .rich-text-field:empty:before{content:none;}
+  }
+  .rich-text-field strong, .rich-text-field b{font-weight:700;}
+  .rich-text-field em, .rich-text-field i{font-style:italic;}
+  .rich-text-field u{text-decoration:underline;}
+
+  table.pricing{width:100%; table-layout:fixed; border-collapse:collapse; font-size:13.5px; font-family:var(--sans);}
+  table.pricing th{
+    font-family:var(--sans); font-size:10px; letter-spacing:1px; text-transform:uppercase;
+    color:var(--secondary); text-align:left; padding:8px; border-bottom:1.5px solid var(--accent); font-weight:600;
+    background:var(--accent-tint);
+  }
+  table.pricing td{padding:9px 8px; border-bottom:1px solid var(--line); vertical-align:top;}
+
+  /* Keep these atomic during PDF/print pagination — never split mid-element,
+     which is what was causing lines to get cut off and duplicated across pages */
+  table.pricing tr, .photo-cell, .sign-block, .totals {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  table.pricing td.num, table.pricing td.linetotal, table.pricing td.del, table.pricing td.drag{padding-top:13px;}
+  table.pricing tr:hover td{background:rgba(0,0,0,.015);}
+  table.pricing td select, table.pricing td input{
+    width:100%; border:none; background:transparent; font-family:inherit; font-size:13.5px; padding:4px 2px;
+  }
+  table.pricing td .custom-item-input{
+    margin-top:4px; border-bottom:1px solid var(--line) !important; background:rgba(0,0,0,.015) !important;
+    border-radius:3px; padding:4px 6px !important;
+    resize:none; overflow:hidden; min-height:26px; line-height:1.4; white-space:pre-wrap; word-wrap:break-word;
+    width:100%; box-sizing:border-box; font-family:inherit; font-size:inherit;
+  }
+  table.pricing td .custom-item-input:focus{outline:none; border-color:var(--accent) !important;}
+  table.pricing td.num input{text-align:right;}
+  table.pricing td.linetotal{text-align:right; font-weight:600; white-space:nowrap; font-variant-numeric:tabular-nums;}
+  table.pricing td.del{text-align:center; width:28px;}
+  table.pricing td.del button{
+    border:none; background:none; color:#B23A48; cursor:pointer; font-size:17px; line-height:1; font-family:Arial,sans-serif;
+    opacity:.5; transition:opacity .15s ease;
+  }
+  table.pricing td.del button:hover{opacity:1;}
+  table.pricing td.drag{
+    cursor:grab; text-align:center; color:var(--secondary); letter-spacing:-2px; user-select:none; font-size:14px; opacity:.5;
+  }
+  table.pricing tr:hover td.drag{opacity:1;}
+  table.pricing tr.dragging{opacity:.4; background:rgba(0,0,0,.03);}
+  .add-row-btn{
+    margin-top:14px; font-family:var(--sans); font-size:12px; font-weight:600;
+    background:none; border:1px dashed var(--secondary); color:var(--accent-dark);
+    padding:8px 16px; border-radius:20px; cursor:pointer; letter-spacing:.2px;
+    transition:all .15s ease;
+  }
+  .add-row-btn:hover{border-color:var(--accent); border-style:solid; background:rgba(0,0,0,.015);}
+
+  .onetime-toggle{
+    display:flex; align-items:center; gap:8px; font-family:var(--sans); font-size:12.5px;
+    color:var(--secondary); margin:0 0 20px; cursor:pointer; user-select:none;
+  }
+  .onetime-toggle input{width:15px; height:15px; accent-color:var(--accent); cursor:pointer; margin:0;}
+  @media print{
+    .onetime-toggle{display:none !important;}
+  }
+
+  .optional-toggle{
+    display:flex; align-items:center; gap:7px; font-family:var(--sans); font-size:11.5px;
+    color:var(--secondary); margin:0 0 10px; cursor:pointer; user-select:none;
+  }
+  .optional-toggle input{width:13px; height:13px; accent-color:var(--accent); cursor:pointer; margin:0;}
+  @media print{
+    .optional-toggle{display:none !important;}
+  }
+  @media print{
+    #acceptanceSection{break-before:page; page-break-before:always;}
+    #inspectionNotesSection{break-before:page; page-break-before:always;}
+    #termsSection{break-before:page; page-break-before:always;}
+    #pricingInitialSection, #recurringSection{
+      break-inside:avoid; page-break-inside:avoid;
+    }
+    table.pricing tr{
+      break-inside:avoid; page-break-inside:avoid;
+    }
+  }
+
+  .totals{
+    margin-top:22px; margin-left:auto; width:fit-content; min-width:300px; max-width:100%;
+    font-family:var(--sans); font-size:13px;
+    background:var(--accent-tint-strong); border-radius:6px; padding:16px 22px;
+    border:1px solid var(--accent-tint-strong);
+  }
+  .totals .row{display:flex; justify-content:space-between; align-items:baseline; gap:28px; padding:7px 0; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums; white-space:nowrap;}
+  .totals .row.grand{border-bottom:none; border-top:2px solid var(--accent); margin-top:4px; padding-top:12px; font-size:16px; font-weight:700; color:var(--accent-dark);}
+  .totals .label{color:var(--secondary); white-space:nowrap;}
+
+  .terms{font-size:13px; line-height:1.75; color:var(--ink); font-family:var(--serif);}
+  .terms ol{padding:0; margin:0; list-style:none; counter-reset:term-counter;}
+  .terms li{margin-bottom:8px; position:relative; padding-left:22px;}
+  .terms li::before{
+    counter-increment:term-counter;
+    content:counter(term-counter) ".";
+    position:absolute; left:0; top:0;
+    font-family:var(--serif); font-weight:400; color:inherit;
+  }
+  .terms li.template-clause{
+    border-bottom:1px solid transparent; padding-left:22px; padding-top:1px; padding-bottom:1px; padding-right:2px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .terms li.template-clause:hover{background:rgba(0,0,0,.015);}
+  .terms li.template-clause:focus{outline:none; border-bottom:1.5px solid var(--accent); background:rgba(0,0,0,.015);}
+  @media print{
+    .terms li.template-clause{border-bottom:none; background:none; padding-left:22px; padding-top:0; padding-bottom:0; padding-right:0;}
+  }
+  .terms-preamble{
+    font-family:var(--serif); font-size:12.5px; line-height:1.7; color:var(--secondary);
+    margin-bottom:14px; white-space:pre-line;
+  }
+  .terms-preamble:empty{display:none; margin:0;}
+  .terms-select-row{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    font-family:var(--sans); font-size:12px; color:var(--secondary); margin-bottom:16px;
+  }
+  .terms-select-row label{display:flex; align-items:center; gap:8px; font-weight:600; color:var(--ink);}
+  .terms-select-row select{
+    font-family:var(--sans); font-size:12.5px; padding:6px 10px; border-radius:14px;
+    border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer;
+  }
+  .terms-select-note{font-size:11px; color:var(--secondary); font-style:italic;}
+  @media print{
+    .terms-select-row{display:none !important;}
+  }
+
+  .addon-mode-row{
+    display:flex; align-items:center; gap:12px;
+    font-family:var(--sans); font-size:12px; color:var(--secondary); margin:6px 0 12px;
+  }
+  .addon-mode-row label{display:flex; align-items:center; gap:8px; font-weight:600; color:var(--ink);}
+  .addon-mode-row select{
+    font-family:var(--sans); font-size:12.5px; padding:6px 10px; border-radius:14px;
+    border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer;
+  }
+  #addonTableWrap .pricing td input[type="text"]{font-family:var(--sans);}
+  #addonTableWrap .pricing td{vertical-align:top;}
+  .addon-desc-input{
+    display:block; width:100%; border:none; background:transparent;
+    font-family:var(--sans); font-size:12px; font-style:italic; color:var(--secondary);
+    padding:3px 2px; font-weight:400; margin-top:5px;
+    resize:none; overflow:hidden; min-height:18px; line-height:1.5; white-space:pre-wrap; word-wrap:break-word;
+  }
+  .addon-desc-input:focus{outline:none; border-bottom:1px solid var(--accent);}
+  .addon-desc-input::placeholder{color:var(--secondary); opacity:.55;}
+  @media print{
+    .addon-mode-row{display:none !important;}
+  }
+
+  .discount-rows{margin-top:10px;}
+  .discount-row{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:9px 10px; margin-bottom:8px; border:1px dashed var(--line); border-radius:6px;
+    background:rgba(0,0,0,.012); font-family:var(--sans); font-size:12.5px;
+  }
+  .discount-row input[type="text"].discount-label{
+    flex:1; min-width:110px; border:none; border-bottom:1px solid var(--line); background:transparent;
+    font-family:var(--sans); font-size:12.5px; color:var(--ink); padding:4px 2px;
+  }
+  .discount-row input[type="text"].discount-value{
+    width:70px; border:none; border-bottom:1px solid var(--line); background:transparent;
+    font-family:var(--sans); font-size:12.5px; color:var(--ink); padding:4px 2px; text-align:right;
+  }
+  .discount-row select{
+    font-family:var(--sans); font-size:12px; padding:5px 8px; border-radius:12px;
+    border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer;
+  }
+  .discount-row .discount-amount{
+    min-width:80px; text-align:right; font-weight:700; color:#B2472A; font-variant-numeric:tabular-nums;
+  }
+  .discount-row .discount-del{
+    border:none; background:none; color:#B23A48; cursor:pointer; font-size:17px; line-height:1;
+    font-family:Arial,sans-serif; opacity:.55; flex-shrink:0;
+  }
+  .discount-row .discount-del:hover{opacity:1;}
+  .discount-add-btn{margin-top:2px;}
+  .totals .discount-summary-row .label{color:var(--secondary);}
+  .totals .discount-summary-row span:last-child{color:#B2472A; font-weight:600;}
+  @media print{
+    .discount-row .discount-del{display:none !important;}
+    .discount-row select, .discount-row input.discount-label, .discount-row input.discount-value{display:none !important;}
+    .discount-row{border:none; padding:4px 0; background:none; margin-bottom:6px;}
+  }
+
+  .warranty-select-row{
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    font-family:var(--sans); font-size:12px; color:var(--secondary); margin-bottom:14px;
+  }
+  .warranty-select-row label{display:flex; align-items:center; gap:8px; font-weight:600; color:var(--ink);}
+  .warranty-select-row select{
+    font-family:var(--sans); font-size:12.5px; padding:6px 10px; border-radius:14px;
+    border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer;
+  }
+  @media print{
+    .warranty-select-row{display:none !important;}
+  }
+  .terms li.warranty-legal-clause{
+    border-bottom:1px solid transparent; padding-left:22px; padding-top:1px; padding-bottom:1px; padding-right:2px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .terms li.warranty-legal-clause:hover{background:rgba(0,0,0,.015);}
+  .terms li.warranty-legal-clause:focus{outline:none; border-bottom:1.5px solid var(--accent); background:rgba(0,0,0,.015);}
+  @media print{
+    .terms li.warranty-legal-clause{border-bottom:none; background:none; padding-left:22px; padding-top:0; padding-bottom:0; padding-right:0;}
+  }
+
+  .term-row{display:flex; align-items:flex-start; gap:8px;}
+  .term-row textarea{
+    flex:1; border:none; border-bottom:1px solid var(--line); background:transparent;
+    font-family:var(--serif); font-size:13px; line-height:1.75; color:var(--ink);
+    padding:0 2px; resize:none; overflow:hidden; min-height:26px;
+  }
+  .term-row textarea:focus{outline:none; border-bottom:1.5px solid var(--accent);}
+  .term-row .term-del{
+    border:none; background:none; color:#B23A48; cursor:pointer; font-size:17px; line-height:1;
+    font-family:Arial,sans-serif; opacity:.5; transition:opacity .15s ease; padding-top:1px;
+    flex-shrink:0;
+  }
+  .term-row .term-del:hover{opacity:1;}
+  @media print{
+    .term-row .term-del{display:none !important;}
+    .term-row textarea{
+      border:none; resize:none; font-family:var(--serif); overflow:hidden;
+    }
+  }
+
+  .sign-grid{display:grid; grid-template-columns:1fr 1fr; gap:48px; margin-top:14px;}
+  .sign-block .line{border-bottom:1px solid var(--ink); height:42px; margin-bottom:8px; font-family:'Brush Script MT','Segoe Script',cursive; font-size:24px; padding:0 4px; display:flex; align-items:flex-end; color:var(--accent-dark);}
+  .sign-block .line:focus{outline:none;}
+  .sign-block .cap{font-family:var(--sans); font-size:10.5px; letter-spacing:.5px; color:var(--secondary); display:flex; justify-content:space-between; text-transform:uppercase; font-weight:600;}
+
+  .footer-note{
+    margin-top:44px; padding-top:20px; border-top:1px solid var(--line);
+    font-family:var(--sans); font-size:10.5px; letter-spacing:.3px; color:var(--secondary); text-align:center; position:relative; z-index:1;
+  }
+
+  .print-item-text{display:block; width:100%; box-sizing:border-box; height:0; overflow:hidden;}
+
+  .photos-section{margin-bottom:36px;}
+  #photosContent{margin-top:2px;}
+  .photo-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+    gap:14px; margin-top:16px;
+  }
+  .photo-cell{
+    position:relative; border-radius:6px; overflow:hidden; border:1px solid var(--line);
+    aspect-ratio:4/3; background:rgba(0,0,0,.02);
+  }
+  .photo-cell img{width:100%; height:100%; object-fit:cover; display:block;}
+  .photo-cell .photo-del{
+    position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%;
+    border:none; background:rgba(0,0,0,.55); color:#fff; font-size:15px; line-height:1;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    opacity:0; transition:opacity .15s ease;
+  }
+  .photo-cell:hover .photo-del{opacity:1;}
+  @media print{
+    #togglePhotosBtn{display:none !important;}
+    .photos-section #photoUploadInput, .photos-section > #photosContent > .add-row-btn{display:none !important;}
+    .photo-cell .photo-del{display:none !important;}
+    .photo-grid{grid-template-columns:repeat(3, 1fr);}
+    .photo-cell{border:1px solid var(--line); break-inside:avoid;}
+  }
+
+  @media print{
+    .toolbar, .add-row-btn, td.del, td.drag, th.drag-header{display:none !important;}
+    body{background:#fff;}
+    .sheet{box-shadow:none; margin:0; padding:30px; border-radius:0; overflow:visible !important;}
+    .sheet:after{display:none;}
+    table.pricing select{display:none !important;}
+    table.pricing .custom-item-input{display:none !important;}
+    table.pricing .addon-price-input{display:none !important;}
+    .print-item-text{height:auto !important; overflow:visible !important;}
+  }
+  @media (max-width:700px){
+    .sheet{padding:36px 24px;}
+    .grid2{grid-template-columns:1fr;}
+    .header{flex-direction:column; gap:16px; align-items:flex-start;}
+    .cred-badges{justify-content:flex-start; flex-wrap:wrap;}
+    .info-bar{flex-direction:column; gap:4px;}
+    .totals{width:100%;}
+    .sign-grid{grid-template-columns:1fr; gap:28px;}
+  }
+
+  /* ---- Saved Proposals sidebar ---- */
+  #sidebarOverlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:98;
+    opacity:0; pointer-events:none; transition:opacity .2s ease;
+  }
+  #sidebarOverlay.open{opacity:1; pointer-events:auto;}
+  #proposalSidebar{
+    position:fixed; top:0; right:0; height:100%; width:360px; max-width:88vw;
+    background:var(--paper); z-index:99; box-shadow:-6px 0 24px rgba(0,0,0,.18);
+    transform:translateX(100%); transition:transform .22s ease;
+    display:flex; flex-direction:column; font-family:var(--sans);
+  }
+  #proposalSidebar.open{transform:translateX(0);}
+  .sidebar-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 20px; border-bottom:1px solid var(--line);
+    font-weight:700; font-size:15px; color:var(--accent-dark);
+  }
+  .sidebar-close{
+    background:none; border:none; font-size:22px; line-height:1; cursor:pointer;
+    color:var(--secondary); padding:0 4px;
+  }
+  .sidebar-sub{
+    font-size:10.5px; letter-spacing:.3px; text-transform:uppercase;
+    color:var(--secondary); padding:0 20px 14px; border-bottom:1px solid var(--line);
+  }
+  .sidebar-list{flex:1; overflow-y:auto; padding:14px 16px;}
+  .sidebar-empty{color:var(--secondary); font-size:13px; text-align:center; padding:40px 10px;}
+  .sidebar-card{
+    border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin-bottom:12px;
+    position:relative; transition:border-color .15s ease;
+  }
+  .sidebar-card:hover{border-color:var(--accent);}
+  .sidebar-card .brand-pill{
+    display:inline-block; font-size:9.5px; letter-spacing:.8px; text-transform:uppercase;
+    font-weight:700; padding:2px 8px; border-radius:10px; margin-bottom:6px;
+    background:var(--accent); color:#fff;
+  }
+  .sidebar-card .card-name{font-size:14px; font-weight:600; color:var(--ink); margin-bottom:2px;}
+  .sidebar-card .card-meta{font-size:11.5px; color:var(--secondary); margin-bottom:8px; line-height:1.5;}
+  .sidebar-card .card-total{font-weight:700; color:var(--accent-dark);}
+  .sidebar-card .card-actions{display:flex; gap:8px; margin-top:8px;}
+  .sidebar-card .card-actions button{
+    flex:1; font-family:var(--sans); font-size:11.5px; font-weight:600; cursor:pointer;
+    padding:6px 8px; border-radius:14px; border:1px solid var(--line); background:#fff;
+  }
+  .sidebar-card .card-actions button.load-btn{color:var(--accent-dark); border-color:var(--accent);}
+  .sidebar-card .card-actions button.delete-btn{color:#B23A48;}
+
+  .status-badge{
+    display:inline-block; font-size:9.5px; letter-spacing:.5px; text-transform:uppercase;
+    font-weight:700; padding:2px 8px; border-radius:10px; margin-left:6px;
+  }
+  .status-badge.status-draft{background:rgba(0,0,0,.06); color:var(--secondary);}
+  .status-badge.status-sent{background:#E4EEF7; color:#2B6CA3;}
+  .status-badge.status-expired{background:#FBE7E2; color:#B2472A;}
+  .status-badge.status-accepted{background:#E4F3E6; color:#2E7D42;}
+  .status-badge.status-rejected{background:#F5E4E4; color:#9C3B3B;}
+  .card-owner{font-size:11px; color:var(--secondary); margin-top:2px;}
+  .card-expiration{font-weight:600;}
+  .card-status-actions{display:flex; gap:8px; margin-top:8px;}
+  .card-status-actions button{
+    flex:1; font-family:var(--sans); font-size:11px; font-weight:600; cursor:pointer;
+    padding:6px 6px; border-radius:14px; border:1px solid var(--line); background:#fff;
+  }
+  .card-status-actions button.sent-btn{color:#2B6CA3; border-color:#2B6CA3;}
+  .card-status-actions button.accept-btn{color:#2E7D42; border-color:#2E7D42;}
+  .card-status-actions button.reject-btn{color:#9C3B3B; border-color:#9C3B3B;}
+  #toggleSidebarBtn #savedCountBadge{
+    display:inline-block; background:#fff; color:var(--accent-dark); font-weight:800;
+    border-radius:10px; padding:0 6px; margin-left:2px; font-size:11px;
+  }
+  @media print{
+    #sidebarOverlay, #proposalSidebar, #toggleSidebarBtn, #saveProposalBtn, #modalOverlay{display:none !important;}
+  }
+
+  /* ---- Custom confirm/alert modal (works everywhere, unlike native dialogs) ---- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:199;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .15s ease;
+  }
+  .modal-overlay.open{opacity:1; pointer-events:auto;}
+  .modal-box{
+    background:var(--paper); border-radius:10px; padding:26px 26px 20px;
+    max-width:360px; width:88vw; box-shadow:0 12px 40px rgba(0,0,0,.25);
+    font-family:var(--sans);
+  }
+  .modal-box p{font-size:14px; line-height:1.6; color:var(--ink); margin:0 0 20px;}
+  .modal-box input[type="text"]{
+    width:100%; box-sizing:border-box; font-family:var(--sans); font-size:14px; color:var(--ink);
+    border:1px solid var(--line); border-radius:6px; padding:9px 10px; margin:-10px 0 20px;
+  }
+  .modal-box input[type="text"]:focus{outline:none; border-color:var(--accent);}
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px;}
+  .modal-actions button{
+    font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer;
+    padding:8px 16px; border-radius:16px; border:1px solid var(--line);
+  }
+  .modal-cancel{background:#fff; color:var(--secondary);}
+  .modal-ok{background:var(--accent); color:#fff; border-color:var(--accent);}
+  #configBanner{
+    display:none; background:#B2472A; color:#fff; font-family:var(--sans); font-size:12.5px;
+    text-align:center; padding:10px 20px; line-height:1.5;
+  }
+  #configBanner a{color:#fff; text-decoration:underline;}
+  @media print{ #configBanner{display:none !important;} }
+</style>
+</head>
+<body>
+
+<div id="configBanner">Shared storage isn't configured yet — edit the SUPABASE_URL / SUPABASE_ANON_KEY constants near the top of the &lt;script&gt; tag. Saved Proposals won't work until then.</div>
+
+<div class="toolbar">
+  <label>Brand
+    <select id="brandSelect">
+      <option value="pp">Pest Pro</option>
+      <option value="bcu">Bird Control Utah</option>
+    </select>
+  </label>
+  <label>Job Type
+    <select id="jobType"></select>
+  </label>
+  <input type="text" id="jobTypeCustomInput" placeholder="Type job type" style="display:none;">
+  <label id="clientTypeWrap">Client Type
+    <select id="clientType">
+      <option value="commercial">Commercial</option>
+      <option value="residential">Residential</option>
+    </select>
+  </label>
+  <label>You
+    <input type="text" id="ownerNameInput" placeholder="Your name" style="width:110px;">
+  </label>
+  <div class="spacer"></div>
+  <button id="saveProposalBtn" onclick="saveProposal()">💾 Save This Proposal</button>
+  <button id="toggleSidebarBtn" onclick="toggleSidebar()">📁 Saved Proposals <span id="savedCountBadge"></span></button>
+  <button onclick="startNewProposal()">＋ New</button>
+  <button id="pdfBtn" onclick="savePDFFile()">Print / Save PDF</button>
+</div>
+
+<div id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
+<div id="proposalSidebar">
+  <div class="sidebar-head">
+    <span>Saved Proposals</span>
+    <button class="sidebar-close" onclick="toggleSidebar(false)">&times;</button>
+  </div>
+  <div class="sidebar-sub">Shared with your whole team</div>
+  <div id="sidebarList" class="sidebar-list">
+    <div class="sidebar-empty" id="sidebarLoading">Loading&hellip;</div>
+  </div>
+</div>
+
+<div id="modalOverlay" class="modal-overlay">
+  <div class="modal-box">
+    <p id="modalMessage"></p>
+    <input type="text" id="modalInput" style="display:none;">
+    <div class="modal-actions">
+      <button id="modalCancelBtn" class="modal-cancel">Cancel</button>
+      <button id="modalOkBtn" class="modal-ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet">
+
+  <div class="header">
+    <div class="brandmark">
+    <div class="logo-row">
+      <img id="logoPP" class="logo-img" src="assets/logo-pestpro.png" alt="Pest Pro logo" onerror="this.style.display='none';">
+      <img id="logoBCU" class="logo-img" src="assets/logo-bcu.png" alt="Bird Control Utah logo" style="display:none;" onerror="this.style.display='none';">
+    </div>
+    <span id="brandSub" class="brand-sub">Pest Control &middot; Salt Lake City, UT</span>
+    </div>
+    <div class="cred-badges">
+        <img class="cred-badge npma" src="assets/badge-npma.png" alt="NPMA Member">
+        <img class="cred-badge" src="assets/badge-bestofslc.png" alt="Best of SLC 2026 Gold Winner">
+        <img class="cred-badge" src="assets/badge-bestofutah.png" alt="Best of Utah 2025">
+    </div>
+  </div>
+
+  <div class="info-bar">
+    <span style="white-space:nowrap;">Date: <span id="proposalDate"></span></span>
+    <span style="white-space:nowrap;">Pesticide Business License #: 4000-1167</span>
+  </div>
+
+  <h1 class="proposal-title">Proposal for Service</h1>
+  <span class="job-tag" id="jobTag">Monthly Pest Control</span>
+
+  <div class="section">
+    <h2>Client &amp; Property Information</h2>
+    <div class="grid2">
+      <div class="field"><label id="propNameLabel">Property / Company Name</label><input type="text" id="propNameInput" data-save="propName" placeholder="e.g. Ashford Apartment Homes"></div>
+      <div class="field" id="mgmtCoField">
+        <label class="optional-toggle" style="margin-bottom:5px;">
+          <input type="checkbox" id="includeMgmtCo" checked onchange="updateMgmtCoVisibility()">
+          Include Management Company
+        </label>
+        <div id="mgmtCoContent">
+          <label>Management Company</label>
+          <input type="text" id="mgmtCoInput" data-save="mgmtCo" placeholder="e.g. Greystar">
+        </div>
+      </div>
+      <div class="field"><label>Contact Name</label><input type="text" id="contactName" data-save="contactName"></div>
+      <div class="field" id="contactTitleField"><label>Contact Title</label><input type="text" id="contactTitle" data-save="contactTitle"></div>
+      <div class="field"><label>Phone</label><input type="text" id="phoneInput" data-save="phone" oninput="formatPhoneInput(this)"></div>
+      <div class="field"><label>Email</label><input type="text" id="emailInput" data-save="email"></div>
+      <div class="field" style="grid-column:1 / -1;"><label>Property Address</label><input type="text" id="propertyAddress" data-save="propertyAddress"></div>
+      <div class="field" id="unitCountField"><label id="unitCountLabel">Unit Count / Building Type</label><input type="text" id="unitCount" data-save="unitCount"></div>
+      <div class="field"><label>Prepared By</label><input type="text" id="preparedBy" data-save="preparedBy" placeholder="Aidan Cluff"></div>
+    </div>
+  </div>
+
+  <div class="section" id="inspectionNotesSection">
+    <label class="optional-toggle">
+      <input type="checkbox" id="includeInspectionNotes" checked onchange="toggleOptionalField(this,'inspectionNotesContent')">
+      Include Inspection Notes
+    </label>
+    <div id="inspectionNotesContent">
+      <h2>Inspection Notes</h2>
+      <div class="field">
+        <div id="inspectionNotes" class="rich-text-field" data-save="inspectionNotes" contenteditable="true" data-placeholder="Document findings from the site walk — activity observed, problem areas, access points, conducive conditions, etc."></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section photos-section" id="photosSection">
+    <button type="button" class="add-row-btn" id="togglePhotosBtn" onclick="togglePhotosSection()">+ Add Inspection Photos</button>
+    <div id="photosContent" style="display:none;">
+      <h2 style="margin-top:18px;">Inspection Photos</h2>
+      <input type="file" id="photoUploadInput" accept="image/*" multiple style="display:none;" onchange="handlePhotoUpload(event)">
+      <button type="button" class="add-row-btn" onclick="document.getElementById('photoUploadInput').click();">+ Upload Photos</button>
+      <div id="photoGrid" class="photo-grid"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Scope of Service &mdash; What's Included</h2>
+    <div class="field" id="serviceMethodologyField">
+      <label class="optional-toggle">
+        <input type="checkbox" id="includeServiceMethodology" checked onchange="toggleOptionalField(this,'serviceMethodologyContent')">
+        Include Service Details &amp; Methodology
+      </label>
+      <div id="serviceMethodologyContent">
+        <label>Service Details &amp; Methodology</label>
+        <div id="serviceMethodology" class="rich-text-field" data-save="serviceMethodology" contenteditable="true" data-placeholder="Describe exactly how the service will be performed — treatment/installation method, materials used, areas covered, and frequency."></div>
+      </div>
+    </div>
+    <div class="field" id="whatsIncludedField">
+      <label class="optional-toggle">
+        <input type="checkbox" id="includeWhatsIncluded" checked onchange="toggleOptionalField(this,'whatsIncludedContent')">
+        Include What's Included
+      </label>
+      <div id="whatsIncludedContent">
+        <label>What's Included</label>
+        <div id="whatsIncluded" class="rich-text-field" data-save="whatsIncluded" contenteditable="true" data-placeholder="List specifically what is included in this proposal — e.g. number of visits, treated areas, materials, warranty coverage, follow-up visits."></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="warrantySection">
+    <label class="optional-toggle">
+      <input type="checkbox" id="includeWarranty" checked onchange="toggleOptionalField(this,'warrantyContent')">
+      Include Guarantee
+    </label>
+    <div id="warrantyContent">
+      <h2>Guarantee</h2>
+      <div class="warranty-select-row">
+        <label>Warranty Type
+          <select id="warrantyTypeSelect" onchange="onWarrantyTypeChange()">
+            <option value="">&mdash; Select &mdash;</option>
+            <option value="termites">Termites</option>
+            <option value="wildlife">Wildlife</option>
+            <option value="birdcontrol">Bird Control</option>
+            <option value="custom">Custom</option>
+          </select>
+        </label>
+        <div class="field" id="customWarrantyNameField" style="display:none; margin:0; flex:1; min-width:180px;">
+          <input type="text" id="customWarrantyName" data-save="customWarrantyName" placeholder="Name this warranty">
+        </div>
+      </div>
+      <div class="field">
+        <div id="warrantyNotes" class="rich-text-field" data-save="warrantyNotes" contenteditable="true" data-placeholder="Describe the guarantee or warranty coverage for this service — e.g. re-service window, materials warranty, conditions or exclusions that apply."></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="pricingInitialSection">
+    <h2>Pricing &mdash; Initial Visit</h2>
+    <table class="pricing" id="pricingTableInitial">
+      <thead>
+        <tr>
+          <th class="drag-header" style="width:24px;"></th>
+          <th style="width:46%;">Item</th>
+          <th style="width:14%;">Qty</th>
+          <th style="width:18%;">Unit Price</th>
+          <th style="width:18%;">Line Total</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="pricingBodyInitial"></tbody>
+    </table>
+    <button class="add-row-btn" onclick="addRow('initial')">+ Add line item</button>
+
+    <div class="discount-rows" id="discountRowsInitial"></div>
+    <button type="button" class="add-row-btn discount-add-btn" onclick="addDiscountRow('initial')">+ Add Discount</button>
+
+    <div class="totals">
+      <div class="row"><span class="label">Subtotal</span><span id="initialSubtotal">$0.00</span></div>
+      <div class="row discount-summary-row" id="initialDiscountSummaryRow" style="display:none;"><span class="label">Discount</span><span id="initialDiscountAmount">-$0.00</span></div>
+      <div class="row grand"><span class="label">Initial Visit Total</span><span id="initialTotal">$0.00</span></div>
+    </div>
+  </div>
+
+  <label class="onetime-toggle">
+    <input type="checkbox" id="oneTimeJobCheckbox" onchange="toggleRecurringSection()">
+    This is a one-time job &mdash; no recurring service
+  </label>
+
+  <div class="section" id="recurringSection">
+    <h2>Pricing &mdash; Recurring Service</h2>
+    <table class="pricing" id="pricingTableRecurring">
+      <thead>
+        <tr>
+          <th class="drag-header" style="width:24px;"></th>
+          <th style="width:46%;">Item</th>
+          <th style="width:14%;">Qty</th>
+          <th style="width:18%;">Unit Price</th>
+          <th style="width:18%;">Line Total</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="pricingBodyRecurring"></tbody>
+    </table>
+    <button class="add-row-btn" onclick="addRow('recurring')">+ Add line item</button>
+
+    <div class="discount-rows" id="discountRowsRecurring"></div>
+    <button type="button" class="add-row-btn discount-add-btn" onclick="addDiscountRow('recurring')">+ Add Discount</button>
+
+    <div class="totals">
+      <div class="row"><span class="label">Subtotal</span><span id="recurringSubtotal">$0.00</span></div>
+      <div class="row discount-summary-row" id="recurringDiscountSummaryRow" style="display:none;"><span class="label">Discount</span><span id="recurringDiscountAmount">-$0.00</span></div>
+      <div class="row grand"><span class="label">Recurring Visit Total</span><span id="recurringTotal">$0.00</span></div>
+    </div>
+  </div>
+
+  <div class="section" id="whatsNotIncludedField">
+    <label class="optional-toggle">
+      <input type="checkbox" id="includeWhatsNotIncluded" checked onchange="toggleOptionalField(this,'whatsNotIncludedContent')">
+      Include As-Needed Service Pricing
+    </label>
+    <div id="whatsNotIncludedContent">
+      <h2>As-Needed Service Pricing</h2>
+      <div class="addon-mode-row">
+        <label>Format
+          <select id="addonModeSelect" onchange="onAddonModeChange()">
+            <option value="text">Text</option>
+            <option value="table">Table</option>
+          </select>
+        </label>
+      </div>
+      <div id="addonTextWrap">
+        <div id="whatsNotIncluded" class="rich-text-field" data-save="whatsNotIncluded" contenteditable="true" data-placeholder="List services available on an as-needed basis beyond this proposal's scope — e.g. bed bug treatment, wildlife service, termite treatment — with pricing for whenever the situation comes up."></div>
+      </div>
+      <div id="addonTableWrap" style="display:none;">
+        <table class="pricing" id="addonTable">
+          <thead>
+            <tr>
+              <th style="width:56%;">Item</th>
+              <th style="width:18%;">Frequency</th>
+              <th style="width:18%;">Price</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="addonTableBody"></tbody>
+        </table>
+        <button type="button" class="add-row-btn" onclick="addAddonRow()">+ Add line item</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="termsSection">
+    <h2>Terms &amp; Conditions</h2>
+    <div class="terms-select-row">
+      <label>Terms Template
+        <select id="termsTemplateSelect" onchange="onTermsTemplateChange()"></select>
+      </label>
+      <span class="terms-select-note">Auto-selected by Brand + Client Type &mdash; pick a different one anytime</span>
+    </div>
+    <div class="terms">
+      <div id="termsPreamble" class="terms-preamble"></div>
+      <ol id="termsList"></ol>
+    </div>
+    <button class="add-row-btn" onclick="addTermRow()">+ Add term</button>
+  </div>
+
+  <div class="section" id="acceptanceSection">
+    <h2>Acceptance</h2>
+    <div class="sign-grid">
+      <div class="sign-block">
+        <div class="line sigline" id="clientSigLine" data-save="clientSigLine" contenteditable="true" data-target="clientDate"></div>
+        <div class="cap"><span>Client Signature</span></div>
+        <div class="field" style="margin-top:14px;"><label>Print Name</label><input type="text" id="clientPrintName" data-save="clientPrintName"></div>
+        <div class="field"><label>Date</label><input type="text" id="clientDate" data-save="clientDate" readonly placeholder="Auto-fills when signed"></div>
+      </div>
+      <div class="sign-block">
+        <div class="line sigline" id="repSigLine" data-save="repSigLine" contenteditable="true" data-target="repDate"></div>
+        <div class="cap"><span id="repCap">Pest Pro Representative</span></div>
+        <div class="field" style="margin-top:14px;"><label>Print Name</label><input type="text" id="repPrintName" data-save="repPrintName"></div>
+        <div class="field"><label>Date</label><input type="text" id="repDate" data-save="repDate" readonly placeholder="Auto-fills when signed"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note" id="footerNote">
+    Pest Pro Pest Control &middot; 3335 S 900 E STE 200, Salt Lake City, UT 84106 &middot; (801) 810-PEST (7378) &middot; pestproutah.com</div>
+
+<script>
+/* =================================================================
+   SHARED STORAGE CONFIG
+   Fill these in with your Supabase project's values (Project Settings
+   -> API in the Supabase dashboard). These are meant to be public --
+   access is controlled by the RLS policy on the kv_store table, not
+   by keeping this key secret.
+   ================================================================= */
+const SUPABASE_URL = 'REPLACE_WITH_SUPABASE_PROJECT_URL';
+const SUPABASE_ANON_KEY = 'REPLACE_WITH_SUPABASE_ANON_KEY';
+
+const dbStorage = {
+  _configured(){
+    return !SUPABASE_URL.includes('REPLACE_WITH') && !SUPABASE_ANON_KEY.includes('REPLACE_WITH');
+  },
+  _warnUnconfigured(){
+    const banner = document.getElementById('configBanner');
+    if (banner) banner.style.display = 'block';
+  },
+  async get(key, shared){
+    if (!shared) {
+      const v = localStorage.getItem('pestpro:' + key);
+      return v !== null ? { value: v } : null;
+    }
+    if (!this._configured()) { this._warnUnconfigured(); throw new Error('Shared storage not configured'); }
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store?key=eq.${encodeURIComponent(key)}&select=value`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    if (!res.ok) throw new Error('Storage read failed: ' + res.status);
+    const rows = await res.json();
+    return rows.length ? { value: rows[0].value } : null;
+  },
+  async set(key, value, shared){
+    if (!shared) {
+      localStorage.setItem('pestpro:' + key, value);
+      return;
+    }
+    if (!this._configured()) { this._warnUnconfigured(); throw new Error('Shared storage not configured'); }
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
+    });
+    if (!res.ok) throw new Error('Storage write failed: ' + res.status);
+  },
+  async delete(key, shared){
+    if (!shared) {
+      localStorage.removeItem('pestpro:' + key);
+      return;
+    }
+    if (!this._configured()) { this._warnUnconfigured(); throw new Error('Shared storage not configured'); }
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store?key=eq.${encodeURIComponent(key)}`, {
+      method: 'DELETE',
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    if (!res.ok) throw new Error('Storage delete failed: ' + res.status);
+  }
+};
+
+(function(){
+  const today = new Date();
+  const formatted = (today.getMonth()+1).toString().padStart(2,'0') + '/' +
+                     today.getDate().toString().padStart(2,'0') + '/' +
+                     today.getFullYear();
+  document.getElementById('proposalDate').textContent = formatted;
+})();
+
+let isRestoringState = false;
+
+// Bold/italic/underline support for the editable Terms & Conditions clauses.
+// Textareas elsewhere in the form can't support rich text at all (a native
+// HTML limitation), but these contenteditable clauses can — Cmd/Ctrl+B, I, U.
+function handleInlineFormatShortcut(e){
+  const key = e.key.toLowerCase();
+  if ((e.metaKey || e.ctrlKey) && (key === 'b' || key === 'i' || key === 'u')) {
+    e.preventDefault();
+    document.execCommand(key === 'b' ? 'bold' : key === 'i' ? 'italic' : 'underline');
+  }
+}
+document.addEventListener('keydown', function(e){
+  if (document.activeElement && document.activeElement.isContentEditable) {
+    handleInlineFormatShortcut(e);
+  }
+});
+
+function sanitizeInlineHtml(html){
+  const allowed = ['STRONG', 'B', 'EM', 'I', 'U'];
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+  (function clean(node){
+    Array.from(node.childNodes).forEach(child => {
+      if (child.nodeType === 1) {
+        if (!allowed.includes(child.tagName)) {
+          while (child.firstChild) node.insertBefore(child.firstChild, child);
+          node.removeChild(child);
+        } else {
+          child.removeAttribute('style');
+          child.removeAttribute('class');
+          clean(child);
+        }
+      }
+    });
+  })(temp);
+  return temp.innerHTML;
+}
+
+const termsLibrary = [
+  {
+    id: 'standard-default',
+    label: 'Standard Terms (Default)',
+    autoFor: null,
+    preamble: '',
+    clauses: [
+      'This proposal is valid for 30 days from the date listed above.',
+      'Recurring service pricing is based on the frequency and scope selected. Pricing is subject to adjustment if site conditions change materially from the inspection.',
+      'Initial visit fees are due upon completion of the first service unless otherwise agreed in writing.',
+      "Recurring services renew automatically and are billed on the agreed cycle until cancelled in writing with 30 days' notice.",
+      'All work is performed by licensed, insured technicians in accordance with Utah state regulations.',
+      'Materials and warranty terms (where applicable) are specific to the service type selected above.'
+    ]
+  },
+  {
+    id: 'pestpro-commercial',
+    label: 'Pest Pro — Commercial Terms & Conditions',
+    autoFor: { brand: 'pp', clientType: 'commercial' },
+    preamble: `Pest Pro is a registered trade name of Pearson Environmental Services, LLC, a Utah limited liability company. All references to "Pest Pro" in this agreement refer to Pearson Environmental Services, LLC, doing business as Pest Pro. These Commercial Terms and Conditions apply to multi-site, managed-property, and commercial accounts and supersede Pest Pro's standard residential terms for the account(s) referenced in the attached service agreement.`,
+    clauses: [
+      `Services: Pest Pro agrees to provide pest control services as described in this service agreement and the attached Scope of Work / Schedule A. All services will be performed by licensed technicians using EPA-registered products in accordance with applicable federal, state, and local regulations. Pest Pro is licensed with the State of Utah and is a member in good standing of the National Pest Management Association (NPMA) and Utah Pest Management Association (UPMA).`,
+      `Scope of Work and Service Locations: Service locations, buildings, unit counts, and treatment areas covered under this agreement are identified in the attached Schedule A (Scope of Work). Standard service includes treatment of exterior common areas, foundation perimeters, eaves and overhangs, window and doorframes, weep holes, and visible pest entry points at the properties listed in Schedule A. Interior treatment of individual units, clubhouses, leasing offices, or other interior common areas is included only where specifically listed in Schedule A. Any additional buildings, units, or service locations not listed in Schedule A are outside the scope of this agreement and will be quoted separately. Where this agreement covers multiple properties, pricing, service frequency, and scope may vary by location as detailed in Schedule A.`,
+      `Access: Customer agrees to provide Pest Pro and its technicians reasonable access to all service locations on scheduled service dates. For occupied units, Customer is responsible for providing residents or tenants with a minimum of 24 hours' notice prior to any service requiring unit access, except in cases of emergency or pest-related health and safety concerns. Customer will designate an on-site point of contact (property manager, maintenance staff, or equivalent) responsible for coordinating access, including gate codes, key/fob access, and lockbox arrangements where applicable. If access to a scheduled location is not available and no advance notice is given, a trip charge may apply to that location. For purposes of this agreement, "Customer" refers to the property owner or managing agent who is party to this agreement; "Occupants" refers to tenants or residents of the property, who are not party to this agreement but to whom Customer is responsible for providing required notice.`,
+      `Preparation for Service: Customer agrees to follow, and to communicate to Occupants as applicable, any pre-treatment preparation instructions provided by Pest Pro. Failure to adequately prepare a property or unit for service may reduce the effectiveness of treatment and does not exempt Customer from payment obligations for that service.`,
+      `Payment Terms: Pest Pro will invoice Customer upon completion of each scheduled service or on a monthly basis for recurring service, as specified in the service agreement. Payment is due within thirty (30) days of invoice date (Net 30). Invoices may reference a purchase order or work order number if required by Customer; Customer is responsible for providing any such reference numbers prior to service. Late payments not received within thirty (30) days of the invoice date are subject to a late fee of 1.5% per month (18% annually) or the maximum rate permitted by law, whichever is lower. Pest Pro reserves the right to adjust recurring service pricing with sixty (60) days' written notice to Customer.`,
+      `Term and Termination: This agreement is effective as of the date of the last signature and continues for an initial term of twelve (12) months, after which it will automatically renew on a month-to-month basis unless terminated as provided below. Either party may terminate this agreement, whether during the initial term or any renewal period, by providing thirty (30) days' written notice to the other party. Written notice of termination may be submitted via email to office@pestproutah.com or by calling (801) 810-7378. Customer remains responsible for payment of all services performed prior to the effective date of termination.`,
+      `Service Standards: Pest Pro's recurring service program is designed to establish and maintain pest activity at the treated locations below actionable thresholds through regularly scheduled preventive treatment. Given the scale, occupancy turnover, and shared-wall/common-area conditions inherent to multi-unit and commercial properties, Pest Pro does not offer a re-service or money-back guarantee under this agreement. Additional service visits requested outside the regular service schedule, including in response to specific pest activity reports, are available and will be billed at Pest Pro's standard commercial rates unless otherwise specified in Schedule A. Customer's designated point of contact may reach Pest Pro's account management team directly to schedule additional visits or discuss service concerns.`,
+      `Limitation of Liability: Pest Pro's liability for any claim arising out of or related to services provided under this agreement shall not exceed the total amount paid by Customer for services in the twelve (12) months preceding the claim. Pest Pro is not liable for pre-existing conditions, structural damage, or infestations that originated prior to the commencement of service.`,
+      `Indemnification: Pest Pro agrees to indemnify, defend, and hold harmless Customer from and against any third-party claims, damages, or liabilities arising directly from the negligent acts or omissions of Pest Pro or its technicians in the performance of services under this agreement, except to the extent such claims arise from Customer's or Occupants' own negligence, failure to disclose known hazards, or failure to comply with this agreement. Customer agrees to indemnify and hold harmless Pest Pro from claims arising from Customer's failure to disclose property conditions, hazards, or occupancy information reasonably necessary for Pest Pro to safely perform services.`,
+      `Insurance: Pest Pro maintains commercial general liability insurance, workers' compensation coverage, and commercial auto liability insurance in amounts consistent with industry standards for commercial pest control operations. Upon request, Pest Pro will provide Customer with a Certificate of Insurance naming Customer as an additional insured with respect to services performed under this agreement.`,
+      `Animal and Pet Safety: Customer acknowledges that pest control products, rodent bait stations, traps, and related equipment are placed on the property for the purpose of controlling pests. Pest Pro is not responsible for any injury, illness, or death of any domestic animal, pet, wildlife, or livestock that occurs as a result of contact with or ingestion of any pest control product, bait, trap, or rodent control device placed on the property. Customer is responsible for communicating to Occupants the presence and general location of rodent control devices and for keeping pets and animals away from treated areas. Pest Pro will make reasonable efforts to place all rodent bait stations and traps in tamper-resistant housings and in locations that minimize risk, but cannot guarantee that animals will not access them.`,
+      `Children and Vulnerable Persons: All products used by Pest Pro are EPA-registered and applied in accordance with label directions. Customer is responsible for communicating to Occupants any post-treatment access restrictions (such as drying time or re-entry intervals) as directed by the technician. Pest Pro is not responsible for adverse reactions resulting from failure to follow post-treatment instructions.`,
+      `Property Damage: Pest Pro technicians will exercise reasonable care while performing services. Pest Pro is not responsible for damage to property caused by pest activity, including but not limited to structural damage from rodents, termites, or other pests. Any pre-existing property damage identified by the technician will be noted at the time of service.`,
+      `Third-Party Products and Equipment: Pest Pro is not responsible for the performance or safety of any pest control products, traps, or devices purchased or installed independently of this agreement by Customer or Occupants.`,
+      `Confidentiality: Each party agrees to keep confidential any non-public business, financial, or operational information disclosed by the other party in connection with this agreement, and to use such information solely for purposes of performing under this agreement.`,
+      `Governing Law: This agreement shall be governed by the laws of the State of Utah. Any disputes arising out of or related to this agreement shall be resolved in the courts of Salt Lake County, Utah.`,
+      `Entire Agreement: This agreement, including these Commercial Terms and Conditions, the service agreement, and Schedule A, constitutes the entire agreement between the parties with respect to the subject matter herein and supersedes all prior agreements, representations, and understandings. Pest Pro reserves the right to modify these terms and conditions at any time with thirty (30) days' written notice to Customer. Continued use of services following the notice period constitutes acceptance of the updated terms.`
+    ]
+  },
+  {
+    id: 'bcu-terms',
+    label: 'Bird Control Utah — Terms & Conditions',
+    autoFor: { brand: 'bcu' },
+    preamble: `Bird Control Utah is a registered trade name of Pearson Environmental Services, LLC, a Utah limited liability company. All references to "Bird Control Utah" in this agreement refer to Pearson Environmental Services, LLC, doing business as Bird Control Utah. These terms and conditions apply to all Bird Control Utah service agreements, both residential and commercial. Where a provision applies only to one account type, it is noted below.`,
+    clauses: [
+      `Scope of Work: Services performed by Bird Control Utah are limited to those selected on the signed service agreement and described in the accompanying Scope of Work / Service Notes. For multi-building properties, commercial properties, or properties with more than one service location, the specific buildings, units, and treatment areas covered under this agreement are identified in the attached Schedule A. Any buildings, units, or areas not listed in the service agreement or Schedule A are outside the scope of this agreement and will be quoted separately. Bird Control Utah does not guarantee the elimination of all bird activity. Effectiveness of services depends on property conditions, bird species, pressure levels, and factors outside of Bird Control Utah's control. No verbal representations regarding outcomes are binding unless confirmed in writing.`,
+      `Warranty & Guarantee: Bird Control Utah provides the following limited warranties. All warranty claims must be submitted in writing within the warranty period. Bird Control Utah reserves the right to inspect the property before honoring any warranty claim. Entry Point Sealing — 2-year guarantee that sealed entry points will not allow new wildlife entry; does not cover new damage, new entry points, or areas not included in the original scope of work. Optical Gel — 2-year guarantee that optical gel will remain in place; does not guarantee that birds will not land or roost in treated areas. Bird Netting — 2-year guarantee that installed netting will remain in place under normal conditions; does not cover damage caused by vandalism, extreme weather, or tampering. Solar Panel Exclusion (Wire Mesh) — 2-year guarantee that wire mesh will remain in place under normal conditions; does not cover damage caused by vandalism, extreme weather, or tampering. All other services, materials, and methods not listed above carry no warranty of any kind, expressed or implied.`,
+      `Access: Customer agrees to provide safe, reasonable, and unobstructed access to all areas requiring service on the scheduled service date, including roof, rooftop equipment, and elevated areas where applicable. For commercial and multi-tenant properties, Customer will designate an on-site point of contact responsible for coordinating access, including gate codes, key/fob access, roof access, and any required safety briefings. For occupied units or tenant spaces, Customer is responsible for providing occupants with reasonable advance notice of any service requiring access to or near their space. Bird Control Utah is not liable for incomplete work or warranty claims related to areas that were inaccessible, undisclosed, or unsafe at the time of service.`,
+      `Payment: For residential accounts, payment is due in full upon completion of service unless a separate written payment arrangement has been agreed to prior to service. For commercial and managed-property accounts, Bird Control Utah will invoice Customer upon completion of service, and payment is due within thirty (30) days of the invoice date (Net 30) unless otherwise specified in the service agreement. Invoices may reference a purchase order or work order number if required by Customer; Customer is responsible for providing any such reference numbers prior to service. Bird Control Utah accepts credit/debit card and ACH bank transfer. Returned checks and late commercial invoices are subject to applicable bank fees and a late fee of 1.5% per month (18% annually), or the maximum rate permitted by law, whichever is lower.`,
+      `Liability & Insurance: Bird Control Utah is fully insured and licensed, and maintains commercial general liability insurance, workers' compensation coverage, and commercial auto liability insurance in amounts consistent with industry standards for wildlife and pest exclusion work. Upon request, Bird Control Utah will provide Customer with a Certificate of Insurance naming Customer as an additional insured with respect to services performed under this agreement. Bird Control Utah is not responsible for pre-existing property damage, structural deficiencies, or damage caused by bird or wildlife activity prior to service. Customer assumes responsibility for any damage that occurs after services have been completed and accepted. Bird Control Utah's liability for any claim arising out of services performed shall not exceed the total amount paid by Customer for the specific service giving rise to the claim.`,
+      `Indemnification: Bird Control Utah agrees to indemnify, defend, and hold harmless Customer from and against any third-party claims, damages, or liabilities arising directly from the negligent acts or omissions of Bird Control Utah or its technicians in the performance of services under this agreement, except to the extent such claims arise from Customer's own negligence, failure to disclose known hazards, or failure to comply with this agreement. Customer agrees to indemnify and hold harmless Bird Control Utah from claims arising from Customer's failure to disclose property conditions, structural deficiencies, or hazards reasonably necessary for Bird Control Utah to safely perform services, including work at height or on rooftops.`,
+      `Regulatory Compliance: All services are performed in compliance with applicable federal, state, and local wildlife regulations, including the Migratory Bird Treaty Act. Certain species are protected by law and may require additional permits or approvals before removal or exclusion work can proceed. Bird Control Utah will advise Customer of any regulatory requirements identified prior to or during service. Customer agrees to cooperate with any permit requirements.`,
+      `Property Condition: Customer represents that the property is in a condition suitable for the services requested, including that any roof, rooftop equipment, or structure to be accessed can safely support standard installation methods and technician access. Bird Control Utah is not responsible for damage to surfaces, structures, or materials that are deteriorated, weakened, or otherwise not capable of supporting standard installation methods. Any such conditions will be disclosed to Customer prior to proceeding where reasonably identifiable.`,
+      `Confidentiality: Each party agrees to keep confidential any non-public business, financial, or operational information disclosed by the other party in connection with this agreement, and to use such information solely for purposes of performing under this agreement.`,
+      `Dispute Resolution & Arbitration: In the event of any dispute, claim, or controversy arising out of or relating to this agreement or the services performed, both parties agree to first attempt resolution through good-faith negotiation. If a resolution cannot be reached within 30 days, the dispute shall be submitted to binding arbitration in the state of Utah in accordance with the rules of the American Arbitration Association. The decision of the arbitrator shall be final and binding. Each party shall bear its own costs of arbitration unless the arbitrator determines otherwise. Nothing in this clause prevents either party from seeking emergency injunctive relief in a court of competent jurisdiction. These terms and conditions apply to all services performed and are incorporated by reference into any signed service agreement.`
+    ]
+  }
+];
+
+function populateTermsTemplateSelect(){
+  const sel = document.getElementById('termsTemplateSelect');
+  sel.innerHTML = '';
+  termsLibrary.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.label;
+    sel.appendChild(opt);
+  });
+}
+
+function renderTermsTemplate(templateId){
+  const template = termsLibrary.find(t => t.id === templateId) || termsLibrary[0];
+  document.getElementById('termsTemplateSelect').value = template.id;
+  document.getElementById('termsPreamble').textContent = template.preamble || '';
+
+  document.querySelectorAll('#termsList li.template-clause').forEach(li => li.remove());
+
+  const list = document.getElementById('termsList');
+  const frag = document.createDocumentFragment();
+  template.clauses.forEach(text => {
+    const li = document.createElement('li');
+    li.className = 'template-clause';
+    li.contentEditable = 'true';
+    li.dataset.default = text;
+    li.textContent = text;
+    frag.appendChild(li);
+  });
+  list.prepend(frag);
+}
+
+function onTermsTemplateChange(){
+  renderTermsTemplate(document.getElementById('termsTemplateSelect').value);
+}
+
+function autoSelectTermsTemplate(){
+  if (isRestoringState) return;
+  const brand = document.getElementById('brandSelect').value;
+  const clientType = document.getElementById('clientType').value;
+  const match = termsLibrary.find(t =>
+    t.autoFor &&
+    t.autoFor.brand === brand &&
+    (!('clientType' in t.autoFor) || t.autoFor.clientType === clientType)
+  );
+  renderTermsTemplate(match ? match.id : 'standard-default');
+}
+
+/* ===== Guarantee / Warranty marketing box + auto-inserted legal clause ===== */
+
+const warrantyLibrary = {
+  termites: {
+    blurb: 'Backed by our 3-Year Termite Guarantee — if they come back, so do we, at no cost to you.',
+    legalClause: `Termite Guarantee: Pest Pro provides a 3-year guarantee against termite reinfestation at the treated structure for trenching and drilling treatment methods. If termite activity returns within the guarantee period, Pest Pro will re-treat the affected area at no additional cost. This guarantee covers retreatment only and does not cover repair of structural damage, whether pre-existing or resulting from termite activity.`
+  },
+  wildlife: {
+    blurb: 'Every wildlife exclusion job includes our 2-Year Entry Point Guarantee — sealed for good, or we fix it free.',
+    legalClause: `Wildlife Entry Point Guarantee: Pest Pro provides a 2-year guarantee on all wildlife entry points sealed as part of this service. If a sealed entry point fails and allows new wildlife entry within the guarantee period, Pest Pro will repair it at no additional cost. This guarantee covers sealed entry points only and does not cover new or previously unsealed entry points, or general wildlife activity on the property.`
+  },
+  birdcontrol: {
+    blurb: 'Every Bird Control Utah installation is backed by a 2-Year Workmanship Guarantee — built to last, guaranteed.',
+    legalClause: null // already fully covered by the Bird Control Utah terms template's Warranty & Guarantee clause
+  }
+};
+
+function setWarrantyLegalClause(text){
+  let li = document.getElementById('warrantyLegalLi');
+  if (!text) {
+    if (li) li.remove();
+    return;
+  }
+  if (!li) {
+    li = document.createElement('li');
+    li.id = 'warrantyLegalLi';
+    li.className = 'warranty-legal-clause';
+    li.contentEditable = 'true';
+    const list = document.getElementById('termsList');
+    list.appendChild(li); // template clauses re-prepend themselves in front of this, so order stays correct
+  }
+  li.innerHTML = sanitizeInlineHtml(text);
+  li.dataset.default = text;
+}
+
+function onWarrantyTypeChange(){
+  const type = document.getElementById('warrantyTypeSelect').value;
+  const customField = document.getElementById('customWarrantyNameField');
+  const notesField = document.getElementById('warrantyNotes');
+
+  customField.style.display = (type === 'custom') ? 'block' : 'none';
+
+  if (type === '') return; // no-op, leave whatever's already there
+  if (type === 'custom') {
+    notesField.textContent = '';
+    setWarrantyLegalClause(null);
+    return;
+  }
+
+  const entry = warrantyLibrary[type];
+  if (!entry) return;
+  notesField.textContent = entry.blurb;
+  setWarrantyLegalClause(entry.legalClause);
+}
+
+populateTermsTemplateSelect();
+
+const jobTypes = [
+  "Monthly Pest Control",
+  "Bi-Weekly Pest Control",
+  "Bi-Monthly Pest Control",
+  "Quarterly Pest Control",
+  "Weekly Pest Control",
+  "Mosquito Abatement",
+  "Bird Trapping",
+  "Bird Exclusion - Netting",
+  "Bird Exclusion - Mesh",
+  "Bird Exclusion - Solar Panel Mesh",
+  "Bird Control - Optical Gel Deterrent",
+  "Bird Control - Scent Deterrent",
+  "Other (custom)"
+];
+
+const pricingItems = [
+  "Initial Inspection",
+  "Initial Treatment / Setup",
+  "Recurring Service Visit",
+  "Trapping - Setup & Removal",
+  "Netting - Material & Labor",
+  "Mesh Installation",
+  "Solar Panel Mesh Installation",
+  "Optical Gel Deterrent Application",
+  "Scent Deterrent Application",
+  "Mosquito Treatment",
+  "Rodent Bait Stations",
+  "Rodent Bait Box Installation",
+  "Equipment / Lift Rental",
+  "Materials",
+  "Other (custom)"
+];
+
+const addonItems = [
+  "Gopher Control",
+  "German Cockroach Treatment",
+  "Bed Bug Treatment",
+  "General Insect Treatment - Townhome Interior",
+  "General Insect Treatment - Home Interior",
+  "Wildlife Service",
+  "Bird Control",
+  "Termite Treatment",
+  "Large Rodent Bait Stations",
+  "Small Rodent Bait Stations",
+  "Other (custom)"
+];
+
+const addonPresetPrices = {
+  "Gopher Control": 229,
+  "German Cockroach Treatment": 249,
+  "Large Rodent Bait Stations": 30,
+  "Small Rodent Bait Stations": 10,
+  "General Insect Treatment - Townhome Interior": 39,
+  "General Insect Treatment - Home Interior": 49,
+  "Bird Control": "Quote Needed",
+  "Wildlife Service": "Quote Needed"
+};
+
+const addonPresetDescriptions = {
+  "General Insect Treatment - Townhome Interior": "Interior treatment of any townhome throughout the community. Must take place at a regular service to qualify for discounted rate. If scheduled as a standalone service, the cost will be $129.00 per unit.",
+  "Large Rodent Bait Stations": "Exterior weather-resistant, locking rodent bait stations.",
+  "Small Rodent Bait Stations": "Interior add-on used when rodent activity is found inside homes or garages.",
+  "German Cockroach Treatment": "Preparation required by tenant to ensure treatment success. In most cases, three treatments are needed, 2-3 weeks apart.",
+  "Gopher Control": "Bait injection directly into gopher tunnels approximately 6-9 inches underground. Two or more treatments may be required if more than 8 mounds are present or if a field is nearby.",
+  "Bird Control": "Removal, trapping, exclusion of nuisance birds.",
+  "Wildlife Service": "Removal, trapping, exclusion of wildlife."
+};
+
+const jobSelect = document.getElementById('jobType');
+jobTypes.forEach(j=>{
+  const o=document.createElement('option'); o.value=j; o.textContent=j; jobSelect.appendChild(o);
+});
+const jobTypeCustomInput = document.getElementById('jobTypeCustomInput');
+function updateJobTag(){
+  const isCustom = jobSelect.value === 'Other (custom)';
+  jobTypeCustomInput.style.display = isCustom ? 'inline-block' : 'none';
+  if (isCustom) {
+    document.getElementById('jobTag').textContent = jobTypeCustomInput.value.trim() || 'Other (custom)';
+  } else {
+    document.getElementById('jobTag').textContent = jobSelect.value;
+  }
+}
+jobSelect.addEventListener('change', updateJobTag);
+jobTypeCustomInput.addEventListener('input', updateJobTag);
+
+const brandSelect = document.getElementById('brandSelect');
+brandSelect.addEventListener('change', ()=>{
+  const isBcu = brandSelect.value === 'bcu';
+  document.body.classList.toggle('brand-bcu', isBcu);
+  document.getElementById('logoPP').style.display = isBcu ? 'none' : 'block';
+  document.getElementById('logoBCU').style.display = isBcu ? 'block' : 'none';
+  document.getElementById('brandSub').textContent = isBcu ? 'Commercial Bird Exclusion · A Pest Pro Company' : 'Pest Control · Salt Lake City, UT';
+  document.getElementById('repCap').textContent = isBcu ? 'Bird Control Utah Representative' : 'Pest Pro Representative';
+  document.getElementById('footerNote').textContent = isBcu
+    ? 'Bird Control Utah · 3335 S 900 E STE 202, Salt Lake City, UT 84106 · (801) 901-BIRD (2473) · birdcontrolutah.com'
+    : 'Pest Pro Pest Control · 3335 S 900 E STE 200, Salt Lake City, UT 84106 · (801) 810-PEST (7378) · pestproutah.com';
+  autoSelectTermsTemplate();
+});
+
+function toggleRecurringSection(){
+  const isOneTime = document.getElementById('oneTimeJobCheckbox').checked;
+  document.getElementById('recurringSection').style.display = isOneTime ? 'none' : 'block';
+}
+
+function toggleOptionalField(checkbox, contentId){
+  document.getElementById(contentId).style.display = checkbox.checked ? '' : 'none';
+}
+
+function updateMgmtCoVisibility(){
+  const isResidential = document.getElementById('clientType').value === 'residential';
+  const wrapper = document.getElementById('mgmtCoField');
+  if (isResidential) {
+    wrapper.style.display = 'none';
+    return;
+  }
+  wrapper.style.display = 'block';
+  const includeChecked = document.getElementById('includeMgmtCo').checked;
+  document.getElementById('mgmtCoContent').style.display = includeChecked ? 'block' : 'none';
+}
+
+function applyClientType(){
+  const isResidential = document.getElementById('clientType').value === 'residential';
+  document.getElementById('propNameLabel').textContent = isResidential ? 'Homeowner Name' : 'Property / Company Name';
+  document.getElementById('propNameInput').placeholder = isResidential ? 'e.g. John & Jane Smith' : 'e.g. Ashford Apartment Homes';
+  updateMgmtCoVisibility();
+  document.getElementById('contactTitleField').style.display = isResidential ? 'none' : 'block';
+  document.getElementById('unitCountField').style.display = isResidential ? 'none' : 'block';
+  document.getElementById('unitCountLabel').textContent = isResidential ? 'Property Type' : 'Unit Count / Building Type';
+  autoSelectTermsTemplate();
+}
+document.getElementById('clientType').addEventListener('change', applyClientType);
+applyClientType();
+
+document.querySelectorAll('.sigline').forEach(line=>{
+  line.addEventListener('input', ()=>{
+    const dateField = document.getElementById(line.dataset.target);
+    if(line.textContent.trim() === ''){
+      dateField.value = '';
+    } else if(!dateField.value){
+      const today = new Date();
+      dateField.value = (today.getMonth()+1).toString().padStart(2,'0') + '/' +
+                         today.getDate().toString().padStart(2,'0') + '/' +
+                         today.getFullYear();
+    }
+  });
+});
+
+let rowId = 0;
+let draggingRow = null;
+function makeOptionsHtml(selected, list){
+  return (list || pricingItems).map(i=>`<option value="${i}" ${i===selected?'selected':''}>${i}</option>`).join('');
+}
+function syncItemText(select){
+  const customInput = select.nextElementSibling;
+  const span = customInput ? customInput.nextElementSibling : null;
+  if(!span || !span.classList.contains('print-item-text')) return;
+  if(select.value === 'Other (custom)'){
+    span.textContent = customInput.value.trim() || 'Other (custom)';
+  } else {
+    span.textContent = select.options[select.selectedIndex] ? select.options[select.selectedIndex].text : '';
+  }
+}
+function preparePricingItemsForExport(){
+  document.querySelectorAll('table.pricing select').forEach(sel => { sel.style.display = 'none'; });
+  document.querySelectorAll('table.pricing .custom-item-input').forEach(el => { el.style.display = 'none'; });
+  document.querySelectorAll('.print-item-text').forEach(span => {
+    span.style.height = 'auto';
+    span.style.overflow = 'visible';
+  });
+}
+
+function restorePricingItemsAfterExport(){
+  document.querySelectorAll('table.pricing select').forEach(sel => {
+    sel.style.display = '';
+    toggleCustomItemInput(sel);
+  });
+  document.querySelectorAll('.print-item-text').forEach(span => {
+    span.style.height = '';
+    span.style.overflow = '';
+  });
+}
+
+function toggleCustomItemInput(select){
+  const customInput = select.nextElementSibling;
+  const isCustom = select.value === 'Other (custom)';
+  customInput.style.display = isCustom ? 'block' : 'none';
+  if(isCustom) { customInput.focus(); resizeTextarea(customInput); }
+  syncItemText(select);
+}
+function addRow(kind, item, description){
+  rowId++;
+  const tbodyId = kind === 'initial' ? 'pricingBodyInitial' : 'pricingBodyRecurring';
+  const tbody = document.getElementById(tbodyId);
+  const tr = document.createElement('tr');
+  tr.id = 'row-'+rowId;
+  tr.draggable = true;
+  const isKnownItem = pricingItems.includes(item);
+  const selectedOption = isKnownItem ? item : 'Other (custom)';
+  const customValue = isKnownItem ? '' : (item || '');
+  const customValueEscaped = customValue.replace(/"/g, '&quot;');
+  const descEscaped = (description || '').replace(/"/g, '&quot;');
+  tr.innerHTML = `
+    <td class="drag" draggable="true">&#8942;&#8942;</td>
+    <td>
+      <select onchange="recalc('${kind}'); toggleCustomItemInput(this);">${makeOptionsHtml(selectedOption)}</select><textarea class="custom-item-input" placeholder="Type item name" style="display:${selectedOption === 'Other (custom)' ? 'block' : 'none'};" oninput="resizeTextarea(this); syncItemText(this.previousElementSibling)">${customValueEscaped}</textarea><span class="print-item-text"></span>
+      <textarea class="addon-desc-input" placeholder="Optional short description">${descEscaped}</textarea>
+    </td>
+    <td class="num"><input type="text" inputmode="decimal" value="1" oninput="recalc('${kind}')"></td>
+    <td class="num"><input type="text" inputmode="decimal" value="0" oninput="recalc('${kind}')"></td>
+    <td class="linetotal">$0.00</td>
+    <td class="del"><button onclick="this.closest('tr').remove(); recalc('${kind}');">&times;</button></td>
+  `;
+  toggleCustomItemInput(tr.querySelector('select'));
+  tr.addEventListener('dragstart', (e)=>{
+    draggingRow = tr;
+    tr.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  tr.addEventListener('dragend', ()=>{
+    tr.classList.remove('dragging');
+    draggingRow = null;
+  });
+  tr.addEventListener('dragover', (e)=>{
+    e.preventDefault();
+    if(!draggingRow || draggingRow === tr) return;
+    const rect = tr.getBoundingClientRect();
+    const after = (e.clientY - rect.top) > rect.height / 2;
+    tbody.insertBefore(draggingRow, after ? tr.nextSibling : tr);
+  });
+  tbody.appendChild(tr);
+  enableAutoGrow(tr.querySelector('.addon-desc-input'));
+  recalc(kind);
+}
+
+function formatPhoneInput(input){
+  let digits = input.value.replace(/\D/g, '');
+  if (digits.length === 11 && digits.startsWith('1')) digits = digits.slice(1);
+  digits = digits.slice(0, 10);
+  let formatted = digits;
+  if (digits.length > 6) {
+    formatted = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+  } else if (digits.length > 3) {
+    formatted = `(${digits.slice(0,3)}) ${digits.slice(3)}`;
+  } else if (digits.length > 0) {
+    formatted = `(${digits}`;
+  }
+  input.value = formatted;
+}
+
+function formatMoney(amount){
+  return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function recalc(kind){
+  const tbodyId = kind === 'initial' ? 'pricingBodyInitial' : 'pricingBodyRecurring';
+  const subtotalId = kind === 'initial' ? 'initialSubtotal' : 'recurringSubtotal';
+  const totalId = kind === 'initial' ? 'initialTotal' : 'recurringTotal';
+  const discountRowId = kind === 'initial' ? 'initialDiscountSummaryRow' : 'recurringDiscountSummaryRow';
+  const discountAmountId = kind === 'initial' ? 'initialDiscountAmount' : 'recurringDiscountAmount';
+
+  const lineAmounts = [];
+  let subtotal = 0;
+  document.querySelectorAll('#'+tbodyId+' tr').forEach(tr=>{
+    const qty = parseFloat(tr.querySelectorAll('td.num input')[0].value) || 0;
+    const price = parseFloat(tr.querySelectorAll('td.num input')[1].value) || 0;
+    const lineTotal = qty * price;
+    tr.querySelector('.linetotal').textContent = formatMoney(lineTotal);
+    lineAmounts.push(lineTotal);
+    subtotal += lineTotal;
+  });
+
+  populateDiscountTargets(kind);
+
+  let totalDiscount = 0;
+  document.querySelectorAll('#discountRows'+(kind === 'initial' ? 'Initial' : 'Recurring')+' .discount-row').forEach(row=>{
+    const type = row.querySelector('.discount-type').value;
+    const value = parseFloat(row.querySelector('.discount-value').value) || 0;
+    const target = row.querySelector('.discount-target').value;
+    const base = target === 'subtotal' ? subtotal : (lineAmounts[parseInt(target, 10)] || 0);
+    const amount = type === 'percent' ? base * (value / 100) : value;
+    row.querySelector('.discount-amount').textContent = '-' + formatMoney(Math.max(0, amount));
+    const label = row.querySelector('.discount-label').value.trim() || 'Discount';
+    const targetLabel = target === 'subtotal' ? 'subtotal' : (row.querySelector('.discount-target').selectedOptions[0]?.textContent || 'item');
+    const suffix = type === 'percent' ? (value || 0) + '% off ' + targetLabel : 'off ' + targetLabel;
+    row.querySelector('.discount-print-text').textContent = label + ' (' + suffix + '): -' + formatMoney(Math.max(0, amount));
+    totalDiscount += Math.max(0, amount);
+  });
+
+  const total = Math.max(0, subtotal - totalDiscount);
+  document.getElementById(subtotalId).textContent = formatMoney(subtotal);
+  document.getElementById(totalId).textContent = formatMoney(total);
+  const summaryRow = document.getElementById(discountRowId);
+  if (totalDiscount > 0) {
+    summaryRow.style.display = 'flex';
+    document.getElementById(discountAmountId).textContent = '-' + formatMoney(totalDiscount);
+  } else {
+    summaryRow.style.display = 'none';
+  }
+}
+
+let discountRowId = 0;
+function addDiscountRow(kind, data){
+  discountRowId++;
+  const container = document.getElementById(kind === 'initial' ? 'discountRowsInitial' : 'discountRowsRecurring');
+  const row = document.createElement('div');
+  row.className = 'discount-row';
+  row.id = 'discount-' + kind + '-' + discountRowId;
+  const label = data && data.label != null ? data.label : 'Discount';
+  const type = data && data.type ? data.type : 'fixed';
+  const value = data && data.value != null ? data.value : 0;
+  row.innerHTML = `
+    <input type="text" class="discount-label" value="${label.replace(/"/g,'&quot;')}" placeholder="Label">
+    <select class="discount-type" onchange="recalc('${kind}')">
+      <option value="fixed"${type === 'fixed' ? ' selected' : ''}>$ off</option>
+      <option value="percent"${type === 'percent' ? ' selected' : ''}>% off</option>
+    </select>
+    <input type="text" inputmode="decimal" class="discount-value" value="${value}" oninput="recalc('${kind}')">
+    <select class="discount-target" onchange="recalc('${kind}')"></select>
+    <span class="discount-amount">-$0.00</span>
+    <span class="discount-print-text print-item-text"></span>
+    <button type="button" class="discount-del" onclick="this.closest('.discount-row').remove(); recalc('${kind}');">&times;</button>
+  `;
+  container.appendChild(row);
+  const targetSelect = row.querySelector('.discount-target');
+  populateDiscountTargets(kind);
+  if (data && data.target) targetSelect.value = data.target;
+  row.querySelector('.discount-label').addEventListener('input', () => recalc(kind));
+  recalc(kind);
+}
+
+function populateDiscountTargets(kind){
+  const tbodyId = kind === 'initial' ? 'pricingBodyInitial' : 'pricingBodyRecurring';
+  const containerId = kind === 'initial' ? 'discountRowsInitial' : 'discountRowsRecurring';
+  const items = [];
+  document.querySelectorAll('#'+tbodyId+' tr').forEach((tr, i) => {
+    const select = tr.querySelector('select');
+    const customInput = tr.querySelector('.custom-item-input');
+    const name = (select && select.value === 'Other (custom)')
+      ? (customInput.value.trim() || 'Other (custom)')
+      : (select ? select.value : ('Item ' + (i + 1)));
+    items.push({ index: i, name: name });
+  });
+  document.querySelectorAll('#'+containerId+' .discount-target').forEach(select => {
+    const prevValue = select.value;
+    select.innerHTML = '<option value="subtotal">Whole subtotal</option>' +
+      items.map(it => `<option value="${it.index}">${it.name}</option>`).join('');
+    if (prevValue && [...select.options].some(o => o.value === prevValue)) {
+      select.value = prevValue;
+    } else {
+      select.value = 'subtotal';
+    }
+  });
+}
+
+function collectDiscountRows(kind){
+  const containerId = kind === 'initial' ? 'discountRowsInitial' : 'discountRowsRecurring';
+  const rows = [];
+  document.querySelectorAll('#'+containerId+' .discount-row').forEach(row=>{
+    rows.push({
+      label: row.querySelector('.discount-label').value,
+      type: row.querySelector('.discount-type').value,
+      value: row.querySelector('.discount-value').value,
+      target: row.querySelector('.discount-target').value
+    });
+  });
+  return rows;
+}
+
+let addonRowId = 0;
+function syncAddonPriceText(input){
+  const span = input.nextElementSibling;
+  if (span && span.classList.contains('addon-price-print')) {
+    const raw = input.value.trim();
+    const num = Number(raw);
+    span.textContent = (raw !== '' && !isNaN(num)) ? formatMoney(num) : raw;
+  }
+}
+
+function onAddonItemChange(select){
+  toggleCustomItemInput(select);
+  const row = select.closest('tr');
+  const presetPrice = addonPresetPrices[select.value];
+  if (presetPrice != null) {
+    const priceInput = row.querySelectorAll('td.num input')[1];
+    if (priceInput) {
+      priceInput.value = presetPrice;
+      syncAddonPriceText(priceInput);
+    }
+  }
+  const presetDesc = addonPresetDescriptions[select.value];
+  if (presetDesc != null) {
+    const descField = row.querySelector('.addon-desc-input');
+    if (descField) {
+      descField.value = presetDesc;
+      resizeTextarea(descField);
+    }
+  }
+}
+
+function addAddonRow(item, qty, price, description){
+  addonRowId++;
+  const tbody = document.getElementById('addonTableBody');
+  const tr = document.createElement('tr');
+  tr.id = 'addon-row-' + addonRowId;
+  const isKnownItem = addonItems.includes(item);
+  const selectedOption = isKnownItem ? item : 'Other (custom)';
+  const customValue = isKnownItem ? '' : (item || '');
+  const customValueEscaped = customValue.replace(/"/g, '&quot;');
+  const descEscaped = (description || '').replace(/"/g, '&quot;');
+  const freqEscaped = (qty != null ? qty : 'As-Needed').toString().replace(/"/g, '&quot;');
+  tr.innerHTML = `
+    <td>
+      <select onchange="onAddonItemChange(this);">${makeOptionsHtml(selectedOption, addonItems)}</select><textarea class="custom-item-input" placeholder="Type item name" style="display:${selectedOption === 'Other (custom)' ? 'block' : 'none'};" oninput="resizeTextarea(this); syncItemText(this.previousElementSibling)">${customValueEscaped}</textarea><span class="print-item-text"></span>
+      <textarea class="addon-desc-input" placeholder="Optional short description">${descEscaped}</textarea>
+    </td>
+    <td class="num"><input type="text" value="${freqEscaped}"></td>
+    <td class="num"><input type="text" inputmode="decimal" class="addon-price-input" value="${price != null ? price : 0}" oninput="syncAddonPriceText(this)"><span class="addon-price-print print-item-text"></span></td>
+    <td class="del"><button type="button" onclick="this.closest('tr').remove();">&times;</button></td>
+  `;
+  tbody.appendChild(tr);
+  toggleCustomItemInput(tr.querySelector('select'));
+  syncAddonPriceText(tr.querySelector('.addon-price-input'));
+  enableAutoGrow(tr.querySelector('.addon-desc-input'));
+}
+
+function collectAddonRows(){
+  const rows = [];
+  document.querySelectorAll('#addonTableBody tr').forEach(tr=>{
+    const select = tr.querySelector('select');
+    const customInput = tr.querySelector('.custom-item-input');
+    const descInput = tr.querySelector('.addon-desc-input');
+    const numInputs = tr.querySelectorAll('td.num input');
+    const itemValue = (select.value === 'Other (custom)')
+      ? (customInput.value.trim() || 'Other (custom)')
+      : select.value;
+    rows.push({ item: itemValue, qty: numInputs[0].value, price: numInputs[1].value, description: descInput.value });
+  });
+  return rows;
+}
+
+function onAddonModeChange(){
+  const mode = document.getElementById('addonModeSelect').value;
+  document.getElementById('addonTextWrap').style.display = mode === 'text' ? 'block' : 'none';
+  document.getElementById('addonTableWrap').style.display = mode === 'table' ? 'block' : 'none';
+  if (mode === 'table' && document.getElementById('addonTableBody').children.length === 0) {
+    addAddonRow();
+  }
+}
+
+let termRowId = 0;
+function addTermRow(text){
+  termRowId++;
+  const list = document.getElementById('termsList');
+  const li = document.createElement('li');
+  li.id = 'term-' + termRowId;
+  li.innerHTML = `
+    <div class="term-row">
+      <textarea placeholder="e.g. Solar panel access requires 48 hours advance notice to property management.">${text ? text : ''}</textarea>
+      <button class="term-del" onclick="this.closest('li').remove();">&times;</button>
+    </div>
+  `;
+  list.appendChild(li);
+  enableAutoGrow(li.querySelector('textarea'));
+}
+
+function resizeTextarea(el){
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function enableAutoGrow(el){
+  el.addEventListener('input', () => resizeTextarea(el));
+  resizeTextarea(el);
+}
+
+function resizeAllTextareas(){
+  document.querySelectorAll('.field textarea, .term-row textarea, .addon-desc-input, .custom-item-input').forEach(resizeTextarea);
+}
+
+// Wire up auto-grow on every note/scope field already on the page
+document.querySelectorAll('.field textarea').forEach(enableAutoGrow);
+
+// Re-measure right before printing, since the print layout's width differs
+// from the on-screen width and can change how many lines each note wraps to
+window.addEventListener('beforeprint', resizeAllTextareas);
+
+/* ================= PDF export ================= */
+
+async function savePDFFile(){
+  const btn = document.getElementById('pdfBtn');
+  const originalLabel = btn.textContent;
+
+  const propName = (document.getElementById('propNameInput').value || '').trim();
+  const defaultName = 'Pest Pro Proposal' + (propName ? ' - ' + propName : '');
+  const chosenName = await showPrompt('Name this PDF:', defaultName);
+  if (chosenName === null) return;
+
+  const safeName = chosenName.replace(/[\\/:*?"<>|]/g, '').trim() || defaultName;
+  const filename = safeName.toLowerCase().endsWith('.pdf') ? safeName : safeName + '.pdf';
+
+  btn.textContent = 'Generating PDF…';
+  btn.disabled = true;
+
+  try {
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+    }
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    resizeAllTextareas();
+    const sheet = document.querySelector('.sheet');
+    const hasPhotos = photosArray.length > 0;
+
+    preparePricingItemsForExport();
+
+    const opt = {
+      margin: [0.4, 0.45, 0.4, 0.45],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        onclone: (clonedDoc) => {
+          clonedDoc.querySelectorAll(
+            '.toolbar, #sidebarOverlay, #proposalSidebar, #modalOverlay, .add-row-btn, td.del, td.drag, th.drag-header, .term-del, .photo-del, #photoUploadInput, #togglePhotosBtn, .onetime-toggle, .optional-toggle, .terms-select-row, .warranty-select-row, .addon-mode-row, #configBanner'
+          ).forEach(el => { el.style.display = 'none'; });
+
+          const photosSection = clonedDoc.getElementById('photosSection');
+          const photosContent = clonedDoc.getElementById('photosContent');
+          if (hasPhotos && photosContent) {
+            photosContent.style.display = 'block';
+          } else if (photosSection) {
+            photosSection.style.display = 'none';
+          }
+
+          clonedDoc.querySelectorAll('table.pricing .addon-price-input').forEach(el => { el.style.display = 'none'; });
+
+          clonedDoc.querySelectorAll('.discount-row select, .discount-row input.discount-label, .discount-row input.discount-value, .discount-row .discount-amount, .discount-row .discount-del')
+            .forEach(el => { el.style.display = 'none'; });
+
+          clonedDoc.querySelectorAll('.sheet input[type="text"]:not(.custom-item-input):not(.addon-price-input), .sheet textarea:not(.custom-item-input)').forEach(el => {
+            const cs = clonedDoc.defaultView.getComputedStyle(el);
+            const div = clonedDoc.createElement('div');
+            div.textContent = el.value || '';
+            div.style.display = 'block';
+            div.style.width = '100%';
+            div.style.boxSizing = 'border-box';
+            div.style.fontFamily = cs.fontFamily;
+            div.style.fontSize = cs.fontSize;
+            div.style.fontStyle = cs.fontStyle;
+            div.style.fontWeight = cs.fontWeight;
+            div.style.color = cs.color;
+            div.style.lineHeight = cs.lineHeight;
+            div.style.whiteSpace = 'pre-wrap';
+            div.style.wordWrap = 'break-word';
+            div.style.padding = cs.padding;
+            div.style.minHeight = cs.minHeight;
+            el.insertAdjacentElement('beforebegin', div);
+            el.style.display = 'none';
+          });
+
+          clonedDoc.querySelectorAll('.rich-text-field').forEach(el => {
+            if (!el.textContent.trim()) el.removeAttribute('data-placeholder');
+          });
+        }
+      },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      pagebreak: {
+        mode: ['css'],
+        avoid: ['tr', '.photo-cell', '.sign-block', '.totals', '#pricingInitialSection', '#recurringSection'],
+        before: ['#inspectionNotesSection', '#termsSection', '#acceptanceSection']
+      }
+    };
+
+    await html2pdf().set(opt).from(sheet).save();
+    btn.textContent = 'Saved ✓';
+  } catch (err) {
+    console.error('PDF export failed', err);
+    btn.textContent = 'Export failed';
+  } finally {
+    restorePricingItemsAfterExport();
+    setTimeout(() => { btn.textContent = originalLabel; btn.disabled = false; }, 1800);
+  }
+}
+
+/* ================= Inspection Photos ================= */
+
+let photosArray = [];
+let photosWasCollapsedBeforePrint = false;
+
+function togglePhotosSection(force){
+  const content = document.getElementById('photosContent');
+  const btn = document.getElementById('togglePhotosBtn');
+  const shouldOpen = typeof force === 'boolean' ? force : content.style.display === 'none';
+  content.style.display = shouldOpen ? 'block' : 'none';
+  btn.textContent = shouldOpen ? '－ Hide Inspection Photos' : '+ Add Inspection Photos';
+}
+
+function compressImage(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 1600;
+        let width = img.width, height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.onerror = () => reject(new Error('Could not read image'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Could not read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handlePhotoUpload(event){
+  const files = Array.from(event.target.files || []);
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) continue;
+    try {
+      const dataUrl = await compressImage(file);
+      photosArray.push(dataUrl);
+    } catch (err) {
+      console.error('Could not process photo', err);
+    }
+  }
+  event.target.value = '';
+  renderPhotoGrid();
+}
+
+function removePhoto(index){
+  photosArray.splice(index, 1);
+  renderPhotoGrid();
+}
+
+function renderPhotoGrid(){
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = '';
+  photosArray.forEach((src, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'photo-cell';
+    cell.innerHTML = `
+      <img src="${src}" alt="Inspection photo ${i + 1}">
+      <button type="button" class="photo-del" onclick="removePhoto(${i})">&times;</button>
+    `;
+    grid.appendChild(cell);
+  });
+}
+
+window.addEventListener('beforeprint', () => {
+  photosWasCollapsedBeforePrint = document.getElementById('photosContent').style.display === 'none';
+  if (photosArray.length > 0 && photosWasCollapsedBeforePrint) {
+    togglePhotosSection(true);
+  }
+});
+window.addEventListener('afterprint', () => {
+  if (photosWasCollapsedBeforePrint) togglePhotosSection(false);
+});
+
+let descPrintSwaps = [];
+window.addEventListener('beforeprint', () => {
+  descPrintSwaps = [];
+  document.querySelectorAll('.addon-desc-input').forEach(ta => {
+    const cs = getComputedStyle(ta);
+    const div = document.createElement('div');
+    div.textContent = ta.value || '';
+    div.className = 'addon-desc-print-swap';
+    div.style.fontFamily = cs.fontFamily;
+    div.style.fontSize = cs.fontSize;
+    div.style.fontStyle = cs.fontStyle;
+    div.style.fontWeight = cs.fontWeight;
+    div.style.color = cs.color;
+    div.style.lineHeight = cs.lineHeight;
+    div.style.whiteSpace = 'pre-wrap';
+    div.style.wordWrap = 'break-word';
+    div.style.padding = cs.padding;
+    div.style.marginTop = cs.marginTop;
+    ta.insertAdjacentElement('beforebegin', div);
+    ta.style.display = 'none';
+    descPrintSwaps.push({ ta, div });
+  });
+});
+window.addEventListener('afterprint', () => {
+  descPrintSwaps.forEach(({ ta, div }) => {
+    ta.style.display = '';
+    div.remove();
+  });
+  descPrintSwaps = [];
+});
+
+// seed with one starter row in each table
+addRow('initial', "Initial Inspection");
+addRow('recurring', "Recurring Service Visit");
+
+/* ================= Saved Proposals (shared storage) ================= */
+
+const INDEX_KEY = 'proposal-index';
+let currentProposalId = null;
+
+(async function loadOwnerName(){
+  try {
+    const result = await dbStorage.get('currentUserName', false);
+    if (result && result.value) {
+      document.getElementById('ownerNameInput').value = result.value;
+    }
+  } catch (err) { /* not set yet */ }
+})();
+document.getElementById('ownerNameInput').addEventListener('change', async () => {
+  const name = document.getElementById('ownerNameInput').value.trim();
+  try { await dbStorage.set('currentUserName', name, false); } catch (err) {}
+});
+
+function daysBetween(a, b){
+  return Math.round((b - a) / (1000 * 60 * 60 * 24));
+}
+
+function expirationInfo(sentAtISO){
+  if (!sentAtISO) return null;
+  const sentDate = new Date(sentAtISO);
+  const expiresDate = new Date(sentDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const today = new Date();
+  const daysLeft = daysBetween(today, expiresDate);
+  if (daysLeft < 0) {
+    return { expired: true, label: 'Expired ' + Math.abs(daysLeft) + 'd ago' };
+  } else if (daysLeft === 0) {
+    return { expired: false, label: 'Expires today' };
+  } else {
+    return { expired: false, label: 'Expires in ' + daysLeft + 'd' };
+  }
+}
+
+function collectRows(tbodyId){
+  const rows = [];
+  document.querySelectorAll('#'+tbodyId+' tr').forEach(tr=>{
+    const select = tr.querySelector('select');
+    const customInput = tr.querySelector('.custom-item-input');
+    const descInput = tr.querySelector('.addon-desc-input');
+    const inputs = tr.querySelectorAll('td.num input');
+    const itemValue = (select.value === 'Other (custom)')
+      ? (customInput.value.trim() || 'Other (custom)')
+      : select.value;
+    rows.push({ item: itemValue, qty: inputs[0].value, price: inputs[1].value, description: descInput ? descInput.value : '' });
+  });
+  return rows;
+}
+
+function restoreRows(kind, rows){
+  const tbodyId = kind === 'initial' ? 'pricingBodyInitial' : 'pricingBodyRecurring';
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = '';
+  (rows || []).forEach(r=>{
+    addRow(kind, r.item, r.description);
+    const tr = tbody.lastElementChild;
+    const inputs = tr.querySelectorAll('td.num input');
+    inputs[0].value = r.qty;
+    inputs[1].value = r.price;
+  });
+  recalc(kind);
+}
+
+function collectFormState(){
+  const state = {};
+  document.querySelectorAll('[data-save]').forEach(el=>{
+    const key = el.dataset.save;
+    if (el.tagName === 'SELECT' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+      state[key] = el.value;
+    } else if (el.isContentEditable) {
+      state[key] = el.classList.contains('rich-text-field') ? sanitizeInlineHtml(el.innerHTML) : el.textContent;
+    }
+  });
+  state.brand = document.getElementById('brandSelect').value;
+  state.clientType = document.getElementById('clientType').value;
+  state.oneTimeJob = document.getElementById('oneTimeJobCheckbox').checked;
+  state.includeMgmtCo = document.getElementById('includeMgmtCo').checked;
+  state.includeInspectionNotes = document.getElementById('includeInspectionNotes').checked;
+  state.includeServiceMethodology = document.getElementById('includeServiceMethodology').checked;
+  state.includeWhatsIncluded = document.getElementById('includeWhatsIncluded').checked;
+  state.includeWhatsNotIncluded = document.getElementById('includeWhatsNotIncluded').checked;
+  state.includeWarranty = document.getElementById('includeWarranty').checked;
+  state.jobType = (document.getElementById('jobType').value === 'Other (custom)')
+    ? (document.getElementById('jobTypeCustomInput').value.trim() || 'Other (custom)')
+    : document.getElementById('jobType').value;
+  state.pricingInitial = collectRows('pricingBodyInitial');
+  state.pricingRecurring = collectRows('pricingBodyRecurring');
+  state.additionalTerms = Array.from(document.querySelectorAll('#termsList .term-row textarea')).map(t => t.value);
+  state.termsTemplateId = document.getElementById('termsTemplateSelect').value;
+  state.termsClauses = Array.from(document.querySelectorAll('#termsList li.template-clause')).map(li => sanitizeInlineHtml(li.innerHTML));
+  state.warrantyType = document.getElementById('warrantyTypeSelect').value;
+  const warrantyLegalLi = document.getElementById('warrantyLegalLi');
+  state.warrantyLegalText = warrantyLegalLi ? sanitizeInlineHtml(warrantyLegalLi.innerHTML) : '';
+  state.photos = photosArray.slice();
+  state.addonMode = document.getElementById('addonModeSelect').value;
+  state.addonRows = collectAddonRows();
+  state.discountsInitial = collectDiscountRows('initial');
+  state.discountsRecurring = collectDiscountRows('recurring');
+  return state;
+}
+
+function applyFormState(state){
+  if(!state) return;
+  isRestoringState = true;
+  document.querySelectorAll('[data-save]').forEach(el=>{
+    const key = el.dataset.save;
+    if(!(key in state)) return;
+    if (el.tagName === 'SELECT' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+      el.value = state[key];
+    } else if (el.isContentEditable) {
+      if (el.classList.contains('rich-text-field')) {
+        el.innerHTML = sanitizeInlineHtml(state[key]);
+      } else {
+        el.textContent = state[key];
+      }
+    }
+  });
+
+  const brandSelect = document.getElementById('brandSelect');
+  if (state.brand) {
+    brandSelect.value = state.brand;
+    brandSelect.dispatchEvent(new Event('change'));
+  }
+  const clientType = document.getElementById('clientType');
+  document.getElementById('includeMgmtCo').checked = state.includeMgmtCo !== false;
+  if (state.clientType) {
+    clientType.value = state.clientType;
+    clientType.dispatchEvent(new Event('change'));
+  } else {
+    updateMgmtCoVisibility();
+  }
+  document.getElementById('oneTimeJobCheckbox').checked = !!state.oneTimeJob;
+  toggleRecurringSection();
+
+  const setOptional = (checkboxId, contentId, val) => {
+    const cb = document.getElementById(checkboxId);
+    cb.checked = val;
+    document.getElementById(contentId).style.display = val ? '' : 'none';
+  };
+  setOptional('includeInspectionNotes', 'inspectionNotesContent', state.includeInspectionNotes !== false);
+  setOptional('includeServiceMethodology', 'serviceMethodologyContent', state.includeServiceMethodology !== false);
+  setOptional('includeWhatsIncluded', 'whatsIncludedContent', state.includeWhatsIncluded !== false);
+  setOptional('includeWhatsNotIncluded', 'whatsNotIncludedContent', state.includeWhatsNotIncluded !== false);
+  setOptional('includeWarranty', 'warrantyContent', state.includeWarranty !== false);
+  const jobSelect2 = document.getElementById('jobType');
+  if (state.jobType) {
+    if (jobTypes.includes(state.jobType)) {
+      jobSelect2.value = state.jobType;
+    } else {
+      jobSelect2.value = 'Other (custom)';
+      document.getElementById('jobTypeCustomInput').value = state.jobType;
+    }
+    jobSelect2.dispatchEvent(new Event('change'));
+  }
+
+  restoreRows('initial', state.pricingInitial);
+  restoreRows('recurring', state.pricingRecurring);
+
+  document.getElementById('discountRowsInitial').innerHTML = '';
+  document.getElementById('discountRowsRecurring').innerHTML = '';
+  (state.discountsInitial || []).forEach(d => addDiscountRow('initial', d));
+  (state.discountsRecurring || []).forEach(d => addDiscountRow('recurring', d));
+
+  document.querySelectorAll('#termsList .term-row').forEach(row => row.closest('li').remove());
+  (state.additionalTerms || []).forEach(text => addTermRow(text));
+
+  if (state.termsTemplateId) {
+    renderTermsTemplate(state.termsTemplateId);
+  } else {
+    isRestoringState = false;
+    autoSelectTermsTemplate();
+  }
+  if (state.termsClauses && state.termsClauses.length) {
+    const clauseEls = document.querySelectorAll('#termsList li.template-clause');
+    state.termsClauses.forEach((text, i) => { if (clauseEls[i]) clauseEls[i].innerHTML = sanitizeInlineHtml(text); });
+  }
+  document.getElementById('warrantyTypeSelect').value = state.warrantyType || '';
+  document.getElementById('customWarrantyNameField').style.display = (state.warrantyType === 'custom') ? 'block' : 'none';
+  setWarrantyLegalClause(state.warrantyLegalText || null);
+  isRestoringState = false;
+
+  photosArray = Array.isArray(state.photos) ? state.photos.slice() : [];
+  renderPhotoGrid();
+  togglePhotosSection(photosArray.length > 0);
+
+  document.getElementById('addonModeSelect').value = state.addonMode || 'text';
+  document.getElementById('addonTableBody').innerHTML = '';
+  (state.addonRows || []).forEach(r => addAddonRow(r.item, r.qty, r.price, r.description));
+  document.getElementById('addonTextWrap').style.display = (state.addonMode === 'table') ? 'none' : 'block';
+  document.getElementById('addonTableWrap').style.display = (state.addonMode === 'table') ? 'block' : 'none';
+
+  resizeAllTextareas();
+}
+
+function moneyLabel(kind){
+  const el = document.getElementById(kind === 'initial' ? 'initialTotal' : 'recurringTotal');
+  return el ? el.textContent : '$0.00';
+}
+
+async function getIndex(){
+  try {
+    const result = await dbStorage.get(INDEX_KEY, true);
+    if (result && result.value) return JSON.parse(result.value);
+    return [];
+  } catch (err) {
+    return [];
+  }
+}
+
+async function setIndex(list){
+  try {
+    await dbStorage.set(INDEX_KEY, JSON.stringify(list), true);
+  } catch (err) {
+    console.error('Could not update saved-proposal index', err);
+  }
+}
+
+function fmtDate(iso){
+  const d = new Date(iso);
+  return (d.getMonth()+1).toString().padStart(2,'0') + '/' +
+         d.getDate().toString().padStart(2,'0') + '/' +
+         d.getFullYear();
+}
+
+async function saveProposal(){
+  const btn = document.getElementById('saveProposalBtn');
+  const originalLabel = btn.textContent;
+  btn.textContent = 'Saving…';
+  btn.disabled = true;
+
+  try {
+    const state = collectFormState();
+    const isUpdate = !!currentProposalId;
+    const id = currentProposalId || ('p' + Date.now() + '-' + Math.random().toString(36).slice(2,8));
+    const savedAt = new Date().toISOString();
+
+    await dbStorage.set('proposal-data:' + id, JSON.stringify(state), true);
+
+    const index = await getIndex();
+
+    if (isUpdate) {
+      const existing = index.find(item => item.id === id);
+      const updatedSummary = Object.assign({}, existing, {
+        propName: state.propName || '(untitled)',
+        brand: state.brand === 'bcu' ? 'BCU' : 'Pest Pro',
+        jobType: state.jobType || '',
+        savedAt: savedAt,
+        initialTotal: moneyLabel('initial'),
+        recurringTotal: moneyLabel('recurring')
+      });
+      const updatedIndex = index.filter(item => item.id !== id);
+      updatedIndex.unshift(updatedSummary);
+      await setIndex(updatedIndex);
+    } else {
+      const ownerName = document.getElementById('ownerNameInput').value.trim() || 'Unknown';
+      const summary = {
+        id: id,
+        propName: state.propName || '(untitled)',
+        brand: state.brand === 'bcu' ? 'BCU' : 'Pest Pro',
+        jobType: state.jobType || '',
+        savedAt: savedAt,
+        initialTotal: moneyLabel('initial'),
+        recurringTotal: moneyLabel('recurring'),
+        status: 'draft',
+        sentAt: null,
+        owner: ownerName
+      };
+      index.unshift(summary);
+      await setIndex(index);
+      currentProposalId = id;
+    }
+
+    await renderSidebar();
+    toggleSidebar(true);
+    btn.textContent = 'Saved ✓';
+  } catch (err) {
+    console.error('Save failed', err);
+    btn.textContent = 'Save failed';
+    if (!dbStorage._configured()) {
+      await showAlert('Shared storage isn\'t configured yet. See the red banner at the top of the page for setup instructions.');
+    }
+  } finally {
+    setTimeout(()=>{ btn.textContent = originalLabel; btn.disabled = false; }, 1800);
+  }
+}
+
+async function loadProposal(id){
+  try {
+    const result = await dbStorage.get('proposal-data:' + id, true);
+    if (!result || !result.value) { showAlert('Could not find that saved proposal.'); return; }
+    const state = JSON.parse(result.value);
+    applyFormState(state);
+    currentProposalId = id;
+    toggleSidebar(false);
+    window.scrollTo({top:0, behavior:'smooth'});
+  } catch (err) {
+    console.error('Load failed', err);
+    showAlert('Could not load that saved proposal.');
+  }
+}
+
+async function deleteProposal(id, evt){
+  if (evt) evt.stopPropagation();
+  const ok = await showConfirm('Delete this saved proposal? This cannot be undone.');
+  if (!ok) return;
+  try {
+    const index = await getIndex();
+    const updated = index.filter(item => item.id !== id);
+    await setIndex(updated);
+    try { await dbStorage.delete('proposal-data:' + id, true); } catch(e){}
+    if (currentProposalId === id) currentProposalId = null;
+    await renderSidebar();
+  } catch (err) {
+    console.error('Delete failed', err);
+    showAlert('Could not delete that saved proposal.');
+  }
+}
+
+async function setProposalStatus(id, status, evt){
+  if (evt) evt.stopPropagation();
+  try {
+    const index = await getIndex();
+    const item = index.find(i => i.id === id);
+    if (!item) return;
+    item.status = status;
+    if (status === 'sent') {
+      item.sentAt = new Date().toISOString();
+    }
+    await setIndex(index);
+    await renderSidebar();
+  } catch (err) {
+    console.error('Status update failed', err);
+    showAlert('Could not update that proposal\'s status.');
+  }
+}
+
+async function startNewProposal(){
+  const ok = await showConfirm('Clear the form to start a fresh proposal? Anything unsaved will be lost.');
+  if (!ok) return;
+  currentProposalId = null;
+  document.querySelectorAll('[data-save]').forEach(el=>{
+    if (el.tagName === 'SELECT') return;
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = '';
+    else if (el.isContentEditable) el.textContent = '';
+  });
+  document.getElementById('clientType').value = 'commercial';
+  document.getElementById('includeMgmtCo').checked = true;
+  applyClientType();
+  document.getElementById('oneTimeJobCheckbox').checked = false;
+  toggleRecurringSection();
+  [
+    ['includeInspectionNotes', 'inspectionNotesContent'],
+    ['includeServiceMethodology', 'serviceMethodologyContent'],
+    ['includeWhatsIncluded', 'whatsIncludedContent'],
+    ['includeWhatsNotIncluded', 'whatsNotIncludedContent'],
+    ['includeWarranty', 'warrantyContent']
+  ].forEach(([checkboxId, contentId]) => {
+    document.getElementById(checkboxId).checked = true;
+    document.getElementById(contentId).style.display = '';
+  });
+  document.getElementById('warrantyTypeSelect').value = '';
+  document.getElementById('customWarrantyNameField').style.display = 'none';
+  setWarrantyLegalClause(null);
+  document.getElementById('jobType').selectedIndex = 0;
+  document.getElementById('jobTypeCustomInput').value = '';
+  updateJobTag();
+  document.getElementById('pricingBodyInitial').innerHTML = '';
+  document.getElementById('pricingBodyRecurring').innerHTML = '';
+  addRow('initial', "Initial Inspection");
+  addRow('recurring', "Recurring Service Visit");
+  document.getElementById('discountRowsInitial').innerHTML = '';
+  document.getElementById('discountRowsRecurring').innerHTML = '';
+  recalc('initial');
+  recalc('recurring');
+  document.querySelectorAll('#termsList .term-row').forEach(row => row.closest('li').remove());
+  photosArray = [];
+  renderPhotoGrid();
+  togglePhotosSection(false);
+  document.getElementById('addonModeSelect').value = 'text';
+  document.getElementById('addonTableBody').innerHTML = '';
+  document.getElementById('addonTextWrap').style.display = 'block';
+  document.getElementById('addonTableWrap').style.display = 'none';
+  resizeAllTextareas();
+  toggleSidebar(false);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function showConfirm(message){
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('modalOverlay');
+    document.getElementById('modalMessage').textContent = message;
+    document.getElementById('modalInput').style.display = 'none';
+    const okBtn = document.getElementById('modalOkBtn');
+    const cancelBtn = document.getElementById('modalCancelBtn');
+    cancelBtn.style.display = 'inline-block';
+    okBtn.textContent = 'Confirm';
+    overlay.classList.add('open');
+    const cleanup = (result) => {
+      overlay.classList.remove('open');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    };
+    const onOk = () => cleanup(true);
+    const onCancel = () => cleanup(false);
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+  });
+}
+
+function showAlert(message){
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('modalOverlay');
+    document.getElementById('modalMessage').textContent = message;
+    document.getElementById('modalInput').style.display = 'none';
+    const okBtn = document.getElementById('modalOkBtn');
+    const cancelBtn = document.getElementById('modalCancelBtn');
+    cancelBtn.style.display = 'none';
+    okBtn.textContent = 'OK';
+    overlay.classList.add('open');
+    const cleanup = () => {
+      overlay.classList.remove('open');
+      okBtn.removeEventListener('click', onOk);
+      resolve();
+    };
+    const onOk = () => cleanup();
+    okBtn.addEventListener('click', onOk);
+  });
+}
+
+function showPrompt(message, defaultValue){
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('modalOverlay');
+    document.getElementById('modalMessage').textContent = message;
+    const input = document.getElementById('modalInput');
+    input.style.display = 'block';
+    input.value = defaultValue || '';
+    const okBtn = document.getElementById('modalOkBtn');
+    const cancelBtn = document.getElementById('modalCancelBtn');
+    cancelBtn.style.display = 'inline-block';
+    okBtn.textContent = 'Save';
+    overlay.classList.add('open');
+    setTimeout(() => { input.focus(); input.select(); }, 50);
+    const cleanup = (result) => {
+      overlay.classList.remove('open');
+      input.style.display = 'none';
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      input.removeEventListener('keydown', onKeydown);
+      resolve(result);
+    };
+    const onOk = () => cleanup(input.value.trim() || defaultValue || '');
+    const onCancel = () => cleanup(null);
+    const onKeydown = (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); onOk(); }
+      else if (e.key === 'Escape') { onCancel(); }
+    };
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    input.addEventListener('keydown', onKeydown);
+  });
+}
+
+async function renderSidebar(){
+  const listEl = document.getElementById('sidebarList');
+  const badge = document.getElementById('savedCountBadge');
+  const index = await getIndex();
+
+  badge.textContent = index.length ? index.length : '';
+
+  if (!index.length) {
+    listEl.innerHTML = '<div class="sidebar-empty">No proposals saved yet.<br>Fill this one out, then click<br>"Save This Proposal" above.</div>';
+    return;
+  }
+
+  listEl.innerHTML = '';
+  index.forEach(item=>{
+    const status = item.status || 'draft';
+    const owner = item.owner || 'Unknown';
+    const expiration = status === 'sent' ? expirationInfo(item.sentAt) : null;
+    const effectiveStatus = (status === 'sent' && expiration && expiration.expired) ? 'expired' : status;
+
+    const statusLabels = {
+      draft: 'Draft',
+      sent: expiration ? expiration.label : 'Sent',
+      expired: expiration ? expiration.label : 'Expired',
+      accepted: 'Accepted',
+      rejected: 'Rejected'
+    };
+
+    let actionsHtml = '';
+    if (status === 'draft') {
+      actionsHtml = '<div class="card-status-actions"><button class="sent-btn">Mark as Sent</button></div>';
+    } else if (status === 'sent') {
+      actionsHtml = '<div class="card-status-actions"><button class="accept-btn">Accepted</button><button class="reject-btn">Rejected</button></div>';
+    }
+
+    const card = document.createElement('div');
+    card.className = 'sidebar-card';
+    card.innerHTML = `
+      <span class="brand-pill">${item.brand}</span>
+      <span class="status-badge status-${effectiveStatus}">${statusLabels[effectiveStatus] || effectiveStatus}</span>
+      <div class="card-name">${item.propName}</div>
+      <div class="card-meta">${item.jobType || 'No job type set'}<br>Saved ${fmtDate(item.savedAt)} &middot;
+        Initial <span class="card-total">${item.initialTotal}</span> &middot;
+        Recurring <span class="card-total">${item.recurringTotal}</span>
+      </div>
+      <div class="card-owner">Owner: ${owner}</div>
+      ${actionsHtml}
+      <div class="card-actions">
+        <button class="load-btn">Load</button>
+        <button class="delete-btn">Delete</button>
+      </div>
+    `;
+    card.querySelector('.load-btn').addEventListener('click', ()=>loadProposal(item.id));
+    card.querySelector('.delete-btn').addEventListener('click', (e)=>deleteProposal(item.id, e));
+    const sentBtn = card.querySelector('.sent-btn');
+    if (sentBtn) sentBtn.addEventListener('click', (e)=>setProposalStatus(item.id, 'sent', e));
+    const acceptBtn = card.querySelector('.accept-btn');
+    if (acceptBtn) acceptBtn.addEventListener('click', (e)=>setProposalStatus(item.id, 'accepted', e));
+    const rejectBtn = card.querySelector('.reject-btn');
+    if (rejectBtn) rejectBtn.addEventListener('click', (e)=>setProposalStatus(item.id, 'rejected', e));
+    listEl.appendChild(card);
+  });
+}
+
+function toggleSidebar(force){
+  const sidebar = document.getElementById('proposalSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const shouldOpen = typeof force === 'boolean' ? force : !sidebar.classList.contains('open');
+  sidebar.classList.toggle('open', shouldOpen);
+  overlay.classList.toggle('open', shouldOpen);
+}
+
+if (!dbStorage._configured()) dbStorage._warnUnconfigured();
+renderSidebar();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,57 @@
+# Pest Pro / Bird Control Utah Proposal Builder
+
+A single-page proposal builder for both Pest Pro and Bird Control Utah. Fill
+out client info, pricing, terms, and a guarantee, then export a branded PDF.
+Saved proposals are shared with your whole team via a small database, so
+anyone on the team can save, load, and track proposal status (draft / sent /
+accepted / rejected).
+
+## How this is hosted
+
+- **The site itself** (`index.html`) is hosted for free on **GitHub Pages**,
+  straight from this repo. Push to `main` and it goes live automatically —
+  no build step, no server to manage.
+- **Saved Proposals data** is stored in a free **Supabase** project (a
+  hosted Postgres database with a built-in REST API). The page talks to it
+  directly from the browser using a public "anon" key — see
+  `supabase-setup.sql` for the one-time setup.
+
+## One-time setup (only needs to happen once)
+
+1. Create a free project at [supabase.com](https://supabase.com).
+2. In your new project, go to **SQL Editor** → **New query**, paste the
+   contents of `supabase-setup.sql`, and click **Run**.
+3. Go to **Project Settings → API** and copy the **Project URL** and the
+   **anon public** key.
+4. Open `index.html` and near the top of the `<script>` tag, replace:
+   ```js
+   const SUPABASE_URL = 'REPLACE_WITH_SUPABASE_PROJECT_URL';
+   const SUPABASE_ANON_KEY = 'REPLACE_WITH_SUPABASE_ANON_KEY';
+   ```
+   with your actual values.
+5. Commit and push — the live site now has working Saved Proposals.
+
+Until step 4 is done, the page shows a red banner at the top and the
+Saved Proposals sidebar will show an error when you try to save/load. The
+proposal builder itself (pricing, terms, PDF export) works fine either way.
+
+## Day-to-day workflow
+
+You don't need to touch any of this yourself. Just tell Claude what you
+want changed (wording, pricing defaults, a new job type, a design tweak,
+anything), and Claude edits `index.html`, commits, and pushes. GitHub
+Pages rebuilds automatically within about a minute, at the same URL —
+no new link, ever.
+
+## Assets
+
+Logo and badge images live in `assets/`. If `assets/logo-bcu.png` (the
+Bird Control Utah logo) is missing, the Bird Control Utah brand toggle
+falls back to text-only branding until that file is added.
+
+## Security note
+
+There's no login system on this site or on the Supabase table — it's
+built around the same "anyone with the link" trust model as the original
+template. Don't store anything more sensitive than proposal drafts in
+Saved Proposals.
