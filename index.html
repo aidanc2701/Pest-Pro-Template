@@ -1683,6 +1683,13 @@ async function savePDFFile(){
             '.toolbar, #sidebarOverlay, #proposalSidebar, #modalOverlay, .add-row-btn, td.del, td.drag, th.drag-header, .term-del, .photo-del, #photoUploadInput, #togglePhotosBtn, .onetime-toggle, .optional-toggle, .terms-select-row, .warranty-select-row, .addon-mode-row, #configBanner'
           ).forEach(el => { el.style.display = 'none'; });
 
+          // Trim the sheet's screen-only bottom padding for export. Left in
+          // place, this trailing whitespace is just small enough to tip
+          // html2pdf's page-count rounding into an extra, fully blank page
+          // at the end of every PDF.
+          const clonedSheet = clonedDoc.querySelector('.sheet');
+          if (clonedSheet) clonedSheet.style.paddingBottom = '4px';
+
           const photosSection = clonedDoc.getElementById('photosSection');
           const photosContent = clonedDoc.getElementById('photosContent');
           if (hasPhotos && photosContent) {
@@ -1725,8 +1732,7 @@ async function savePDFFile(){
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
       pagebreak: {
         mode: ['css'],
-        avoid: ['tr', '.photo-cell', '.sign-block', '.totals', '#pricingInitialSection', '#recurringSection', '.terms li'],
-        before: ['#inspectionNotesSection', '#termsSection', '#acceptanceSection']
+        avoid: ['tr', '.photo-cell', '.sign-block', '.totals', '#pricingInitialSection', '#recurringSection', '.terms li']
       }
     };
 
