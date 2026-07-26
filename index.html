@@ -258,21 +258,7 @@
   .totals .label{color:var(--secondary); white-space:nowrap;}
 
   .terms{font-size:13px; line-height:1.75; color:var(--ink); font-family:var(--serif);}
-  .terms ol{
-    padding:0; margin:0; list-style:none; counter-reset:term-counter;
-    column-count:2; column-gap:36px; column-rule:1px solid var(--line);
-  }
-  /* 2-column is screen-only. In theory a real browser's print pagination
-     should restart columns cleanly on each page; in practice Safari's print
-     engine does NOT reliably honor break-inside:avoid on list items once
-     they're inside a multi-column box, so a clause can still get sliced
-     mid-sentence across a page boundary. Rather than fight that, both real
-     output paths (native File > Print and the custom PDF button) render
-     single-column, where break-inside:avoid is fully reliable. */
-  @media print{
-    .terms ol{column-count:1 !important; column-rule:none !important;}
-  }
-  body.exporting-pdf .terms ol{column-count:1 !important; column-rule:none !important;}
+  .terms ol{padding:0; margin:0; list-style:none; counter-reset:term-counter;}
   .terms li{margin-bottom:8px; position:relative; padding-left:22px; break-inside:avoid; -webkit-column-break-inside:avoid;}
   .terms li::before{
     counter-increment:term-counter;
@@ -1669,12 +1655,6 @@ async function savePDFFile(){
   const scrollY = window.scrollY;
   window.scrollTo(0, 0);
 
-  // Flip the Terms & Conditions list to single-column for this export path.
-  // (See the CSS rule for body.exporting-pdf .terms ol for why.) This has to
-  // happen on the real document before html2canvas clones it -- mutating the
-  // clone from inside onclone doesn't reliably stick for CSS column-count.
-  document.body.classList.add('exporting-pdf');
-
   try {
     if (document.fonts && document.fonts.ready) {
       await document.fonts.ready;
@@ -1762,7 +1742,6 @@ async function savePDFFile(){
     console.error('PDF export failed', err);
     btn.textContent = 'Export failed';
   } finally {
-    document.body.classList.remove('exporting-pdf');
     restorePricingItemsAfterExport();
     window.scrollTo(scrollX, scrollY);
     setTimeout(() => { btn.textContent = originalLabel; btn.disabled = false; }, 1800);
