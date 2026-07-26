@@ -262,13 +262,16 @@
     padding:0; margin:0; list-style:none; counter-reset:term-counter;
     column-count:2; column-gap:36px; column-rule:1px solid var(--line);
   }
-  /* The custom "Print / Save PDF" button captures one continuous image and
-     slices it into pages after the fact, with no concept of a page boundary.
-     A 2-column layout only reads correctly when something paginates it
-     page-by-page (real browser printing does this natively) -- otherwise the
-     two columns get sliced independently and a page can show, say, clause 3
-     on the left and clause 9 on the right. Force single-column for that
-     export path only; native File > Print keeps the real 2-column layout. */
+  /* 2-column is screen-only. In theory a real browser's print pagination
+     should restart columns cleanly on each page; in practice Safari's print
+     engine does NOT reliably honor break-inside:avoid on list items once
+     they're inside a multi-column box, so a clause can still get sliced
+     mid-sentence across a page boundary. Rather than fight that, both real
+     output paths (native File > Print and the custom PDF button) render
+     single-column, where break-inside:avoid is fully reliable. */
+  @media print{
+    .terms ol{column-count:1 !important; column-rule:none !important;}
+  }
   body.exporting-pdf .terms ol{column-count:1 !important; column-rule:none !important;}
   .terms li{margin-bottom:8px; position:relative; padding-left:22px; break-inside:avoid; -webkit-column-break-inside:avoid;}
   .terms li::before{
