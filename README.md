@@ -8,9 +8,12 @@ accepted / rejected).
 
 ## How this is hosted
 
-- **The site itself** (`index.html`) is hosted for free on **GitHub Pages**,
-  straight from this repo. Push to `main` and it goes live automatically —
-  no build step, no server to manage.
+- **The site itself** (`index.html`) is hosted for free on **Cloudflare
+  Pages**, straight from this repo, live at
+  [pest-pro-template.pages.dev](https://pest-pro-template.pages.dev). Push
+  to `main` and it goes live automatically — no build step, no server to
+  manage. (It used to be on GitHub Pages at a URL with a personal GitHub
+  username in it; that's now disabled in favor of this one.)
 - **Saved Proposals data** is stored in a free **Supabase** project (a
   hosted Postgres database with a built-in REST API). The page talks to it
   directly from the browser using a public "anon" key — see
@@ -39,7 +42,7 @@ proposal builder itself (pricing, terms, PDF export) works fine either way.
 
 You don't need to touch any of this yourself. Just tell Claude what you
 want changed (wording, pricing defaults, a new job type, a design tweak,
-anything), and Claude edits `index.html`, commits, and pushes. GitHub
+anything), and Claude edits `index.html`, commits, and pushes. Cloudflare
 Pages rebuilds automatically within about a minute, at the same URL —
 no new link, ever.
 
