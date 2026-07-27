@@ -525,8 +525,66 @@
     border-radius:10px; padding:0 6px; margin-left:2px; font-size:11px;
   }
   @media print{
-    #sidebarOverlay, #proposalSidebar, #toggleSidebarBtn, #saveProposalBtn, #modalOverlay{display:none !important;}
+    #sidebarOverlay, #proposalSidebar, #toggleSidebarBtn, #saveProposalBtn, #modalOverlay,
+    #customersView, #customerModalOverlay, #toggleCustomersBtn{display:none !important;}
   }
+
+  /* ============== Customer pipeline (CRM) ============== */
+  #customersView{max-width:1200px; margin:36px auto 90px; padding:0 24px;}
+  .crm-header{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; gap:16px; flex-wrap:wrap;}
+  .crm-header h2{font-family:var(--serif); font-size:24px; margin:0; color:var(--ink);}
+  .crm-sub{font-family:var(--sans); font-size:12.5px; color:var(--secondary); margin-top:2px;}
+  .crm-board{display:grid; grid-template-columns:repeat(5, minmax(210px, 1fr)); gap:14px; overflow-x:auto;}
+  .crm-column{background:rgba(0,0,0,.02); border:1px solid var(--line); border-radius:10px; padding:10px; min-width:210px;}
+  .crm-column-head{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.6px; text-transform:uppercase;
+    color:var(--secondary); padding:4px 6px 10px;
+  }
+  .crm-column-count{background:#fff; border-radius:10px; padding:0 7px; font-size:11px; color:var(--accent-dark); font-weight:800;}
+  .crm-cards{display:flex; flex-direction:column; gap:8px; min-height:40px;}
+  .crm-card{
+    background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px 12px; cursor:pointer;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .crm-card:hover{border-color:var(--accent); box-shadow:0 1px 4px rgba(0,0,0,.06);}
+  .crm-card-name{font-family:var(--sans); font-weight:600; font-size:13px; color:var(--ink); margin-bottom:4px;}
+  .crm-card-meta{font-family:var(--sans); font-size:11px; color:var(--secondary); line-height:1.5;}
+  .crm-card-meta .crm-note-preview{display:block; margin-top:3px; color:var(--ink); font-style:italic;}
+  .crm-empty-col{font-family:var(--sans); font-size:11.5px; color:var(--secondary); text-align:center; padding:14px 4px;}
+  .crm-board-empty{font-family:var(--sans); font-size:13px; color:var(--secondary); text-align:center; padding:60px 10px;}
+
+  .customer-modal-box{width:420px; max-width:90vw; text-align:left;}
+  .customer-modal-head{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
+  .customer-modal-head input{
+    flex:1; font-family:var(--sans); font-size:16px; font-weight:600; border:none; border-bottom:1.5px solid var(--line);
+    padding:4px 2px; color:var(--ink);
+  }
+  .customer-modal-head input:focus{outline:none; border-color:var(--accent);}
+  .customer-stage-label{
+    display:block; font-family:var(--sans); font-size:11.5px; font-weight:600; color:var(--secondary);
+    margin-bottom:16px; text-transform:uppercase; letter-spacing:.4px;
+  }
+  .customer-stage-label select{
+    display:block; width:100%; margin-top:5px; font-family:var(--sans); font-size:13.5px; padding:7px 8px;
+    border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink); text-transform:none; letter-spacing:normal;
+  }
+  .followup-section{border-top:1px solid var(--line); padding-top:14px; margin-bottom:6px;}
+  .followup-add-row{display:flex; flex-direction:column; gap:8px; margin-bottom:14px;}
+  .followup-add-row input[type="date"]{
+    font-family:var(--sans); font-size:13px; padding:6px 8px; border-radius:6px; border:1px solid var(--line); width:fit-content;
+  }
+  .followup-add-row textarea{
+    font-family:var(--sans); font-size:13px; padding:8px; border-radius:6px; border:1px solid var(--line);
+    resize:vertical; min-height:56px;
+  }
+  .followup-list{max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;}
+  .followup-entry{border-left:2px solid var(--accent); padding:2px 0 2px 10px;}
+  .followup-entry-date{font-family:var(--sans); font-size:11.5px; font-weight:700; color:var(--accent-dark);}
+  .followup-entry-note{font-family:var(--sans); font-size:13px; color:var(--ink); margin-top:2px; white-space:pre-wrap;}
+  .followup-empty{font-family:var(--sans); font-size:12.5px; color:var(--secondary); font-style:italic;}
+  .customer-modal-actions{justify-content:space-between; margin-top:16px;}
+  #customerDeleteBtn{color:#B23A48; border-color:#B23A48;}
 
   /* ---- Custom confirm/alert modal (works everywhere, unlike native dialogs) ---- */
   .modal-overlay{
@@ -535,6 +593,13 @@
     opacity:0; pointer-events:none; transition:opacity .15s ease;
   }
   .modal-overlay.open{opacity:1; pointer-events:auto;}
+  /* The shared alert/confirm/prompt overlay (#modalOverlay) can be triggered
+     while the customer detail modal is already open (e.g. confirming a
+     delete). Both share .modal-overlay's z-index, so without this override
+     DOM order decides the stacking and #modalOverlay would paint underneath
+     #customerModalOverlay -- clicks on "Confirm" would silently hit the
+     customer modal behind it instead. Keep #modalOverlay on top always. */
+  #modalOverlay{z-index:299;}
   .modal-box{
     background:var(--paper); border-radius:10px; padding:26px 26px 20px;
     max-width:360px; width:88vw; box-shadow:0 12px 40px rgba(0,0,0,.25);
@@ -590,6 +655,7 @@
   <button id="toggleSidebarBtn" onclick="toggleSidebar()">📁 Saved Proposals <span id="savedCountBadge"></span></button>
   <button onclick="startNewProposal()">＋ New</button>
   <button id="pdfBtn" onclick="savePDFFile()">Print / Save PDF</button>
+  <button id="toggleCustomersBtn" onclick="toggleCustomersView()">📇 Customers</button>
 </div>
 
 <div id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
@@ -611,6 +677,47 @@
     <div class="modal-actions">
       <button id="modalCancelBtn" class="modal-cancel">Cancel</button>
       <button id="modalOkBtn" class="modal-ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<div id="customersView" style="display:none;">
+  <div class="crm-header">
+    <div>
+      <h2>Customer Pipeline</h2>
+      <div class="crm-sub">Shared with your whole team</div>
+    </div>
+    <button class="add-row-btn" onclick="addCustomer()">+ New Customer</button>
+  </div>
+  <div class="crm-board" id="crmBoard"></div>
+</div>
+
+<div id="customerModalOverlay" class="modal-overlay">
+  <div class="modal-box customer-modal-box">
+    <div class="customer-modal-head">
+      <input type="text" id="customerNameInput" placeholder="Customer / Property name">
+      <button class="sidebar-close" onclick="closeCustomerModal()">&times;</button>
+    </div>
+    <label class="customer-stage-label">Stage
+      <select id="customerStageSelect">
+        <option value="lead">Lead</option>
+        <option value="proposal_sent">Proposal Sent</option>
+        <option value="follow_up">Follow-Up</option>
+        <option value="won">Won</option>
+        <option value="lost">Lost</option>
+      </select>
+    </label>
+    <div class="followup-section">
+      <div class="followup-add-row">
+        <input type="date" id="newFollowUpDate">
+        <textarea id="newFollowUpNote" placeholder="How did the contact go?"></textarea>
+        <button class="add-row-btn" onclick="addFollowUp()">+ Add Follow-Up</button>
+      </div>
+      <div id="followUpList" class="followup-list"></div>
+    </div>
+    <div class="modal-actions customer-modal-actions">
+      <button id="customerDeleteBtn" class="modal-cancel">Delete Customer</button>
+      <button class="modal-ok" onclick="closeCustomerModal()">Done</button>
     </div>
   </div>
 </div>
@@ -2402,6 +2509,203 @@ function toggleSidebar(force){
   sidebar.classList.toggle('open', shouldOpen);
   overlay.classList.toggle('open', shouldOpen);
 }
+
+/* ============== Customer pipeline (CRM) ============== */
+
+// fmtDate() parses full ISO datetime strings (with a time + Z) and is
+// correct for those. A plain "YYYY-MM-DD" date-input value has no time
+// component, so `new Date(str)` parses it as UTC midnight -- in any
+// timezone behind UTC that rolls back to the previous day once
+// getMonth()/getDate() read it in local time. Parse these manually instead.
+function fmtPlainDate(dateStr){
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return m.toString().padStart(2, '0') + '/' + d.toString().padStart(2, '0') + '/' + y;
+}
+
+const CRM_KEY = 'crm-customers';
+const CRM_STAGES = [
+  { id: 'lead', label: 'Lead' },
+  { id: 'proposal_sent', label: 'Proposal Sent' },
+  { id: 'follow_up', label: 'Follow-Up' },
+  { id: 'won', label: 'Won' },
+  { id: 'lost', label: 'Lost' }
+];
+let customersCache = [];
+let openCustomerId = null;
+
+async function getCustomers(){
+  try {
+    const result = await dbStorage.get(CRM_KEY, true);
+    if (result && result.value) return JSON.parse(result.value);
+    return [];
+  } catch (err) {
+    return [];
+  }
+}
+
+async function setCustomers(list){
+  try {
+    await dbStorage.set(CRM_KEY, JSON.stringify(list), true);
+  } catch (err) {
+    console.error('Could not update customer pipeline', err);
+    showAlert('Could not save that change. Check your connection and try again.');
+  }
+}
+
+async function toggleCustomersView(force){
+  const view = document.getElementById('customersView');
+  const isOpen = view.style.display !== 'none';
+  const shouldOpen = typeof force === 'boolean' ? force : !isOpen;
+  view.style.display = shouldOpen ? 'block' : 'none';
+  document.querySelector('.sheet').style.display = shouldOpen ? 'none' : '';
+  if (shouldOpen) {
+    toggleSidebar(false);
+    await renderCustomerBoard();
+  }
+}
+
+async function renderCustomerBoard(){
+  const board = document.getElementById('crmBoard');
+  board.innerHTML = '';
+  customersCache = await getCustomers();
+
+  CRM_STAGES.forEach(stage => {
+    const col = document.createElement('div');
+    col.className = 'crm-column';
+    const inStage = customersCache.filter(c => (c.stage || 'lead') === stage.id);
+
+    const cardsHtml = inStage.length
+      ? inStage.map(c => {
+          const lastFollowUp = (c.followUps && c.followUps.length) ? c.followUps[0] : null;
+          const notePreview = lastFollowUp
+            ? `<span class="crm-note-preview">${fmtPlainDate(lastFollowUp.date)}: ${escapeHtml(truncate(lastFollowUp.note, 60))}</span>`
+            : '';
+          return `
+            <div class="crm-card" data-id="${c.id}">
+              <div class="crm-card-name">${escapeHtml(c.name || '(untitled)')}</div>
+              <div class="crm-card-meta">${lastFollowUp ? 'Last follow-up' : 'No follow-ups yet'}${notePreview}</div>
+            </div>
+          `;
+        }).join('')
+      : '<div class="crm-empty-col">No customers here</div>';
+
+    col.innerHTML = `
+      <div class="crm-column-head"><span>${stage.label}</span><span class="crm-column-count">${inStage.length}</span></div>
+      <div class="crm-cards">${cardsHtml}</div>
+    `;
+    col.querySelectorAll('.crm-card').forEach(cardEl => {
+      cardEl.addEventListener('click', () => openCustomerModal(cardEl.dataset.id));
+    });
+    board.appendChild(col);
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : str;
+  return div.innerHTML;
+}
+
+function truncate(str, len){
+  if (!str) return '';
+  return str.length > len ? str.slice(0, len).trim() + '…' : str;
+}
+
+async function addCustomer(){
+  const name = await showPrompt('New customer / property name:', '');
+  if (name === null) return;
+  const customer = {
+    id: 'c' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+    name: name.trim() || '(untitled)',
+    stage: 'lead',
+    followUps: [],
+    createdAt: new Date().toISOString()
+  };
+  customersCache.unshift(customer);
+  await setCustomers(customersCache);
+  await renderCustomerBoard();
+  openCustomerModal(customer.id);
+}
+
+function openCustomerModal(id){
+  const customer = customersCache.find(c => c.id === id);
+  if (!customer) return;
+  openCustomerId = id;
+  document.getElementById('customerNameInput').value = customer.name || '';
+  document.getElementById('customerStageSelect').value = customer.stage || 'lead';
+  const dateInput = document.getElementById('newFollowUpDate');
+  const today = new Date();
+  dateInput.value = today.toISOString().slice(0, 10);
+  document.getElementById('newFollowUpNote').value = '';
+  renderFollowUpList(customer);
+  document.getElementById('customerModalOverlay').classList.add('open');
+}
+
+function closeCustomerModal(){
+  const customer = customersCache.find(c => c.id === openCustomerId);
+  document.getElementById('customerModalOverlay').classList.remove('open');
+  openCustomerId = null;
+  if (customer) renderCustomerBoard();
+}
+
+function renderFollowUpList(customer){
+  const list = document.getElementById('followUpList');
+  if (!customer.followUps || !customer.followUps.length) {
+    list.innerHTML = '<div class="followup-empty">No follow-ups logged yet.</div>';
+    return;
+  }
+  list.innerHTML = customer.followUps.map(f => `
+    <div class="followup-entry">
+      <div class="followup-entry-date">${fmtPlainDate(f.date)}</div>
+      <div class="followup-entry-note">${escapeHtml(f.note)}</div>
+    </div>
+  `).join('');
+}
+
+async function saveCustomerModalFields(){
+  const customer = customersCache.find(c => c.id === openCustomerId);
+  if (!customer) return;
+  customer.name = document.getElementById('customerNameInput').value.trim() || '(untitled)';
+  customer.stage = document.getElementById('customerStageSelect').value;
+  customer.updatedAt = new Date().toISOString();
+  await setCustomers(customersCache);
+}
+
+document.getElementById('customerNameInput').addEventListener('change', saveCustomerModalFields);
+document.getElementById('customerStageSelect').addEventListener('change', saveCustomerModalFields);
+
+async function addFollowUp(){
+  const customer = customersCache.find(c => c.id === openCustomerId);
+  if (!customer) return;
+  const dateVal = document.getElementById('newFollowUpDate').value;
+  const noteVal = document.getElementById('newFollowUpNote').value.trim();
+  if (!noteVal) {
+    showAlert('Add a quick note about how the contact went before saving.');
+    return;
+  }
+  if (!customer.followUps) customer.followUps = [];
+  customer.followUps.unshift({
+    date: dateVal || new Date().toISOString().slice(0, 10),
+    note: noteVal
+  });
+  customer.updatedAt = new Date().toISOString();
+  await setCustomers(customersCache);
+  document.getElementById('newFollowUpNote').value = '';
+  renderFollowUpList(customer);
+}
+
+document.getElementById('customerDeleteBtn').addEventListener('click', async () => {
+  const customer = customersCache.find(c => c.id === openCustomerId);
+  if (!customer) return;
+  const ok = await showConfirm('Delete this customer and all of their follow-up notes? This cannot be undone.');
+  if (!ok) return;
+  customersCache = customersCache.filter(c => c.id !== openCustomerId);
+  await setCustomers(customersCache);
+  document.getElementById('customerModalOverlay').classList.remove('open');
+  openCustomerId = null;
+  renderCustomerBoard();
+});
 
 if (!dbStorage._configured()) dbStorage._warnUnconfigured();
 renderSidebar();
