@@ -788,7 +788,6 @@
       <div class="field"><label>Phone</label><input type="text" id="phoneInput" data-save="phone" oninput="formatPhoneInput(this)"></div>
       <div class="field"><label>Email</label><input type="text" id="emailInput" data-save="email"></div>
       <div class="field" style="grid-column:1 / -1;"><label>Property Address</label><input type="text" id="propertyAddress" data-save="propertyAddress"></div>
-      <div class="field" id="unitCountField"><label id="unitCountLabel">Unit Count / Building Type</label><input type="text" id="unitCount" data-save="unitCount"></div>
       <div class="field"><label>Prepared By</label><input type="text" id="preparedBy" data-save="preparedBy" placeholder="Aidan Cluff"></div>
     </div>
   </div>
@@ -1399,8 +1398,6 @@ function applyClientType(){
   document.getElementById('propNameInput').placeholder = isResidential ? 'e.g. John & Jane Smith' : 'e.g. Ashford Apartment Homes';
   updateMgmtCoVisibility();
   document.getElementById('contactTitleField').style.display = isResidential ? 'none' : 'block';
-  document.getElementById('unitCountField').style.display = isResidential ? 'none' : 'block';
-  document.getElementById('unitCountLabel').textContent = isResidential ? 'Property Type' : 'Unit Count / Building Type';
   autoSelectTermsTemplate();
 }
 document.getElementById('clientType').addEventListener('change', applyClientType);
