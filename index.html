@@ -485,7 +485,13 @@
     font-family:var(--sans); font-size:10.5px; letter-spacing:.3px; color:var(--secondary); text-align:center; position:relative; z-index:1;
   }
 
-  .print-item-text{display:block; width:100%; box-sizing:border-box; height:0; overflow:hidden;}
+  /* Matches table.pricing td select/input's own padding (4px 2px). In
+     print, the actual <select>/price <input> gets hidden and this span
+     shows its text instead -- without matching padding, a cell whose
+     sibling in the same row is still a real <input> (like the As-Needed
+     table's Frequency column) sits noticeably higher than this one,
+     since the input keeps its 4px top padding and this had none. */
+  .print-item-text{display:block; width:100%; box-sizing:border-box; height:0; overflow:hidden; padding:4px 2px;}
 
   .photos-section{margin-bottom:36px;}
   #photosContent{margin-top:2px;}
