@@ -239,12 +239,34 @@
     #acceptanceSection{break-before:page; page-break-before:always;}
     #inspectionNotesSection{break-before:page; page-break-before:always;}
     #termsSection{break-before:page; page-break-before:always;}
-    #pricingInitialSection, #recurringSection{
+
+    /* Keep short, self-contained blocks whole rather than letting them
+       split between an intro line and the content that explains it (e.g.
+       a methodology paragraph separated from the location list right
+       after it). Deliberately NOT applied to Inspection Notes, Terms, or
+       the As-Needed pricing table -- those can all run to any length (an
+       open-ended list of add-on items in the As-Needed case), so forcing
+       them whole just relocates the blank-space problem onto a bigger
+       block instead of removing it. Those get row-level protection plus
+       the repeating table header below instead. */
+    #pricingInitialSection, #recurringSection,
+    #serviceMethodologyField, #whatsIncludedField, #warrantySection .field{
       break-inside:avoid; page-break-inside:avoid;
     }
     table.pricing tr{
       break-inside:avoid; page-break-inside:avoid;
     }
+    /* Repeat the column header row on every printed page a table spans.
+       This is the standard `display` value for <thead> already, but WebKit
+       has a long-standing bug where it silently stops repeating headers on
+       tables using border-collapse:collapse. Switching to separate (print
+       only) works around it; visually it's the same since only bottom
+       borders are set, so there's no doubled-border line between rows. */
+    table.pricing{border-collapse:separate; border-spacing:0;}
+    table.pricing thead{display:table-header-group;}
+    /* Prevent a single stranded line at the top/bottom of a page for any
+       free-flowing text (Inspection Notes, Terms preamble, etc.) */
+    p, li, .rich-text-field > *{orphans:3; widows:3;}
   }
 
   .totals{
