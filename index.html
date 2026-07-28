@@ -611,25 +611,27 @@
   .crm-header{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; gap:16px; flex-wrap:wrap;}
   .crm-header h2{font-family:var(--serif); font-size:24px; margin:0; color:var(--ink);}
   .crm-sub{font-family:var(--sans); font-size:12.5px; color:var(--secondary); margin-top:2px;}
-  .crm-board{display:grid; grid-template-columns:repeat(5, minmax(210px, 1fr)); gap:14px; overflow-x:auto;}
-  .crm-column{background:rgba(0,0,0,.02); border:1px solid var(--line); border-radius:10px; padding:10px; min-width:210px;}
-  .crm-column-head{
-    display:flex; justify-content:space-between; align-items:center;
-    font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.6px; text-transform:uppercase;
-    color:var(--secondary); padding:4px 6px 10px;
+  .crm-tabs{display:flex; gap:6px; border-bottom:1px solid var(--line); margin-bottom:18px; flex-wrap:wrap;}
+  .crm-tab{
+    font-family:var(--sans); font-size:13px; font-weight:600; color:var(--secondary); cursor:pointer;
+    background:none; border:none; padding:10px 16px; border-bottom:2.5px solid transparent;
+    display:flex; align-items:center; gap:7px; transition:color .15s ease, border-color .15s ease;
   }
-  .crm-column-count{background:#fff; border-radius:10px; padding:0 7px; font-size:11px; color:var(--accent-dark); font-weight:800;}
-  .crm-cards{display:flex; flex-direction:column; gap:8px; min-height:40px;}
-  .crm-card{
-    background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px 12px; cursor:pointer;
+  .crm-tab:hover{color:var(--ink);}
+  .crm-tab.active{color:var(--accent-dark); border-bottom-color:var(--accent);}
+  .crm-tab-count{background:rgba(0,0,0,.06); border-radius:10px; padding:1px 8px; font-size:11px; font-weight:800;}
+  .crm-tab.active .crm-tab-count{background:var(--accent-tint-strong); color:var(--accent-dark);}
+  .crm-list{display:flex; flex-direction:column; gap:10px;}
+  .crm-row{
+    background:#fff; border:1px solid var(--line); border-radius:9px; padding:14px 18px; cursor:pointer;
+    display:flex; align-items:baseline; justify-content:space-between; gap:18px; flex-wrap:wrap;
     transition:border-color .15s ease, box-shadow .15s ease;
   }
-  .crm-card:hover{border-color:var(--accent); box-shadow:0 1px 4px rgba(0,0,0,.06);}
-  .crm-card-name{font-family:var(--sans); font-weight:600; font-size:13px; color:var(--ink); margin-bottom:4px;}
-  .crm-card-meta{font-family:var(--sans); font-size:11px; color:var(--secondary); line-height:1.5;}
-  .crm-card-meta .crm-note-preview{display:block; margin-top:3px; color:var(--ink); font-style:italic;}
-  .crm-empty-col{font-family:var(--sans); font-size:11.5px; color:var(--secondary); text-align:center; padding:14px 4px;}
-  .crm-board-empty{font-family:var(--sans); font-size:13px; color:var(--secondary); text-align:center; padding:60px 10px;}
+  .crm-row:hover{border-color:var(--accent); box-shadow:0 1px 5px rgba(0,0,0,.06);}
+  .crm-row-name{font-family:var(--sans); font-weight:700; font-size:14.5px; color:var(--ink); white-space:nowrap;}
+  .crm-note-preview{font-family:var(--sans); font-size:12.5px; color:var(--secondary); flex:1; min-width:200px;}
+  .crm-note-empty{font-style:italic; opacity:.75;}
+  .crm-list-empty{font-family:var(--sans); font-size:13px; color:var(--secondary); text-align:center; padding:60px 10px;}
 
   .customer-modal-box{width:420px; max-width:90vw; text-align:left;}
   .customer-modal-head{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
@@ -816,7 +818,8 @@
     </div>
     <button class="add-row-btn" onclick="addCustomer()">+ New Customer</button>
   </div>
-  <div class="crm-board" id="crmBoard"></div>
+  <div class="crm-tabs" id="crmTabs"></div>
+  <div class="crm-list" id="crmList"></div>
 </div>
 
 <div id="customerModalOverlay" class="modal-overlay">
@@ -2641,7 +2644,23 @@ function fmtPlainDate(dateStr){
   return m.toString().padStart(2, '0') + '/' + d.toString().padStart(2, '0') + '/' + y;
 }
 
-const CRM_KEY = 'crm-customers';
+// Storage model: each customer is its own key (crm-customer:<id>, full
+// record including followUps), plus a lightweight crm-customer-index key
+// (just id/name/stage/last-followup-preview) used to render the tab list
+// without fetching every full record. This mirrors how Saved Proposals
+// already works (proposal-index + proposal-data:<id>) for a specific
+// reason: the OLD design stored every customer in ONE shared JSON blob,
+// and every single edit -- adding a follow-up, changing a stage, even
+// ensureCrmCustomerExists() running on a totally unrelated proposal save
+// -- read the whole blob, changed one customer, and wrote the WHOLE blob
+// back. Any two of those overlapping (two people using it at once, or
+// even just a save landing while another was in flight) meant whichever
+// write finished last silently erased everyone else's changes, including
+// follow-up notes on customers nobody was even touching. Per-customer
+// keys make that impossible: editing one customer can never overwrite
+// another's data, since they're physically different keys.
+const CRM_INDEX_KEY = 'crm-customer-index';
+const CRM_OLD_BLOB_KEY = 'crm-customers'; // pre-migration format, read once
 const CRM_STAGES = [
   { id: 'lead', label: 'Lead' },
   { id: 'proposal_sent', label: 'Proposal Sent' },
@@ -2649,26 +2668,94 @@ const CRM_STAGES = [
   { id: 'won', label: 'Won' },
   { id: 'lost', label: 'Lost' }
 ];
-let customersCache = [];
+let crmIndexCache = [];
+let crmActiveStage = 'lead';
 let openCustomerId = null;
 
-async function getCustomers(){
+async function getCustomerIndex(){
+  // Returns null if the index key has never been written -- distinct
+  // from [] (migrated, just empty) so ensureCrmMigrated() knows whether
+  // it still needs to check for old-format data to bring forward.
   try {
-    const result = await dbStorage.get(CRM_KEY, true);
+    const result = await dbStorage.get(CRM_INDEX_KEY, true);
     if (result && result.value) return JSON.parse(result.value);
-    return [];
+    return null;
   } catch (err) {
-    return [];
+    return null;
   }
 }
 
-async function setCustomers(list){
+async function setCustomerIndex(list){
   try {
-    await dbStorage.set(CRM_KEY, JSON.stringify(list), true);
+    await dbStorage.set(CRM_INDEX_KEY, JSON.stringify(list), true);
   } catch (err) {
-    console.error('Could not update customer pipeline', err);
+    console.error('Could not update customer index', err);
     showAlert('Could not save that change. Check your connection and try again.');
   }
+}
+
+async function loadCustomerRecord(id){
+  try {
+    const result = await dbStorage.get('crm-customer:' + id, true);
+    if (!result || !result.value) return null;
+    return JSON.parse(result.value);
+  } catch (err) {
+    return null;
+  }
+}
+
+function summarizeCustomer(record){
+  const lastFollowUp = (record.followUps && record.followUps.length) ? record.followUps[0] : null;
+  return {
+    id: record.id,
+    name: record.name,
+    stage: record.stage || 'lead',
+    lastFollowUpDate: lastFollowUp ? lastFollowUp.date : null,
+    lastFollowUpNote: lastFollowUp ? lastFollowUp.note : null,
+    updatedAt: record.updatedAt || record.createdAt || new Date().toISOString()
+  };
+}
+
+async function saveCustomerRecord(record){
+  await dbStorage.set('crm-customer:' + record.id, JSON.stringify(record), true);
+  // Only this one customer's summary changes -- read-modify-write the
+  // index, but never anyone else's full record.
+  const index = (await getCustomerIndex()) || [];
+  const filtered = index.filter(c => c.id !== record.id);
+  filtered.unshift(summarizeCustomer(record));
+  await setCustomerIndex(filtered);
+}
+
+async function deleteCustomerRecord(id){
+  try { await dbStorage.delete('crm-customer:' + id, true); } catch (err) {}
+  const index = (await getCustomerIndex()) || [];
+  await setCustomerIndex(index.filter(c => c.id !== id));
+}
+
+async function ensureCrmMigrated(){
+  const existing = await getCustomerIndex();
+  if (existing !== null) return existing;
+  let oldList = [];
+  try {
+    const oldResult = await dbStorage.get(CRM_OLD_BLOB_KEY, true);
+    if (oldResult && oldResult.value) oldList = JSON.parse(oldResult.value);
+  } catch (err) { /* nothing to migrate */ }
+  const newIndex = [];
+  for (const c of oldList) {
+    const now = new Date().toISOString();
+    const record = {
+      id: c.id,
+      name: c.name || '(untitled)',
+      stage: c.stage || 'lead',
+      followUps: c.followUps || [],
+      createdAt: c.createdAt || now,
+      updatedAt: c.updatedAt || c.createdAt || now
+    };
+    await dbStorage.set('crm-customer:' + record.id, JSON.stringify(record), true);
+    newIndex.push(summarizeCustomer(record));
+  }
+  await setCustomerIndex(newIndex);
+  return newIndex;
 }
 
 async function toggleCustomersView(force){
@@ -2680,43 +2767,57 @@ async function toggleCustomersView(force){
   document.getElementById('controlsPanel').style.display = shouldOpen ? 'none' : '';
   if (shouldOpen) {
     toggleSidebar(false);
-    await renderCustomerBoard();
+    await renderCustomers();
   }
 }
 
-async function renderCustomerBoard(){
-  const board = document.getElementById('crmBoard');
-  board.innerHTML = '';
-  customersCache = await getCustomers();
+async function renderCustomers(){
+  crmIndexCache = await ensureCrmMigrated();
+  renderCrmTabs();
+  renderCrmList();
+}
 
-  CRM_STAGES.forEach(stage => {
-    const col = document.createElement('div');
-    col.className = 'crm-column';
-    const inStage = customersCache.filter(c => (c.stage || 'lead') === stage.id);
-
-    const cardsHtml = inStage.length
-      ? inStage.map(c => {
-          const lastFollowUp = (c.followUps && c.followUps.length) ? c.followUps[0] : null;
-          const notePreview = lastFollowUp
-            ? `<span class="crm-note-preview">${fmtPlainDate(lastFollowUp.date)}: ${escapeHtml(truncate(lastFollowUp.note, 60))}</span>`
-            : '';
-          return `
-            <div class="crm-card" data-id="${c.id}">
-              <div class="crm-card-name">${escapeHtml(c.name || '(untitled)')}</div>
-              <div class="crm-card-meta">${lastFollowUp ? 'Last follow-up' : 'No follow-ups yet'}${notePreview}</div>
-            </div>
-          `;
-        }).join('')
-      : '<div class="crm-empty-col">No customers here</div>';
-
-    col.innerHTML = `
-      <div class="crm-column-head"><span>${stage.label}</span><span class="crm-column-count">${inStage.length}</span></div>
-      <div class="crm-cards">${cardsHtml}</div>
-    `;
-    col.querySelectorAll('.crm-card').forEach(cardEl => {
-      cardEl.addEventListener('click', () => openCustomerModal(cardEl.dataset.id));
+function renderCrmTabs(){
+  const tabsEl = document.getElementById('crmTabs');
+  tabsEl.innerHTML = CRM_STAGES.map(stage => {
+    const count = crmIndexCache.filter(c => (c.stage || 'lead') === stage.id).length;
+    const activeClass = stage.id === crmActiveStage ? ' active' : '';
+    return `<button type="button" class="crm-tab${activeClass}" data-stage="${stage.id}">${stage.label} <span class="crm-tab-count">${count}</span></button>`;
+  }).join('');
+  tabsEl.querySelectorAll('.crm-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      crmActiveStage = btn.dataset.stage;
+      renderCrmTabs();
+      renderCrmList();
     });
-    board.appendChild(col);
+  });
+}
+
+function renderCrmList(){
+  const listEl = document.getElementById('crmList');
+  const inStage = crmIndexCache
+    .filter(c => (c.stage || 'lead') === crmActiveStage)
+    .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+
+  if (!inStage.length) {
+    listEl.innerHTML = '<div class="crm-list-empty">No customers here yet.</div>';
+    return;
+  }
+
+  listEl.innerHTML = inStage.map(c => {
+    const notePreview = c.lastFollowUpDate
+      ? `<span class="crm-note-preview">${fmtPlainDate(c.lastFollowUpDate)}: ${escapeHtml(truncate(c.lastFollowUpNote || '', 90))}</span>`
+      : '<span class="crm-note-preview crm-note-empty">No follow-ups logged yet</span>';
+    return `
+      <div class="crm-row" data-id="${c.id}">
+        <div class="crm-row-name">${escapeHtml(c.name || '(untitled)')}</div>
+        ${notePreview}
+      </div>
+    `;
+  }).join('');
+
+  listEl.querySelectorAll('.crm-row').forEach(rowEl => {
+    rowEl.addEventListener('click', () => openCustomerModal(rowEl.dataset.id));
   });
 }
 
@@ -2735,17 +2836,18 @@ async function ensureCrmCustomerExists(propName){
   const name = (propName || '').trim();
   if (!name) return;
   try {
-    const customers = await getCustomers();
-    const exists = customers.some(c => (c.name || '').trim().toLowerCase() === name.toLowerCase());
+    const index = await ensureCrmMigrated();
+    const exists = index.some(c => (c.name || '').trim().toLowerCase() === name.toLowerCase());
     if (exists) return;
-    customers.unshift({
+    const now = new Date().toISOString();
+    await saveCustomerRecord({
       id: 'c' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
       name: name,
       stage: 'lead',
       followUps: [],
-      createdAt: new Date().toISOString()
+      createdAt: now,
+      updatedAt: now
     });
-    await setCustomers(customers);
   } catch (err) {
     console.error('Could not add customer to CRM', err);
   }
@@ -2754,38 +2856,38 @@ async function ensureCrmCustomerExists(propName){
 async function addCustomer(){
   const name = await showPrompt('New customer / property name:', '');
   if (name === null) return;
+  const now = new Date().toISOString();
   const customer = {
     id: 'c' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
     name: name.trim() || '(untitled)',
     stage: 'lead',
     followUps: [],
-    createdAt: new Date().toISOString()
+    createdAt: now,
+    updatedAt: now
   };
-  customersCache.unshift(customer);
-  await setCustomers(customersCache);
-  await renderCustomerBoard();
+  await saveCustomerRecord(customer);
+  crmActiveStage = 'lead';
+  await renderCustomers();
   openCustomerModal(customer.id);
 }
 
-function openCustomerModal(id){
-  const customer = customersCache.find(c => c.id === id);
-  if (!customer) return;
+async function openCustomerModal(id){
+  const customer = await loadCustomerRecord(id);
+  if (!customer) { showAlert('Could not load that customer.'); return; }
   openCustomerId = id;
   document.getElementById('customerNameInput').value = customer.name || '';
   document.getElementById('customerStageSelect').value = customer.stage || 'lead';
   const dateInput = document.getElementById('newFollowUpDate');
-  const today = new Date();
-  dateInput.value = today.toISOString().slice(0, 10);
+  dateInput.value = new Date().toISOString().slice(0, 10);
   document.getElementById('newFollowUpNote').value = '';
   renderFollowUpList(customer);
   document.getElementById('customerModalOverlay').classList.add('open');
 }
 
 function closeCustomerModal(){
-  const customer = customersCache.find(c => c.id === openCustomerId);
   document.getElementById('customerModalOverlay').classList.remove('open');
   openCustomerId = null;
-  if (customer) renderCustomerBoard();
+  renderCustomers();
 }
 
 function renderFollowUpList(customer){
@@ -2803,19 +2905,21 @@ function renderFollowUpList(customer){
 }
 
 async function saveCustomerModalFields(){
-  const customer = customersCache.find(c => c.id === openCustomerId);
+  if (!openCustomerId) return;
+  const customer = await loadCustomerRecord(openCustomerId);
   if (!customer) return;
   customer.name = document.getElementById('customerNameInput').value.trim() || '(untitled)';
   customer.stage = document.getElementById('customerStageSelect').value;
   customer.updatedAt = new Date().toISOString();
-  await setCustomers(customersCache);
+  await saveCustomerRecord(customer);
 }
 
 document.getElementById('customerNameInput').addEventListener('change', saveCustomerModalFields);
 document.getElementById('customerStageSelect').addEventListener('change', saveCustomerModalFields);
 
 async function addFollowUp(){
-  const customer = customersCache.find(c => c.id === openCustomerId);
+  if (!openCustomerId) return;
+  const customer = await loadCustomerRecord(openCustomerId);
   if (!customer) return;
   const dateVal = document.getElementById('newFollowUpDate').value;
   const noteVal = document.getElementById('newFollowUpNote').value.trim();
@@ -2829,21 +2933,19 @@ async function addFollowUp(){
     note: noteVal
   });
   customer.updatedAt = new Date().toISOString();
-  await setCustomers(customersCache);
+  await saveCustomerRecord(customer);
   document.getElementById('newFollowUpNote').value = '';
   renderFollowUpList(customer);
 }
 
 document.getElementById('customerDeleteBtn').addEventListener('click', async () => {
-  const customer = customersCache.find(c => c.id === openCustomerId);
-  if (!customer) return;
+  if (!openCustomerId) return;
   const ok = await showConfirm('Delete this customer and all of their follow-up notes? This cannot be undone.');
   if (!ok) return;
-  customersCache = customersCache.filter(c => c.id !== openCustomerId);
-  await setCustomers(customersCache);
+  await deleteCustomerRecord(openCustomerId);
   document.getElementById('customerModalOverlay').classList.remove('open');
   openCustomerId = null;
-  renderCustomerBoard();
+  renderCustomers();
 });
 
 /* ============== Manual page-break control + guide ruler ============== */
