@@ -111,7 +111,7 @@
     letter-spacing:.5px; color:var(--secondary); margin:0 0 10px;
   }
   .controls-group .optional-toggle, .controls-group .page-break-toggle{margin-bottom:9px;}
-  .controls-group .discount-add-btn{display:block; width:100%; margin-bottom:8px; text-align:center;}
+  .controls-group .discount-add-btn, .controls-group #togglePhotosBtn{display:block; width:100%; margin-bottom:8px; text-align:center;}
   @media print{ #controlsPanel{display:none !important;} }
   @media (max-width:1350px){ #controlsPanel{display:none !important;} }
 
@@ -747,6 +747,7 @@
       <input type="checkbox" id="includeInspectionNotes" checked onchange="toggleOptionalField(this,'inspectionNotesContent')">
       Inspection Notes
     </label>
+    <button type="button" class="add-row-btn" id="togglePhotosBtn" onclick="togglePhotosSection()">+ Add Inspection Photos</button>
     <label class="optional-toggle">
       <input type="checkbox" id="includeServiceMethodology" checked onchange="toggleOptionalField(this,'serviceMethodologyContent')">
       Service Details &amp; Methodology
@@ -902,7 +903,6 @@
   </div>
 
   <div class="section photos-section" id="photosSection">
-    <button type="button" class="add-row-btn" id="togglePhotosBtn" onclick="togglePhotosSection()">+ Add Inspection Photos</button>
     <div id="photosContent" style="display:none;">
       <h2 style="margin-top:18px;">Inspection Photos</h2>
       <input type="file" id="photoUploadInput" accept="image/*" multiple style="display:none;" onchange="handlePhotoUpload(event)">
