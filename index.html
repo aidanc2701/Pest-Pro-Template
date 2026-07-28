@@ -2903,7 +2903,8 @@ async function openCustomerModal(id){
   document.getElementById('customerModalOverlay').classList.add('open');
 }
 
-function closeCustomerModal(){
+async function closeCustomerModal(){
+  await commitDraftFollowUp();
   document.getElementById('customerModalOverlay').classList.remove('open');
   openCustomerId = null;
   renderCustomers();
@@ -2925,6 +2926,13 @@ function renderFollowUpList(customer){
 
 async function saveCustomerModalFields(){
   if (!openCustomerId) return;
+  // Changing the stage is exactly the "move it to a new section" action
+  // that was silently discarding whatever note was typed but not yet
+  // committed with "+ Add Follow-Up" -- this textarea has no autosave of
+  // its own, so switching stages just abandoned it. Capture any drafted
+  // note as its own journal entry first, so moving a customer never loses
+  // what you just wrote about them.
+  await commitDraftFollowUp();
   const customer = await loadCustomerRecord(openCustomerId);
   if (!customer) return;
   customer.name = document.getElementById('customerNameInput').value.trim() || '(untitled)';
@@ -2936,16 +2944,18 @@ async function saveCustomerModalFields(){
 document.getElementById('customerNameInput').addEventListener('change', saveCustomerModalFields);
 document.getElementById('customerStageSelect').addEventListener('change', saveCustomerModalFields);
 
-async function addFollowUp(){
-  if (!openCustomerId) return;
-  const customer = await loadCustomerRecord(openCustomerId);
-  if (!customer) return;
-  const dateVal = document.getElementById('newFollowUpDate').value;
+// Commits whatever is currently typed in the follow-up note box as a new
+// journal entry, if anything's there. Shared by the explicit "+ Add
+// Follow-Up" button, by changing the stage/name (saveCustomerModalFields),
+// and by closing the modal -- so a drafted note is captured no matter how
+// you leave it, instead of only when you remember to click Add.
+async function commitDraftFollowUp(){
+  if (!openCustomerId) return null;
   const noteVal = document.getElementById('newFollowUpNote').value.trim();
-  if (!noteVal) {
-    showAlert('Add a quick note about how the contact went before saving.');
-    return;
-  }
+  if (!noteVal) return null;
+  const customer = await loadCustomerRecord(openCustomerId);
+  if (!customer) return null;
+  const dateVal = document.getElementById('newFollowUpDate').value;
   if (!customer.followUps) customer.followUps = [];
   customer.followUps.unshift({
     date: dateVal || new Date().toISOString().slice(0, 10),
@@ -2955,6 +2965,17 @@ async function addFollowUp(){
   await saveCustomerRecord(customer);
   document.getElementById('newFollowUpNote').value = '';
   renderFollowUpList(customer);
+  return customer;
+}
+
+async function addFollowUp(){
+  if (!openCustomerId) return;
+  const noteVal = document.getElementById('newFollowUpNote').value.trim();
+  if (!noteVal) {
+    showAlert('Add a quick note about how the contact went before saving.');
+    return;
+  }
+  await commitDraftFollowUp();
 }
 
 document.getElementById('customerDeleteBtn').addEventListener('click', async () => {
