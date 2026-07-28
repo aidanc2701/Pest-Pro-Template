@@ -94,6 +94,27 @@
   .toolbar button.active{background:#fff; color:var(--accent-dark); box-shadow:inset 0 0 0 2px var(--accent-dark), inset 0 2px 5px rgba(0,0,0,.25);}
   .toolbar .spacer{flex:1; min-width:12px;}
 
+  /* All the editing-only controls (include/exclude toggles, page-break
+     toggles, add-discount buttons) live here instead of inline in the
+     document, so .sheet always shows exactly what a customer -- and the
+     exported PDF -- will actually see. Fixed to the left of the sheet;
+     doesn't participate in the sheet's own layout or print output at all. */
+  #controlsPanel{
+    position:fixed; top:140px; left:20px; width:230px; max-height:calc(100vh - 160px);
+    overflow-y:auto; background:var(--paper); border:1px solid var(--line); border-radius:10px;
+    padding:16px; box-shadow:0 4px 16px rgba(0,0,0,.1); z-index:40;
+  }
+  .controls-group{margin-bottom:20px;}
+  .controls-group:last-child{margin-bottom:0;}
+  .controls-group h3{
+    font-family:var(--sans); font-size:11px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.5px; color:var(--secondary); margin:0 0 10px;
+  }
+  .controls-group .optional-toggle, .controls-group .page-break-toggle{margin-bottom:9px;}
+  .controls-group .discount-add-btn{display:block; width:100%; margin-bottom:8px; text-align:center;}
+  @media print{ #controlsPanel{display:none !important;} }
+  @media (max-width:1350px){ #controlsPanel{display:none !important;} }
+
   .sheet{
     max-width:850px; margin:36px auto 90px; background:var(--paper);
     box-shadow:0 1px 2px rgba(0,0,0,.04), 0 18px 48px -12px rgba(0,0,0,.18);
@@ -248,7 +269,6 @@
     text-transform:none; letter-spacing:normal;
   }
   .page-break-toggle input{width:12px; height:12px; accent-color:var(--accent); cursor:pointer; margin:0;}
-  .section-head-row{display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap;}
   @media print{
     .page-break-toggle{display:none !important;}
   }
@@ -716,6 +736,54 @@
   <button id="togglePageGuidesBtn" onclick="togglePageGuides()">📏 Show Page Breaks</button>
 </div>
 
+<div id="controlsPanel">
+  <div class="controls-group">
+    <h3>Sections to Include</h3>
+    <label class="optional-toggle">
+      <input type="checkbox" id="includeMgmtCo" checked onchange="updateMgmtCoVisibility()">
+      Management Company
+    </label>
+    <label class="optional-toggle">
+      <input type="checkbox" id="includeInspectionNotes" checked onchange="toggleOptionalField(this,'inspectionNotesContent')">
+      Inspection Notes
+    </label>
+    <label class="optional-toggle">
+      <input type="checkbox" id="includeServiceMethodology" checked onchange="toggleOptionalField(this,'serviceMethodologyContent')">
+      Service Details &amp; Methodology
+    </label>
+    <label class="optional-toggle">
+      <input type="checkbox" id="includeWhatsIncluded" checked onchange="toggleOptionalField(this,'whatsIncludedContent')">
+      What's Included
+    </label>
+    <label class="optional-toggle">
+      <input type="checkbox" id="includeWarranty" checked onchange="toggleOptionalField(this,'warrantyContent')">
+      Guarantee
+    </label>
+    <label class="optional-toggle">
+      <input type="checkbox" id="includeWhatsNotIncluded" checked onchange="toggleOptionalField(this,'whatsNotIncludedContent')">
+      As-Needed Service Pricing
+    </label>
+  </div>
+
+  <div class="controls-group">
+    <h3>Start New Page Before&hellip;</h3>
+    <label class="page-break-toggle"><input type="checkbox" id="pageBreakInspectionNotes" checked onchange="applyPageBreak('pageBreakInspectionNotes','inspectionNotesSection')">Inspection Notes</label>
+    <label class="page-break-toggle"><input type="checkbox" id="pageBreakScopeOfService" onchange="applyPageBreak('pageBreakScopeOfService','scopeOfServiceSection')">Scope of Service</label>
+    <label class="page-break-toggle"><input type="checkbox" id="pageBreakWarranty" onchange="applyPageBreak('pageBreakWarranty','warrantySection')">Guarantee</label>
+    <label class="page-break-toggle"><input type="checkbox" id="pageBreakPricingInitial" onchange="applyPageBreak('pageBreakPricingInitial','pricingInitialSection')">Pricing &mdash; Initial Visit</label>
+    <label class="page-break-toggle"><input type="checkbox" id="pageBreakRecurring" onchange="applyPageBreak('pageBreakRecurring','recurringSection')">Pricing &mdash; Recurring</label>
+    <label class="page-break-toggle"><input type="checkbox" id="pageBreakWhatsNotIncluded" onchange="applyPageBreak('pageBreakWhatsNotIncluded','whatsNotIncludedField')">As-Needed Pricing</label>
+    <label class="page-break-toggle"><input type="checkbox" id="pageBreakTerms" checked onchange="applyPageBreak('pageBreakTerms','termsSection')">Terms &amp; Conditions</label>
+    <label class="page-break-toggle"><input type="checkbox" id="pageBreakAcceptance" checked onchange="applyPageBreak('pageBreakAcceptance','acceptanceSection')">Acceptance</label>
+  </div>
+
+  <div class="controls-group">
+    <h3>Pricing</h3>
+    <button type="button" class="add-row-btn discount-add-btn" onclick="addDiscountRow('initial')">+ Add Initial Visit Discount</button>
+    <button type="button" class="add-row-btn discount-add-btn" onclick="addDiscountRow('recurring')">+ Add Recurring Discount</button>
+  </div>
+</div>
+
 <div id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
 <div id="proposalSidebar">
   <div class="sidebar-head">
@@ -810,10 +878,6 @@
     <div class="grid2">
       <div class="field"><label id="propNameLabel">Property / Company Name</label><input type="text" id="propNameInput" data-save="propName" placeholder="e.g. Ashford Apartment Homes"></div>
       <div class="field" id="mgmtCoField">
-        <label class="optional-toggle" style="margin-bottom:5px;">
-          <input type="checkbox" id="includeMgmtCo" checked onchange="updateMgmtCoVisibility()">
-          Include Management Company
-        </label>
         <div id="mgmtCoContent">
           <label>Management Company</label>
           <input type="text" id="mgmtCoInput" data-save="mgmtCo" placeholder="e.g. Greystar">
@@ -829,15 +893,8 @@
   </div>
 
   <div class="section" id="inspectionNotesSection">
-    <label class="optional-toggle">
-      <input type="checkbox" id="includeInspectionNotes" checked onchange="toggleOptionalField(this,'inspectionNotesContent')">
-      Include Inspection Notes
-    </label>
     <div id="inspectionNotesContent">
-      <div class="section-head-row">
-        <h2>Inspection Notes</h2>
-        <label class="page-break-toggle"><input type="checkbox" id="pageBreakInspectionNotes" checked onchange="applyPageBreak('pageBreakInspectionNotes','inspectionNotesSection')">Start on a new page</label>
-      </div>
+      <h2>Inspection Notes</h2>
       <div class="field">
         <div id="inspectionNotes" class="rich-text-field" data-save="inspectionNotes" contenteditable="true" data-placeholder="Document findings from the site walk — activity observed, problem areas, access points, conducive conditions, etc."></div>
       </div>
@@ -855,25 +912,14 @@
   </div>
 
   <div class="section" id="scopeOfServiceSection">
-    <div class="section-head-row">
-      <h2>Scope of Service &mdash; What's Included</h2>
-      <label class="page-break-toggle"><input type="checkbox" id="pageBreakScopeOfService" onchange="applyPageBreak('pageBreakScopeOfService','scopeOfServiceSection')">Start on a new page</label>
-    </div>
+    <h2>Scope of Service &mdash; What's Included</h2>
     <div class="field" id="serviceMethodologyField">
-      <label class="optional-toggle">
-        <input type="checkbox" id="includeServiceMethodology" checked onchange="toggleOptionalField(this,'serviceMethodologyContent')">
-        Include Service Details &amp; Methodology
-      </label>
       <div id="serviceMethodologyContent">
         <label>Service Details &amp; Methodology</label>
         <div id="serviceMethodology" class="rich-text-field" data-save="serviceMethodology" contenteditable="true" data-placeholder="Describe exactly how the service will be performed — treatment/installation method, materials used, areas covered, and frequency."></div>
       </div>
     </div>
     <div class="field" id="whatsIncludedField">
-      <label class="optional-toggle">
-        <input type="checkbox" id="includeWhatsIncluded" checked onchange="toggleOptionalField(this,'whatsIncludedContent')">
-        Include What's Included
-      </label>
       <div id="whatsIncludedContent">
         <label>What's Included</label>
         <div id="whatsIncluded" class="rich-text-field" data-save="whatsIncluded" contenteditable="true" data-placeholder="List specifically what is included in this proposal — e.g. number of visits, treated areas, materials, warranty coverage, follow-up visits."></div>
@@ -882,15 +928,8 @@
   </div>
 
   <div class="section" id="warrantySection">
-    <label class="optional-toggle">
-      <input type="checkbox" id="includeWarranty" checked onchange="toggleOptionalField(this,'warrantyContent')">
-      Include Guarantee
-    </label>
     <div id="warrantyContent">
-      <div class="section-head-row">
-        <h2>Guarantee</h2>
-        <label class="page-break-toggle"><input type="checkbox" id="pageBreakWarranty" onchange="applyPageBreak('pageBreakWarranty','warrantySection')">Start on a new page</label>
-      </div>
+      <h2>Guarantee</h2>
       <div class="warranty-select-row">
         <label>Warranty Type
           <select id="warrantyTypeSelect" onchange="onWarrantyTypeChange()">
@@ -912,10 +951,7 @@
   </div>
 
   <div class="section" id="pricingInitialSection">
-    <div class="section-head-row">
-      <h2>Pricing &mdash; Initial Visit</h2>
-      <label class="page-break-toggle"><input type="checkbox" id="pageBreakPricingInitial" onchange="applyPageBreak('pageBreakPricingInitial','pricingInitialSection')">Start on a new page</label>
-    </div>
+    <h2>Pricing &mdash; Initial Visit</h2>
     <table class="pricing" id="pricingTableInitial">
       <thead>
         <tr>
@@ -932,7 +968,6 @@
     <button class="add-row-btn" onclick="addRow('initial')">+ Add line item</button>
 
     <div class="discount-rows" id="discountRowsInitial"></div>
-    <button type="button" class="add-row-btn discount-add-btn" onclick="addDiscountRow('initial')">+ Add Discount</button>
 
     <div class="totals">
       <div class="row"><span class="label">Subtotal</span><span id="initialSubtotal">$0.00</span></div>
@@ -947,10 +982,7 @@
   </label>
 
   <div class="section" id="recurringSection">
-    <div class="section-head-row">
-      <h2>Pricing &mdash; Recurring Service</h2>
-      <label class="page-break-toggle"><input type="checkbox" id="pageBreakRecurring" onchange="applyPageBreak('pageBreakRecurring','recurringSection')">Start on a new page</label>
-    </div>
+    <h2>Pricing &mdash; Recurring Service</h2>
     <table class="pricing" id="pricingTableRecurring">
       <thead>
         <tr>
@@ -967,7 +999,6 @@
     <button class="add-row-btn" onclick="addRow('recurring')">+ Add line item</button>
 
     <div class="discount-rows" id="discountRowsRecurring"></div>
-    <button type="button" class="add-row-btn discount-add-btn" onclick="addDiscountRow('recurring')">+ Add Discount</button>
 
     <div class="totals">
       <div class="row"><span class="label">Subtotal</span><span id="recurringSubtotal">$0.00</span></div>
@@ -977,15 +1008,8 @@
   </div>
 
   <div class="section" id="whatsNotIncludedField">
-    <label class="optional-toggle">
-      <input type="checkbox" id="includeWhatsNotIncluded" checked onchange="toggleOptionalField(this,'whatsNotIncludedContent')">
-      Include As-Needed Service Pricing
-    </label>
     <div id="whatsNotIncludedContent">
-      <div class="section-head-row">
-        <h2>As-Needed Service Pricing</h2>
-        <label class="page-break-toggle"><input type="checkbox" id="pageBreakWhatsNotIncluded" onchange="applyPageBreak('pageBreakWhatsNotIncluded','whatsNotIncludedField')">Start on a new page</label>
-      </div>
+      <h2>As-Needed Service Pricing</h2>
       <div class="addon-mode-row">
         <label>Format
           <select id="addonModeSelect" onchange="onAddonModeChange()">
@@ -1015,10 +1039,7 @@
   </div>
 
   <div class="section" id="termsSection">
-    <div class="section-head-row">
-      <h2>Terms &amp; Conditions</h2>
-      <label class="page-break-toggle"><input type="checkbox" id="pageBreakTerms" checked onchange="applyPageBreak('pageBreakTerms','termsSection')">Start on a new page</label>
-    </div>
+    <h2>Terms &amp; Conditions</h2>
     <div class="terms-select-row">
       <label>Terms Template
         <select id="termsTemplateSelect" onchange="onTermsTemplateChange()"></select>
@@ -1033,10 +1054,7 @@
   </div>
 
   <div class="section" id="acceptanceSection">
-    <div class="section-head-row">
-      <h2>Acceptance</h2>
-      <label class="page-break-toggle"><input type="checkbox" id="pageBreakAcceptance" checked onchange="applyPageBreak('pageBreakAcceptance','acceptanceSection')">Start on a new page</label>
-    </div>
+    <h2>Acceptance</h2>
     <div class="sign-grid">
       <div class="sign-block">
         <div class="line sigline" id="clientSigLine" data-save="clientSigLine" contenteditable="true" data-target="clientDate"></div>
