@@ -91,6 +91,7 @@
     transition:transform .12s ease, box-shadow .12s ease;
   }
   .toolbar button:hover{transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,.2);}
+  .toolbar button.active{background:#fff; color:var(--accent-dark); box-shadow:inset 0 0 0 2px var(--accent-dark), inset 0 2px 5px rgba(0,0,0,.25);}
   .toolbar .spacer{flex:1; min-width:12px;}
 
   .sheet{
@@ -235,11 +236,42 @@
   @media print{
     .optional-toggle{display:none !important;}
   }
-  @media print{
-    #acceptanceSection{break-before:page; page-break-before:always;}
-    #inspectionNotesSection{break-before:page; page-break-before:always;}
-    #termsSection{break-before:page; page-break-before:always;}
+  /* Applied by the "Start on a new page" checkbox each section header now
+     has -- see initPageBreakToggles(). Not scoped to @media print: these
+     properties are inert outside paginated contexts, so there's no need
+     to gate them and it keeps the toggle logic simpler. */
+  .force-new-page{break-before:page; page-break-before:always;}
 
+  .page-break-toggle{
+    display:flex; align-items:center; gap:6px; font-family:var(--sans); font-size:11px;
+    color:var(--secondary); cursor:pointer; user-select:none; font-weight:600;
+    text-transform:none; letter-spacing:normal;
+  }
+  .page-break-toggle input{width:12px; height:12px; accent-color:var(--accent); cursor:pointer; margin:0;}
+  .section-head-row{display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap;}
+  @media print{
+    .page-break-toggle{display:none !important;}
+  }
+
+  /* Approximate ruler showing where a real print page boundary would fall,
+     based on Letter-size paper at the same margins savePDFFile()/native
+     print use (11in tall, 0.4in top+bottom margin = 10.2in of content per
+     page, i.e. 979.2px at the CSS-standard 96px/inch). This is an estimate,
+     not a guarantee -- actual browser pagination can still shift things by
+     a line or two to honor break-inside:avoid/orphans/widows -- but it's
+     close enough to tell you where to place a "Start on a new page" toggle. */
+  .page-guide{
+    position:absolute; left:0; right:0; height:0; border-top:2px dashed #C0574A;
+    pointer-events:none; z-index:50;
+  }
+  .page-guide span{
+    position:absolute; top:-11px; right:8px; background:#C0574A; color:#fff;
+    font-family:var(--sans); font-size:10px; font-weight:700; letter-spacing:.3px;
+    padding:2px 8px; border-radius:4px; white-space:nowrap;
+  }
+  @media print{ .page-guide{display:none !important;} }
+
+  @media print{
     /* Keep short, self-contained blocks whole rather than letting them
        split between an intro line and the content that explains it (e.g.
        a methodology paragraph separated from the location list right
@@ -267,6 +299,9 @@
     /* Prevent a single stranded line at the top/bottom of a page for any
        free-flowing text (Inspection Notes, Terms preamble, etc.) */
     p, li, .rich-text-field > *{orphans:3; widows:3;}
+    /* Never let a section heading end up alone at the bottom of a page
+       with its own content pushed to the next one. */
+    .section h2{break-after:avoid; page-break-after:avoid;}
   }
 
   .totals{
@@ -678,6 +713,7 @@
   <button onclick="startNewProposal()">＋ New</button>
   <button id="pdfBtn" onclick="savePDFFile()">Print / Save PDF</button>
   <button id="toggleCustomersBtn" onclick="toggleCustomersView()">📇 Customers</button>
+  <button id="togglePageGuidesBtn" onclick="togglePageGuides()">📏 Show Page Breaks</button>
 </div>
 
 <div id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
@@ -798,7 +834,10 @@
       Include Inspection Notes
     </label>
     <div id="inspectionNotesContent">
-      <h2>Inspection Notes</h2>
+      <div class="section-head-row">
+        <h2>Inspection Notes</h2>
+        <label class="page-break-toggle"><input type="checkbox" id="pageBreakInspectionNotes" checked onchange="applyPageBreak('pageBreakInspectionNotes','inspectionNotesSection')">Start on a new page</label>
+      </div>
       <div class="field">
         <div id="inspectionNotes" class="rich-text-field" data-save="inspectionNotes" contenteditable="true" data-placeholder="Document findings from the site walk — activity observed, problem areas, access points, conducive conditions, etc."></div>
       </div>
@@ -815,8 +854,11 @@
     </div>
   </div>
 
-  <div class="section">
-    <h2>Scope of Service &mdash; What's Included</h2>
+  <div class="section" id="scopeOfServiceSection">
+    <div class="section-head-row">
+      <h2>Scope of Service &mdash; What's Included</h2>
+      <label class="page-break-toggle"><input type="checkbox" id="pageBreakScopeOfService" onchange="applyPageBreak('pageBreakScopeOfService','scopeOfServiceSection')">Start on a new page</label>
+    </div>
     <div class="field" id="serviceMethodologyField">
       <label class="optional-toggle">
         <input type="checkbox" id="includeServiceMethodology" checked onchange="toggleOptionalField(this,'serviceMethodologyContent')">
@@ -845,7 +887,10 @@
       Include Guarantee
     </label>
     <div id="warrantyContent">
-      <h2>Guarantee</h2>
+      <div class="section-head-row">
+        <h2>Guarantee</h2>
+        <label class="page-break-toggle"><input type="checkbox" id="pageBreakWarranty" onchange="applyPageBreak('pageBreakWarranty','warrantySection')">Start on a new page</label>
+      </div>
       <div class="warranty-select-row">
         <label>Warranty Type
           <select id="warrantyTypeSelect" onchange="onWarrantyTypeChange()">
@@ -867,7 +912,10 @@
   </div>
 
   <div class="section" id="pricingInitialSection">
-    <h2>Pricing &mdash; Initial Visit</h2>
+    <div class="section-head-row">
+      <h2>Pricing &mdash; Initial Visit</h2>
+      <label class="page-break-toggle"><input type="checkbox" id="pageBreakPricingInitial" onchange="applyPageBreak('pageBreakPricingInitial','pricingInitialSection')">Start on a new page</label>
+    </div>
     <table class="pricing" id="pricingTableInitial">
       <thead>
         <tr>
@@ -899,7 +947,10 @@
   </label>
 
   <div class="section" id="recurringSection">
-    <h2>Pricing &mdash; Recurring Service</h2>
+    <div class="section-head-row">
+      <h2>Pricing &mdash; Recurring Service</h2>
+      <label class="page-break-toggle"><input type="checkbox" id="pageBreakRecurring" onchange="applyPageBreak('pageBreakRecurring','recurringSection')">Start on a new page</label>
+    </div>
     <table class="pricing" id="pricingTableRecurring">
       <thead>
         <tr>
@@ -931,7 +982,10 @@
       Include As-Needed Service Pricing
     </label>
     <div id="whatsNotIncludedContent">
-      <h2>As-Needed Service Pricing</h2>
+      <div class="section-head-row">
+        <h2>As-Needed Service Pricing</h2>
+        <label class="page-break-toggle"><input type="checkbox" id="pageBreakWhatsNotIncluded" onchange="applyPageBreak('pageBreakWhatsNotIncluded','whatsNotIncludedField')">Start on a new page</label>
+      </div>
       <div class="addon-mode-row">
         <label>Format
           <select id="addonModeSelect" onchange="onAddonModeChange()">
@@ -961,7 +1015,10 @@
   </div>
 
   <div class="section" id="termsSection">
-    <h2>Terms &amp; Conditions</h2>
+    <div class="section-head-row">
+      <h2>Terms &amp; Conditions</h2>
+      <label class="page-break-toggle"><input type="checkbox" id="pageBreakTerms" checked onchange="applyPageBreak('pageBreakTerms','termsSection')">Start on a new page</label>
+    </div>
     <div class="terms-select-row">
       <label>Terms Template
         <select id="termsTemplateSelect" onchange="onTermsTemplateChange()"></select>
@@ -976,7 +1033,10 @@
   </div>
 
   <div class="section" id="acceptanceSection">
-    <h2>Acceptance</h2>
+    <div class="section-head-row">
+      <h2>Acceptance</h2>
+      <label class="page-break-toggle"><input type="checkbox" id="pageBreakAcceptance" checked onchange="applyPageBreak('pageBreakAcceptance','acceptanceSection')">Start on a new page</label>
+    </div>
     <div class="sign-grid">
       <div class="sign-block">
         <div class="line sigline" id="clientSigLine" data-save="clientSigLine" contenteditable="true" data-target="clientDate"></div>
@@ -1087,7 +1147,13 @@ document.addEventListener('keydown', function(e){
 });
 
 function sanitizeInlineHtml(html){
-  const allowed = ['STRONG', 'B', 'EM', 'I', 'U'];
+  // DIV/P/BR must stay allowed -- these are what preserve line and paragraph
+  // breaks in the rich-text fields. Without them, any multi-line content
+  // (typed with Enter, or pasted from somewhere that used real paragraphs)
+  // silently collapses into one run-on block of text the moment it's saved,
+  // since collectFormState() sanitizes every rich-text field's HTML before
+  // storing it.
+  const allowed = ['STRONG', 'B', 'EM', 'I', 'U', 'DIV', 'P', 'BR'];
   const temp = document.createElement('div');
   temp.innerHTML = html;
   (function clean(node){
@@ -2077,6 +2143,10 @@ function collectFormState(){
   state.includeWhatsIncluded = document.getElementById('includeWhatsIncluded').checked;
   state.includeWhatsNotIncluded = document.getElementById('includeWhatsNotIncluded').checked;
   state.includeWarranty = document.getElementById('includeWarranty').checked;
+  state.pageBreaks = {};
+  PAGE_BREAK_SECTIONS.forEach(([checkboxId]) => {
+    state.pageBreaks[checkboxId] = document.getElementById(checkboxId).checked;
+  });
   state.jobType = (document.getElementById('jobType').value === 'Other (custom)')
     ? (document.getElementById('jobTypeCustomInput').value.trim() || 'Other (custom)')
     : document.getElementById('jobType').value;
@@ -2185,6 +2255,16 @@ function applyFormState(state){
   (state.addonRows || []).forEach(r => addAddonRow(r.item, r.qty, r.price, r.description));
   document.getElementById('addonTextWrap').style.display = (state.addonMode === 'table') ? 'none' : 'block';
   document.getElementById('addonTableWrap').style.display = (state.addonMode === 'table') ? 'block' : 'none';
+
+  // Proposals saved before this feature existed won't have state.pageBreaks --
+  // fall back to each checkbox's default (checked) attribute in that case,
+  // matching the forced-break behavior this replaced.
+  PAGE_BREAK_SECTIONS.forEach(([checkboxId, sectionId]) => {
+    const checkbox = document.getElementById(checkboxId);
+    const saved = state.pageBreaks ? state.pageBreaks[checkboxId] : undefined;
+    checkbox.checked = saved !== undefined ? saved : checkbox.defaultChecked;
+    applyPageBreak(checkboxId, sectionId);
+  });
 
   resizeAllTextareas();
 }
@@ -2725,6 +2805,92 @@ document.getElementById('customerDeleteBtn').addEventListener('click', async () 
   openCustomerId = null;
   renderCustomerBoard();
 });
+
+/* ============== Manual page-break control + guide ruler ============== */
+
+const PAGE_BREAK_SECTIONS = [
+  ['pageBreakInspectionNotes', 'inspectionNotesSection'],
+  ['pageBreakScopeOfService', 'scopeOfServiceSection'],
+  ['pageBreakWarranty', 'warrantySection'],
+  ['pageBreakPricingInitial', 'pricingInitialSection'],
+  ['pageBreakRecurring', 'recurringSection'],
+  ['pageBreakWhatsNotIncluded', 'whatsNotIncludedField'],
+  ['pageBreakTerms', 'termsSection'],
+  ['pageBreakAcceptance', 'acceptanceSection']
+];
+
+function applyPageBreak(checkboxId, sectionId){
+  const checkbox = document.getElementById(checkboxId);
+  const section = document.getElementById(sectionId);
+  if (!checkbox || !section) return;
+  section.classList.toggle('force-new-page', checkbox.checked);
+  renderPageGuides();
+}
+
+function initPageBreakToggles(){
+  PAGE_BREAK_SECTIONS.forEach(([checkboxId, sectionId]) => applyPageBreak(checkboxId, sectionId));
+}
+
+// Letter paper, 11in tall, 0.4in top + bottom margin (matches savePDFFile()'s
+// export settings and native print's default margins closely enough to be
+// a useful estimate) = 10.2in of content per page = 979.2px at the
+// CSS-standard 96px/inch, regardless of the viewer's actual screen DPI.
+const PAGE_CONTENT_HEIGHT_PX = 979.2;
+let showPageGuides = false;
+let pageGuideRenderScheduled = false;
+
+function togglePageGuides(){
+  showPageGuides = !showPageGuides;
+  document.getElementById('togglePageGuidesBtn').classList.toggle('active', showPageGuides);
+  renderPageGuides();
+}
+
+function renderPageGuides(){
+  const sheet = document.querySelector('.sheet');
+  sheet.querySelectorAll('.page-guide').forEach(el => el.remove());
+  if (!showPageGuides) return;
+
+  const children = Array.from(sheet.children).filter(el =>
+    el.offsetParent !== null && !el.classList.contains('page-guide')
+  );
+  if (!children.length) return;
+
+  const breakPoints = [0];
+  children.forEach(child => {
+    if (child.classList.contains('force-new-page')) breakPoints.push(child.offsetTop);
+  });
+  breakPoints.push(sheet.scrollHeight);
+
+  let pageNumber = 1;
+  for (let i = 0; i < breakPoints.length - 1; i++) {
+    const segStart = breakPoints[i];
+    const segEnd = breakPoints[i + 1];
+    let y = segStart + PAGE_CONTENT_HEIGHT_PX;
+    while (y < segEnd - 20) {
+      pageNumber++;
+      const guide = document.createElement('div');
+      guide.className = 'page-guide';
+      guide.style.top = y + 'px';
+      guide.innerHTML = `<span>Page ${pageNumber} starts ~here</span>`;
+      sheet.appendChild(guide);
+      y += PAGE_CONTENT_HEIGHT_PX;
+    }
+    pageNumber++;
+  }
+}
+
+function schedulePageGuideRender(){
+  if (pageGuideRenderScheduled) return;
+  pageGuideRenderScheduled = true;
+  setTimeout(() => { pageGuideRenderScheduled = false; renderPageGuides(); }, 250);
+}
+
+new MutationObserver(schedulePageGuideRender).observe(document.querySelector('.sheet'), {
+  childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'], characterData: true
+});
+window.addEventListener('resize', schedulePageGuideRender);
+
+initPageBreakToggles();
 
 if (!dbStorage._configured()) dbStorage._warnUnconfigured();
 renderSidebar();
