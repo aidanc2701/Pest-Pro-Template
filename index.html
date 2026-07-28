@@ -1378,6 +1378,8 @@ const pricingItems = [
   "Initial Inspection",
   "Initial Treatment / Setup",
   "Recurring Service Visit",
+  "General Insect Treatment — Initial Service",
+  "General Insect Treatment — Recurring",
   "Trapping - Setup & Removal",
   "Netting - Material & Labor",
   "Mesh Installation",
@@ -1391,6 +1393,11 @@ const pricingItems = [
   "Materials",
   "Other (custom)"
 ];
+
+const pricingPresetDescriptions = {
+  "General Insect Treatment — Initial Service": "Exterior only insect treatment covering 65+ common insects",
+  "General Insect Treatment — Recurring": "Exterior only insect treatment covering 65+ common insects"
+};
 
 const addonItems = [
   "Gopher Control",
@@ -1546,6 +1553,18 @@ function toggleCustomItemInput(select){
   if(isCustom) { customInput.focus(); resizeTextarea(customInput); }
   syncItemText(select);
 }
+function onPricingItemChange(select, kind){
+  recalc(kind);
+  toggleCustomItemInput(select);
+  const presetDesc = pricingPresetDescriptions[select.value];
+  if (presetDesc != null) {
+    const descField = select.closest('td').querySelector('.addon-desc-input');
+    if (descField) {
+      descField.value = presetDesc;
+      resizeTextarea(descField);
+    }
+  }
+}
 function addRow(kind, item, description){
   rowId++;
   const tbodyId = kind === 'initial' ? 'pricingBodyInitial' : 'pricingBodyRecurring';
@@ -1561,7 +1580,7 @@ function addRow(kind, item, description){
   tr.innerHTML = `
     <td class="drag" draggable="true">&#8942;&#8942;</td>
     <td>
-      <select onchange="recalc('${kind}'); toggleCustomItemInput(this);">${makeOptionsHtml(selectedOption)}</select><textarea class="custom-item-input" placeholder="Type item name" style="display:${selectedOption === 'Other (custom)' ? 'block' : 'none'};" oninput="resizeTextarea(this); syncItemText(this.previousElementSibling)">${customValueEscaped}</textarea><span class="print-item-text"></span>
+      <select onchange="onPricingItemChange(this, '${kind}');">${makeOptionsHtml(selectedOption)}</select><textarea class="custom-item-input" placeholder="Type item name" style="display:${selectedOption === 'Other (custom)' ? 'block' : 'none'};" oninput="resizeTextarea(this); syncItemText(this.previousElementSibling)">${customValueEscaped}</textarea><span class="print-item-text"></span>
       <textarea class="addon-desc-input" placeholder="Optional short description">${descEscaped}</textarea>
     </td>
     <td class="num"><input type="text" inputmode="decimal" value="1" oninput="recalc('${kind}')"></td>
