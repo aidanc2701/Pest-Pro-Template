@@ -202,8 +202,12 @@
   table.pricing td{padding:9px 8px; border-bottom:1px solid var(--line); vertical-align:top;}
 
   /* Keep these atomic during PDF/print pagination — never split mid-element,
-     which is what was causing lines to get cut off and duplicated across pages */
-  table.pricing tr, .photo-cell, .sign-block, .totals, .terms li {
+     which is what was causing lines to get cut off and duplicated across pages.
+     Terms clauses are deliberately NOT included here (see .terms li below):
+     forcing a whole clause to stay together pushes long ones entirely onto
+     the next page and leaves a large, ugly blank gap on the page before it.
+     orphans/widows give clean-enough breaks without that tradeoff. */
+  table.pricing tr, .photo-cell, .sign-block, .totals {
     break-inside: avoid;
     page-break-inside: avoid;
   }
@@ -336,7 +340,7 @@
 
   .terms{font-size:13px; line-height:1.75; color:var(--ink); font-family:var(--serif);}
   .terms ol{padding:0; margin:0; list-style:none; counter-reset:term-counter;}
-  .terms li{margin-bottom:8px; position:relative; padding-left:22px; break-inside:avoid; -webkit-column-break-inside:avoid;}
+  .terms li{margin-bottom:8px; position:relative; padding-left:22px;}
   .terms li::before{
     counter-increment:term-counter;
     content:counter(term-counter) ".";
@@ -1964,7 +1968,7 @@ async function savePDFFile(){
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
       pagebreak: {
         mode: ['css'],
-        avoid: ['tr', '.photo-cell', '.sign-block', '.totals', '#pricingInitialSection', '#recurringSection', '.terms li']
+        avoid: ['tr', '.photo-cell', '.sign-block', '.totals', '#pricingInitialSection', '#recurringSection']
       }
     };
 
