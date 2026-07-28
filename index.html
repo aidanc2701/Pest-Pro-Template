@@ -2365,6 +2365,7 @@ async function saveProposal(){
       currentProposalId = id;
     }
 
+    await ensureCrmCustomerExists(state.propName);
     await renderSidebar();
     toggleSidebar(true);
     btn.textContent = 'Saved ✓';
@@ -2676,6 +2677,7 @@ async function toggleCustomersView(force){
   const shouldOpen = typeof force === 'boolean' ? force : !isOpen;
   view.style.display = shouldOpen ? 'block' : 'none';
   document.querySelector('.sheet').style.display = shouldOpen ? 'none' : '';
+  document.getElementById('controlsPanel').style.display = shouldOpen ? 'none' : '';
   if (shouldOpen) {
     toggleSidebar(false);
     await renderCustomerBoard();
@@ -2727,6 +2729,26 @@ function escapeHtml(str){
 function truncate(str, len){
   if (!str) return '';
   return str.length > len ? str.slice(0, len).trim() + '…' : str;
+}
+
+async function ensureCrmCustomerExists(propName){
+  const name = (propName || '').trim();
+  if (!name) return;
+  try {
+    const customers = await getCustomers();
+    const exists = customers.some(c => (c.name || '').trim().toLowerCase() === name.toLowerCase());
+    if (exists) return;
+    customers.unshift({
+      id: 'c' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+      name: name,
+      stage: 'lead',
+      followUps: [],
+      createdAt: new Date().toISOString()
+    });
+    await setCustomers(customers);
+  } catch (err) {
+    console.error('Could not add customer to CRM', err);
+  }
 }
 
 async function addCustomer(){
