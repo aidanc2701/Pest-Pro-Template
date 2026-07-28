@@ -2257,12 +2257,12 @@ function applyFormState(state){
   document.getElementById('addonTableWrap').style.display = (state.addonMode === 'table') ? 'block' : 'none';
 
   // Proposals saved before this feature existed won't have state.pageBreaks --
-  // fall back to each checkbox's default (checked) attribute in that case,
+  // fall back to the same explicit defaults initPageBreakToggles() uses,
   // matching the forced-break behavior this replaced.
-  PAGE_BREAK_SECTIONS.forEach(([checkboxId, sectionId]) => {
+  PAGE_BREAK_SECTIONS.forEach(([checkboxId, sectionId, defaultVal]) => {
     const checkbox = document.getElementById(checkboxId);
     const saved = state.pageBreaks ? state.pageBreaks[checkboxId] : undefined;
-    checkbox.checked = saved !== undefined ? saved : checkbox.defaultChecked;
+    checkbox.checked = saved !== undefined ? saved : defaultVal;
     applyPageBreak(checkboxId, sectionId);
   });
 
@@ -2808,15 +2808,23 @@ document.getElementById('customerDeleteBtn').addEventListener('click', async () 
 
 /* ============== Manual page-break control + guide ruler ============== */
 
+// Third item is the intended default (matches the old hardcoded
+// forced-break behavior: Inspection Notes / Terms / Acceptance start
+// fresh pages, everything else flows). initPageBreakToggles() asserts
+// these explicitly on load rather than trusting the checkbox's current
+// .checked -- browsers restore form control state across a same-URL
+// reload independent of the HTML's `checked` attribute, so without this
+// a checkbox left unchecked during a previous visit/test stays stuck
+// unchecked forever instead of resetting to its real default.
 const PAGE_BREAK_SECTIONS = [
-  ['pageBreakInspectionNotes', 'inspectionNotesSection'],
-  ['pageBreakScopeOfService', 'scopeOfServiceSection'],
-  ['pageBreakWarranty', 'warrantySection'],
-  ['pageBreakPricingInitial', 'pricingInitialSection'],
-  ['pageBreakRecurring', 'recurringSection'],
-  ['pageBreakWhatsNotIncluded', 'whatsNotIncludedField'],
-  ['pageBreakTerms', 'termsSection'],
-  ['pageBreakAcceptance', 'acceptanceSection']
+  ['pageBreakInspectionNotes', 'inspectionNotesSection', true],
+  ['pageBreakScopeOfService', 'scopeOfServiceSection', false],
+  ['pageBreakWarranty', 'warrantySection', false],
+  ['pageBreakPricingInitial', 'pricingInitialSection', false],
+  ['pageBreakRecurring', 'recurringSection', false],
+  ['pageBreakWhatsNotIncluded', 'whatsNotIncludedField', false],
+  ['pageBreakTerms', 'termsSection', true],
+  ['pageBreakAcceptance', 'acceptanceSection', true]
 ];
 
 function applyPageBreak(checkboxId, sectionId){
@@ -2828,7 +2836,10 @@ function applyPageBreak(checkboxId, sectionId){
 }
 
 function initPageBreakToggles(){
-  PAGE_BREAK_SECTIONS.forEach(([checkboxId, sectionId]) => applyPageBreak(checkboxId, sectionId));
+  PAGE_BREAK_SECTIONS.forEach(([checkboxId, sectionId, defaultVal]) => {
+    document.getElementById(checkboxId).checked = defaultVal;
+    applyPageBreak(checkboxId, sectionId);
+  });
 }
 
 // Letter paper, 11in tall, 0.4in top + bottom margin (matches savePDFFile()'s
