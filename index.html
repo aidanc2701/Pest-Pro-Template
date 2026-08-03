@@ -115,6 +115,33 @@
   @media print{ #controlsPanel{display:none !important;} }
   @media (max-width:1350px){ #controlsPanel{display:none !important;} }
 
+  /* ============== Send-for-signature view (?view=<proposalId>) ============== */
+  /* A locked, read-only rendition of one saved proposal a client opens
+     directly from a link -- no login, no editor chrome, nothing but the
+     proposal itself and a place to sign. Both bars are screen-only. */
+  #signingBanner{
+    position:sticky; top:0; z-index:60; background:var(--accent-dark); color:#fff;
+    font-family:var(--sans); font-size:13px; text-align:center; padding:12px 20px;
+  }
+  #signingActionBar{
+    position:fixed; left:0; right:0; bottom:0; z-index:60; background:var(--ink); color:#fff;
+    font-family:var(--sans); font-size:13px; padding:14px 24px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    box-shadow:0 -4px 16px rgba(0,0,0,.18);
+  }
+  #signingActionBar button{
+    font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;
+    background:var(--accent); color:#fff; border:none; padding:10px 24px; border-radius:20px;
+  }
+  #signingActionBar button:disabled{opacity:.6; cursor:default;}
+  body.signing-view{padding-bottom:64px;}
+  body.signing-view .toolbar, body.signing-view #controlsPanel,
+  body.signing-view #sidebarOverlay, body.signing-view #proposalSidebar,
+  body.signing-view #customersView, body.signing-view #togglePageGuidesBtn{
+    display:none !important;
+  }
+  @media print{ #signingBanner, #signingActionBar{display:none !important;} }
+
   .sheet{
     max-width:850px; margin:36px auto 90px; background:var(--paper);
     box-shadow:0 1px 2px rgba(0,0,0,.04), 0 18px 48px -12px rgba(0,0,0,.18);
@@ -795,6 +822,14 @@
     <button type="button" class="add-row-btn discount-add-btn" onclick="addDiscountRow('initial')">+ Add Initial Visit Discount</button>
     <button type="button" class="add-row-btn discount-add-btn" onclick="addDiscountRow('recurring')">+ Add Recurring Discount</button>
   </div>
+</div>
+
+<div id="signingBanner" style="display:none;">
+  You've been sent this proposal to review. Scroll down to the <strong>Acceptance</strong> section at the bottom to sign electronically.
+</div>
+<div id="signingActionBar" style="display:none;">
+  <span id="signingStatusText">Type your name in the Client Signature box below, then submit.</span>
+  <button type="button" id="submitSignatureBtn" onclick="submitSignature()">Submit Signature</button>
 </div>
 
 <div id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
@@ -2468,6 +2503,100 @@ async function setProposalStatus(id, status, evt){
   }
 }
 
+function copySigningLink(id, evt){
+  if (evt) evt.stopPropagation();
+  const url = window.location.origin + window.location.pathname + '?view=' + encodeURIComponent(id);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(() => showAlert('Signing link copied! Paste it into an email or text to send to your client.\n\nThey can click it, sign electronically, and it saves straight back here -- no PDF, no separate tool.'))
+      .catch(() => showPrompt('Could not copy automatically -- here\'s the link to copy manually:', url));
+  } else {
+    showPrompt('Here\'s the signing link -- copy it to send to your client:', url);
+  }
+}
+
+/* ============== Send-for-signature view ============== */
+
+function getUrlProposalId(){
+  return new URLSearchParams(window.location.search).get('view');
+}
+
+async function enterSigningViewMode(id){
+  const result = await dbStorage.get('proposal-data:' + id, true);
+  if (!result || !result.value) {
+    document.body.innerHTML =
+      '<div style="max-width:440px;margin:120px auto;text-align:center;font-family:sans-serif;color:#555;padding:0 24px;">' +
+      'This proposal link is no longer valid. Please contact us for an updated copy.</div>';
+    return;
+  }
+  const state = JSON.parse(result.value);
+  applyFormState(state);
+  currentProposalId = id;
+  document.body.classList.add('signing-view');
+  lockForSigning();
+  document.getElementById('signingBanner').style.display = 'block';
+  document.getElementById('signingActionBar').style.display = 'flex';
+  refreshSigningActionBar();
+  document.getElementById('clientSigLine').addEventListener('input', refreshSigningActionBar);
+  window.scrollTo({ top: 0 });
+}
+
+function lockForSigning(){
+  const sheet = document.querySelector('.sheet');
+  sheet.querySelectorAll('input, textarea, select').forEach(el => {
+    if (el.id === 'clientPrintName') return; // the one field the client fills in
+    el.disabled = true;
+  });
+  sheet.querySelectorAll('[contenteditable="true"]').forEach(el => {
+    if (el.id === 'clientSigLine') return; // the one field the client signs in
+    el.setAttribute('contenteditable', 'false');
+  });
+}
+
+function refreshSigningActionBar(){
+  const statusText = document.getElementById('signingStatusText');
+  const btn = document.getElementById('submitSignatureBtn');
+  const alreadySigned = !!document.getElementById('clientDate').value && btn.dataset.submitted === 'true';
+  const hasSignature = document.getElementById('clientSigLine').textContent.trim() !== '';
+  if (alreadySigned) {
+    statusText.textContent = 'Signed on ' + document.getElementById('clientDate').value + '. Thank you!';
+    btn.textContent = 'Signed ✓';
+    btn.disabled = true;
+  } else {
+    statusText.textContent = hasSignature
+      ? 'Ready to submit.'
+      : 'Type your name in the Client Signature box below, then submit.';
+    btn.textContent = 'Submit Signature';
+    btn.disabled = false;
+  }
+}
+
+async function submitSignature(){
+  const nameTyped = document.getElementById('clientSigLine').textContent.trim();
+  if (!nameTyped) {
+    showAlert('Please sign in the Client Signature box before submitting.');
+    return;
+  }
+  const btn = document.getElementById('submitSignatureBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+  try {
+    const state = collectFormState();
+    await dbStorage.set('proposal-data:' + currentProposalId, JSON.stringify(state), true);
+    await setProposalStatus(currentProposalId, 'accepted');
+    document.getElementById('clientSigLine').setAttribute('contenteditable', 'false');
+    document.getElementById('clientPrintName').disabled = true;
+    btn.dataset.submitted = 'true';
+    document.getElementById('signingBanner').textContent = '✓ Thank you -- this proposal has been signed and accepted.';
+    refreshSigningActionBar();
+  } catch (err) {
+    console.error('Could not submit signature', err);
+    btn.disabled = false;
+    btn.textContent = 'Submit Signature';
+    showAlert('Something went wrong submitting your signature. Please check your connection and try again.');
+  }
+}
+
 async function startNewProposal(){
   const ok = await showConfirm('Clear the form to start a fresh proposal? Anything unsaved will be lost.');
   if (!ok) return;
@@ -2643,10 +2772,12 @@ async function renderSidebar(){
       ${actionsHtml}
       <div class="card-actions">
         <button class="load-btn">Load</button>
+        <button class="sign-link-btn">🔗 Signing Link</button>
         <button class="delete-btn">Delete</button>
       </div>
     `;
     card.querySelector('.load-btn').addEventListener('click', ()=>loadProposal(item.id));
+    card.querySelector('.sign-link-btn').addEventListener('click', (e)=>copySigningLink(item.id, e));
     card.querySelector('.delete-btn').addEventListener('click', (e)=>deleteProposal(item.id, e));
     const sentBtn = card.querySelector('.sent-btn');
     if (sentBtn) sentBtn.addEventListener('click', (e)=>setProposalStatus(item.id, 'sent', e));
@@ -3102,7 +3233,13 @@ window.addEventListener('resize', schedulePageGuideRender);
 initPageBreakToggles();
 
 if (!dbStorage._configured()) dbStorage._warnUnconfigured();
-renderSidebar();
+
+const urlProposalId = getUrlProposalId();
+if (urlProposalId) {
+  enterSigningViewMode(urlProposalId);
+} else {
+  renderSidebar();
+}
 </script>
 
 </body>
