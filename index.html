@@ -140,6 +140,30 @@
   body.signing-view #customersView, body.signing-view #togglePageGuidesBtn{
     display:none !important;
   }
+  /* The client only ever sees this locked view -- it should read like the
+     finished document (same treatment as print/export), not like a form
+     they could still edit. Hide every editing control and show the plain-
+     text stand-ins those controls already keep in sync. */
+  body.signing-view table.pricing select,
+  body.signing-view table.pricing .custom-item-input,
+  body.signing-view table.pricing .addon-price-input,
+  body.signing-view .add-row-btn, body.signing-view td.del, body.signing-view td.drag,
+  body.signing-view th.drag-header, body.signing-view .term-row .term-del,
+  body.signing-view .photo-cell .photo-del, body.signing-view #photoUploadInput,
+  body.signing-view #togglePhotosBtn, body.signing-view .onetime-toggle,
+  body.signing-view .optional-toggle, body.signing-view .terms-select-row,
+  body.signing-view .warranty-select-row, body.signing-view .addon-mode-row,
+  body.signing-view .page-guide, body.signing-view #configBanner,
+  body.signing-view .discount-row .discount-del, body.signing-view .discount-row select,
+  body.signing-view .discount-row input.discount-label, body.signing-view .discount-row input.discount-value{
+    display:none !important;
+  }
+  body.signing-view .print-item-text{height:auto !important; overflow:visible !important;}
+  body.signing-view .discount-row{border:none; padding:4px 0; background:none; margin-bottom:6px;}
+  body.signing-view .term-row textarea{border:none; resize:none;}
+  body.signing-view .terms li.template-clause, body.signing-view .terms li.warranty-legal-clause{
+    border-bottom:none; background:none; padding-left:22px; padding-top:0; padding-bottom:0; padding-right:0;
+  }
   @media print{ #signingBanner, #signingActionBar{display:none !important;} }
 
   .sheet{
