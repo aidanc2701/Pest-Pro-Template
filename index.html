@@ -2153,6 +2153,7 @@ addRow('recurring', "Recurring Service Visit");
 
 const INDEX_KEY = 'proposal-index';
 let currentProposalId = null;
+let signingAlreadyCompleted = false;
 
 (async function loadOwnerName(){
   try {
@@ -2532,6 +2533,7 @@ async function enterSigningViewMode(id){
   const state = JSON.parse(result.value);
   applyFormState(state);
   currentProposalId = id;
+  signingAlreadyCompleted = !!(state.clientSigLine && state.clientSigLine.trim());
   document.body.classList.add('signing-view');
   lockForSigning();
   document.getElementById('signingBanner').style.display = 'block';
@@ -2556,7 +2558,7 @@ function lockForSigning(){
 function refreshSigningActionBar(){
   const statusText = document.getElementById('signingStatusText');
   const btn = document.getElementById('submitSignatureBtn');
-  const alreadySigned = !!document.getElementById('clientDate').value;
+  const alreadySigned = signingAlreadyCompleted;
   const hasSignature = document.getElementById('clientSigLine').textContent.trim() !== '';
   if (alreadySigned) {
     statusText.textContent = 'Signed on ' + document.getElementById('clientDate').value + '. Thank you! A representative will reach out shortly to schedule.';
@@ -2586,6 +2588,7 @@ async function submitSignature(){
     const state = collectFormState();
     await dbStorage.set('proposal-data:' + currentProposalId, JSON.stringify(state), true);
     await setProposalStatus(currentProposalId, 'accepted');
+    signingAlreadyCompleted = true;
     document.getElementById('clientSigLine').setAttribute('contenteditable', 'false');
     document.getElementById('clientPrintName').disabled = true;
     document.getElementById('signingBanner').textContent = '✓ Thank you -- this proposal has been signed and accepted. A representative will reach out shortly to schedule your service.';
