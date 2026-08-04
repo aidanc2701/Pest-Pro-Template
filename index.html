@@ -2556,12 +2556,14 @@ function lockForSigning(){
 function refreshSigningActionBar(){
   const statusText = document.getElementById('signingStatusText');
   const btn = document.getElementById('submitSignatureBtn');
-  const alreadySigned = !!document.getElementById('clientDate').value && btn.dataset.submitted === 'true';
+  const alreadySigned = !!document.getElementById('clientDate').value;
   const hasSignature = document.getElementById('clientSigLine').textContent.trim() !== '';
   if (alreadySigned) {
-    statusText.textContent = 'Signed on ' + document.getElementById('clientDate').value + '. Thank you!';
+    statusText.textContent = 'Signed on ' + document.getElementById('clientDate').value + '. Thank you! A representative will reach out shortly to schedule.';
     btn.textContent = 'Signed ✓';
     btn.disabled = true;
+    document.getElementById('clientSigLine').setAttribute('contenteditable', 'false');
+    document.getElementById('clientPrintName').disabled = true;
   } else {
     statusText.textContent = hasSignature
       ? 'Ready to submit.'
@@ -2586,8 +2588,7 @@ async function submitSignature(){
     await setProposalStatus(currentProposalId, 'accepted');
     document.getElementById('clientSigLine').setAttribute('contenteditable', 'false');
     document.getElementById('clientPrintName').disabled = true;
-    btn.dataset.submitted = 'true';
-    document.getElementById('signingBanner').textContent = '✓ Thank you -- this proposal has been signed and accepted.';
+    document.getElementById('signingBanner').textContent = '✓ Thank you -- this proposal has been signed and accepted. A representative will reach out shortly to schedule your service.';
     refreshSigningActionBar();
   } catch (err) {
     console.error('Could not submit signature', err);
