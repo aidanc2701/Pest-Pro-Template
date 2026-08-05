@@ -38,6 +38,44 @@ Until step 4 is done, the page shows a red banner at the top and the
 Saved Proposals sidebar will show an error when you try to save/load. The
 proposal builder itself (pricing, terms, PDF export) works fine either way.
 
+## Email notification when a proposal is signed (optional)
+
+By default you have to keep checking Saved Proposals to see if a client has
+signed. Set this up once and you'll get an email the moment they submit their
+signature, using a free **EmailJS** account (no backend server needed — the
+page emails you directly, the same way it talks to Supabase).
+
+1. Create a free account at [emailjs.com](https://www.emailjs.com).
+2. **Email Services** → **Add New Service** → connect your Gmail (or
+   whichever inbox you want to send from). Note the **Service ID** it gives
+   you.
+3. **Email Templates** → **Create New Template**. Set the **To Email** field
+   (in the template's settings, not the body) to your own email address —
+   that's what makes every notification land in your inbox regardless of who
+   signs. Use these variables in the subject/body:
+   - `{{property_name}}` — the property/company name on the proposal
+   - `{{client_name}}` — the name they typed as their signature
+   - `{{signed_date}}` — the date they signed
+   - `{{signing_link}}` — click it to jump straight to the signed proposal
+
+   For example, subject: `Proposal signed: {{property_name}}`, body:
+   `{{client_name}} signed on {{signed_date}}. View it: {{signing_link}}`
+
+   Note the **Template ID**.
+4. **Account → General** → copy your **Public Key**.
+5. Open `index.html` and find:
+   ```js
+   const EMAILJS_PUBLIC_KEY = 'REPLACE_WITH_EMAILJS_PUBLIC_KEY';
+   const EMAILJS_SERVICE_ID = 'REPLACE_WITH_EMAILJS_SERVICE_ID';
+   const EMAILJS_TEMPLATE_ID = 'REPLACE_WITH_EMAILJS_TEMPLATE_ID';
+   ```
+   Replace all three with the values above.
+6. Commit and push.
+
+The free EmailJS plan covers 200 emails/month, far more than you'll need for
+this. Until you fill these in, signing still works exactly the same — you
+just won't get an email about it.
+
 ## Day-to-day workflow
 
 You don't need to touch any of this yourself. Just tell Claude what you

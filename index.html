@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root{
     --pp-green:#8FB94E;
@@ -1156,6 +1157,36 @@
    ================================================================= */
 const SUPABASE_URL = 'https://girqzwoadjovqeudypnw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpcnF6d29hZGpvdnFldWR5cG53Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTY5OTgsImV4cCI6MjEwMDU3Mjk5OH0.ONIV8rxUTlLPBFQYA3gqb9Te3ax5LvOmqtbI2nz5djI';
+
+/* =================================================================
+   SIGNING NOTIFICATION EMAIL (optional)
+   Fill these in with your EmailJS account's values to get an email
+   the moment a client signs a proposal. See README.md for setup.
+   Leave the placeholders as-is to skip email notifications entirely
+   -- everything else about signing still works fine either way.
+   ================================================================= */
+const EMAILJS_PUBLIC_KEY = 'REPLACE_WITH_EMAILJS_PUBLIC_KEY';
+const EMAILJS_SERVICE_ID = 'REPLACE_WITH_EMAILJS_SERVICE_ID';
+const EMAILJS_TEMPLATE_ID = 'REPLACE_WITH_EMAILJS_TEMPLATE_ID';
+const emailNotifyConfigured = typeof emailjs !== 'undefined' &&
+  !EMAILJS_PUBLIC_KEY.includes('REPLACE_WITH') &&
+  !EMAILJS_SERVICE_ID.includes('REPLACE_WITH') &&
+  !EMAILJS_TEMPLATE_ID.includes('REPLACE_WITH');
+if (emailNotifyConfigured) emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+async function sendSignatureNotificationEmail(state){
+  if (!emailNotifyConfigured) return;
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      property_name: state.propName || '(unnamed property)',
+      client_name: state.clientSigLine || '',
+      signed_date: state.clientDate || '',
+      signing_link: window.location.href
+    });
+  } catch (err) {
+    console.error('Signature notification email failed to send', err);
+  }
+}
 
 const dbStorage = {
   _configured(){
@@ -2612,6 +2643,7 @@ async function submitSignature(){
     const state = collectFormState();
     await dbStorage.set('proposal-data:' + currentProposalId, JSON.stringify(state), true);
     await setProposalStatus(currentProposalId, 'accepted');
+    sendSignatureNotificationEmail(state);
     signingAlreadyCompleted = true;
     document.getElementById('clientSigLine').setAttribute('contenteditable', 'false');
     document.getElementById('clientPrintName').disabled = true;
