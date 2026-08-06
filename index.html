@@ -1180,6 +1180,7 @@ async function sendSignatureNotificationEmail(state){
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
       property_name: state.propName || '(unnamed property)',
       client_name: state.clientSigLine || '',
+      print_name: state.clientPrintName || '',
       signed_date: state.clientDate || '',
       signing_link: window.location.href
     });

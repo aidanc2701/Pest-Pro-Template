@@ -55,6 +55,7 @@ page emails you directly, the same way it talks to Supabase).
    signs. Use these variables in the subject/body:
    - `{{property_name}}` — the property/company name on the proposal
    - `{{client_name}}` — the name they typed as their signature
+   - `{{print_name}}` — the name they typed in the "Print Name" box (usually clearer than the signature script)
    - `{{signed_date}}` — the date they signed
    - `{{signing_link}}` — click it to jump straight to the signed proposal
 
