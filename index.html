@@ -151,6 +151,9 @@
     font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer;
     background:#fff; color:#3F5C42; border:none; padding:7px 16px; border-radius:16px;
   }
+  #signedLockBanner button.unsign-btn{
+    background:none; color:#fff; text-decoration:underline; font-weight:600; padding:7px 4px;
+  }
   body.signing-view #signedLockBanner{display:none !important;}
   @media print{ #signedLockBanner{display:none !important;} }
 
@@ -665,6 +668,12 @@
   .sidebar-card .signed-lock-note{
     font-size:10.5px; color:#2E7D42; font-weight:600; margin-top:6px; display:flex; align-items:center; gap:4px;
   }
+  .sidebar-card .unsign-link{
+    display:block; background:none; border:none; padding:0; margin-top:4px;
+    font-family:var(--sans); font-size:10.5px; color:var(--secondary); text-decoration:underline;
+    cursor:pointer; text-align:left;
+  }
+  .sidebar-card .unsign-link:hover{color:var(--ink);}
   .sidebar-empty{color:var(--secondary); font-size:13px; text-align:center; padding:40px 10px;}
   .sidebar-card{
     border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin-bottom:12px;
@@ -907,6 +916,7 @@
 <div id="signedLockBanner" style="display:none;">
   <span>🔒 This proposal has been signed and is locked from editing.</span>
   <button type="button" onclick="duplicateSignedProposal(currentProposalId)">Duplicate to Edit</button>
+  <button type="button" class="unsign-btn" onclick="unsignProposal(currentProposalId)">Not signed correctly? Move back to Active</button>
 </div>
 
 <div id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
@@ -2677,6 +2687,13 @@ async function setProposalStatus(id, status, evt){
   }
 }
 
+async function unsignProposal(id, evt){
+  if (evt) evt.stopPropagation();
+  const ok = await showConfirm('Move this proposal back to Active and unlock it for editing? Only do this if it wasn\'t actually signed correctly -- for example the signature ended up blank or was accidentally cleared.');
+  if (!ok) return;
+  await setProposalStatus(id, 'sent');
+}
+
 function copySigningLink(id, evt){
   if (evt) evt.stopPropagation();
   const url = window.location.origin + window.location.pathname + '?view=' + encodeURIComponent(id);
@@ -2977,7 +2994,7 @@ async function renderSidebar(){
         Recurring <span class="card-total">${item.recurringTotal}</span>
       </div>
       <div class="card-owner">Owner: ${owner}</div>
-      ${isSigned ? '<div class="signed-lock-note">🔒 Locked from editing</div>' : ''}
+      ${isSigned ? '<div class="signed-lock-note">🔒 Locked from editing</div><button type="button" class="unsign-link">Not signed correctly? Move to Active</button>' : ''}
       ${actionsHtml}
       <div class="card-actions">
         <button class="load-btn">${isSigned ? 'View' : 'Load'}</button>
@@ -2988,6 +3005,8 @@ async function renderSidebar(){
     card.querySelector('.load-btn').addEventListener('click', ()=>loadProposal(item.id, status));
     card.querySelector('.sign-link-btn').addEventListener('click', (e)=>copySigningLink(item.id, e));
     card.querySelector('.delete-btn').addEventListener('click', (e)=>deleteProposal(item.id, e));
+    const unsignBtn = card.querySelector('.unsign-link');
+    if (unsignBtn) unsignBtn.addEventListener('click', (e)=>unsignProposal(item.id, e));
     const sentBtn = card.querySelector('.sent-btn');
     if (sentBtn) sentBtn.addEventListener('click', (e)=>setProposalStatus(item.id, 'sent', e));
     const acceptBtn = card.querySelector('.accept-btn');
