@@ -135,6 +135,25 @@
     background:var(--accent); color:#fff; border:none; padding:10px 24px; border-radius:20px;
   }
   #signingActionBar button:disabled{opacity:.6; cursor:default;}
+
+  /* ============== Locked view for a SIGNED proposal in the owner's own
+     editor (distinct from #signingBanner above, which is client-facing).
+     Once a client has signed, the record shouldn't be editable in place --
+     accidental changes here would silently rewrite what was legally
+     accepted. "Duplicate to Edit" is the escape hatch: it opens an
+     editable copy instead of unlocking the signed original. ============== */
+  #signedLockBanner{
+    position:sticky; top:0; z-index:59; background:#3F5C42; color:#fff;
+    font-family:var(--sans); font-size:13px; text-align:center; padding:12px 20px;
+    display:none; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap;
+  }
+  #signedLockBanner button{
+    font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer;
+    background:#fff; color:#3F5C42; border:none; padding:7px 16px; border-radius:16px;
+  }
+  body.signing-view #signedLockBanner{display:none !important;}
+  @media print{ #signedLockBanner{display:none !important;} }
+
   body.signing-view{padding-bottom:64px;}
   body.signing-view .toolbar, body.signing-view #controlsPanel,
   body.signing-view #sidebarOverlay, body.signing-view #proposalSidebar,
@@ -144,25 +163,39 @@
   /* The client only ever sees this locked view -- it should read like the
      finished document (same treatment as print/export), not like a form
      they could still edit. Hide every editing control and show the plain-
-     text stand-ins those controls already keep in sync. */
-  body.signing-view table.pricing select,
-  body.signing-view table.pricing .custom-item-input,
-  body.signing-view table.pricing .addon-price-input,
-  body.signing-view .add-row-btn, body.signing-view td.del, body.signing-view td.drag,
-  body.signing-view th.drag-header, body.signing-view .term-row .term-del,
-  body.signing-view .photo-cell .photo-del, body.signing-view #photoUploadInput,
-  body.signing-view #togglePhotosBtn, body.signing-view .onetime-toggle,
-  body.signing-view .optional-toggle, body.signing-view .terms-select-row,
-  body.signing-view .warranty-select-row, body.signing-view .addon-mode-row,
-  body.signing-view .page-guide, body.signing-view #configBanner,
-  body.signing-view .discount-row .discount-del, body.signing-view .discount-row select,
-  body.signing-view .discount-row input.discount-label, body.signing-view .discount-row input.discount-value{
+     text stand-ins those controls already keep in sync. The signed-and-
+     locked editor view (body.editor-locked-signed) reuses the exact same
+     treatment -- a signed proposal should look just as "finished" to the
+     owner as it does to the client who signed it. */
+  body.signing-view table.pricing select, body.editor-locked-signed table.pricing select,
+  body.signing-view table.pricing .custom-item-input, body.editor-locked-signed table.pricing .custom-item-input,
+  body.signing-view table.pricing .addon-price-input, body.editor-locked-signed table.pricing .addon-price-input,
+  body.signing-view .add-row-btn, body.editor-locked-signed .add-row-btn,
+  body.signing-view td.del, body.editor-locked-signed td.del,
+  body.signing-view td.drag, body.editor-locked-signed td.drag,
+  body.signing-view th.drag-header, body.editor-locked-signed th.drag-header,
+  body.signing-view .term-row .term-del, body.editor-locked-signed .term-row .term-del,
+  body.signing-view .photo-cell .photo-del, body.editor-locked-signed .photo-cell .photo-del,
+  body.signing-view #photoUploadInput, body.editor-locked-signed #photoUploadInput,
+  body.signing-view #togglePhotosBtn, body.editor-locked-signed #togglePhotosBtn,
+  body.signing-view .onetime-toggle, body.editor-locked-signed .onetime-toggle,
+  body.signing-view .optional-toggle, body.editor-locked-signed .optional-toggle,
+  body.signing-view .terms-select-row, body.editor-locked-signed .terms-select-row,
+  body.signing-view .warranty-select-row, body.editor-locked-signed .warranty-select-row,
+  body.signing-view .addon-mode-row, body.editor-locked-signed .addon-mode-row,
+  body.signing-view .page-guide, body.editor-locked-signed .page-guide,
+  body.signing-view #configBanner, body.editor-locked-signed #configBanner,
+  body.signing-view .discount-row .discount-del, body.editor-locked-signed .discount-row .discount-del,
+  body.signing-view .discount-row select, body.editor-locked-signed .discount-row select,
+  body.signing-view .discount-row input.discount-label, body.editor-locked-signed .discount-row input.discount-label,
+  body.signing-view .discount-row input.discount-value, body.editor-locked-signed .discount-row input.discount-value{
     display:none !important;
   }
-  body.signing-view .print-item-text{height:auto !important; overflow:visible !important;}
-  body.signing-view .discount-row{border:none; padding:4px 0; background:none; margin-bottom:6px;}
-  body.signing-view .term-row textarea{border:none; resize:none;}
-  body.signing-view .terms li.template-clause, body.signing-view .terms li.warranty-legal-clause{
+  body.signing-view .print-item-text, body.editor-locked-signed .print-item-text{height:auto !important; overflow:visible !important;}
+  body.signing-view .discount-row, body.editor-locked-signed .discount-row{border:none; padding:4px 0; background:none; margin-bottom:6px;}
+  body.signing-view .term-row textarea, body.editor-locked-signed .term-row textarea{border:none; resize:none;}
+  body.signing-view .terms li.template-clause, body.editor-locked-signed .terms li.template-clause,
+  body.signing-view .terms li.warranty-legal-clause, body.editor-locked-signed .terms li.warranty-legal-clause{
     border-bottom:none; background:none; padding-left:22px; padding-top:0; padding-bottom:0; padding-right:0;
   }
   @media print{ #signingBanner, #signingActionBar{display:none !important;} }
@@ -617,7 +650,21 @@
     font-size:10.5px; letter-spacing:.3px; text-transform:uppercase;
     color:var(--secondary); padding:0 20px 14px; border-bottom:1px solid var(--line);
   }
+  .proposal-tabs{display:flex; gap:4px; padding:12px 16px 0; border-bottom:1px solid var(--line);}
+  .proposal-tab{
+    font-family:var(--sans); font-size:12px; font-weight:600; color:var(--secondary); cursor:pointer;
+    background:none; border:none; padding:0 4px 10px; border-bottom:2.5px solid transparent;
+    display:flex; align-items:center; gap:6px; transition:color .15s ease, border-color .15s ease;
+  }
+  .proposal-tab:hover{color:var(--ink);}
+  .proposal-tab.active{color:var(--accent-dark); border-bottom-color:var(--accent);}
+  .proposal-tab-count{background:rgba(0,0,0,.06); border-radius:10px; padding:1px 7px; font-size:10.5px; font-weight:800;}
+  .proposal-tab.active .proposal-tab-count{background:var(--accent-tint-strong); color:var(--accent-dark);}
   .sidebar-list{flex:1; overflow-y:auto; padding:14px 16px;}
+  .sidebar-card.signed-locked{background:rgba(46,125,66,.04); border-color:rgba(46,125,66,.35);}
+  .sidebar-card .signed-lock-note{
+    font-size:10.5px; color:#2E7D42; font-weight:600; margin-top:6px; display:flex; align-items:center; gap:4px;
+  }
   .sidebar-empty{color:var(--secondary); font-size:13px; text-align:center; padding:40px 10px;}
   .sidebar-card{
     border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin-bottom:12px;
@@ -857,6 +904,11 @@
   <button type="button" id="submitSignatureBtn" onclick="submitSignature()">Submit Signature</button>
 </div>
 
+<div id="signedLockBanner" style="display:none;">
+  <span>🔒 This proposal has been signed and is locked from editing.</span>
+  <button type="button" onclick="duplicateSignedProposal(currentProposalId)">Duplicate to Edit</button>
+</div>
+
 <div id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
 <div id="proposalSidebar">
   <div class="sidebar-head">
@@ -864,6 +916,7 @@
     <button class="sidebar-close" onclick="toggleSidebar(false)">&times;</button>
   </div>
   <div class="sidebar-sub">Shared with your whole team</div>
+  <div class="proposal-tabs" id="proposalTabs"></div>
   <div id="sidebarList" class="sidebar-list">
     <div class="sidebar-empty" id="sidebarLoading">Loading&hellip;</div>
   </div>
@@ -2447,7 +2500,52 @@ function fmtDate(iso){
          d.getFullYear();
 }
 
+// Once a client has signed a proposal, it's a legal record -- the owner's
+// own editor locks it read-only (same visual treatment as the client's
+// signing view) so it can't be silently overwritten. "Duplicate to Edit"
+// is the only way forward: it opens an editable COPY, leaving the signed
+// original untouched.
+let editorLockedSigned = false;
+
+function lockEditorForSignedProposal(){
+  editorLockedSigned = true;
+  document.body.classList.add('editor-locked-signed');
+  document.querySelectorAll('.sheet input, .sheet textarea, .sheet select').forEach(el => { el.disabled = true; });
+  document.querySelectorAll('.sheet [contenteditable="true"]').forEach(el => { el.setAttribute('contenteditable', 'false'); });
+  document.getElementById('signedLockBanner').style.display = 'flex';
+}
+
+function unlockEditorFromSignedProposal(){
+  editorLockedSigned = false;
+  document.body.classList.remove('editor-locked-signed');
+  document.querySelectorAll('.sheet input, .sheet textarea, .sheet select').forEach(el => { el.disabled = false; });
+  document.querySelectorAll('.sheet [contenteditable]').forEach(el => { el.setAttribute('contenteditable', 'true'); });
+  document.getElementById('signedLockBanner').style.display = 'none';
+}
+
+async function duplicateSignedProposal(id){
+  try {
+    const result = await dbStorage.get('proposal-data:' + id, true);
+    if (!result || !result.value) { showAlert('Could not load that proposal.'); return; }
+    const state = JSON.parse(result.value);
+    applyFormState(state);
+    unlockEditorFromSignedProposal();
+    currentProposalId = null;
+    document.getElementById('propNameInput').value = (state.propName || '') + ' (Copy)';
+    toggleSidebar(false);
+    window.scrollTo({top:0, behavior:'smooth'});
+    showAlert('Loaded an editable copy. Click "Save This Proposal" to save it as a new draft -- the original signed proposal is untouched.');
+  } catch (err) {
+    console.error('Duplicate failed', err);
+    showAlert('Could not duplicate that proposal.');
+  }
+}
+
 async function saveProposal(){
+  if (editorLockedSigned) {
+    showAlert('This proposal has been signed and is locked. Click "Duplicate to Edit" at the top to make changes in a new copy.');
+    return;
+  }
   const btn = document.getElementById('saveProposalBtn');
   const originalLabel = btn.textContent;
   btn.textContent = 'Saving…';
@@ -2510,13 +2608,18 @@ async function saveProposal(){
   }
 }
 
-async function loadProposal(id){
+async function loadProposal(id, status){
   try {
     const result = await dbStorage.get('proposal-data:' + id, true);
     if (!result || !result.value) { showAlert('Could not find that saved proposal.'); return; }
     const state = JSON.parse(result.value);
     applyFormState(state);
     currentProposalId = id;
+    if (status === 'accepted') {
+      lockEditorForSignedProposal();
+    } else {
+      unlockEditorFromSignedProposal();
+    }
     toggleSidebar(false);
     window.scrollTo({top:0, behavior:'smooth'});
   } catch (err) {
@@ -2527,11 +2630,21 @@ async function loadProposal(id){
 
 async function deleteProposal(id, evt){
   if (evt) evt.stopPropagation();
-  const ok = await showConfirm('Delete this saved proposal? This cannot be undone.');
-  if (!ok) return;
+  const index = await getIndex();
+  const item = index.find(i => i.id === id);
+  if (item && item.status === 'accepted') {
+    const typed = await showPrompt(
+      'This proposal was SIGNED by the client and is a legal record -- deleting it is permanent. Type the property name exactly to confirm: ' + item.propName,
+      ''
+    );
+    if (typed === null) return;
+    if (typed !== item.propName) { showAlert('That didn\'t match the property name exactly -- nothing was deleted.'); return; }
+  } else {
+    const ok = await showConfirm('Delete this saved proposal? This cannot be undone.');
+    if (!ok) return;
+  }
   try {
-    const index = await getIndex();
-    const updated = index.filter(item => item.id !== id);
+    const updated = index.filter(i => i.id !== id);
     await setIndex(updated);
     try { await dbStorage.delete('proposal-data:' + id, true); } catch(e){}
     if (currentProposalId === id) currentProposalId = null;
@@ -2553,6 +2666,10 @@ async function setProposalStatus(id, status, evt){
       item.sentAt = new Date().toISOString();
     }
     await setIndex(index);
+    if (id === currentProposalId) {
+      if (status === 'accepted') lockEditorForSignedProposal();
+      else unlockEditorFromSignedProposal();
+    }
     await renderSidebar();
   } catch (err) {
     console.error('Status update failed', err);
@@ -2661,6 +2778,7 @@ async function submitSignature(){
 async function startNewProposal(){
   const ok = await showConfirm('Clear the form to start a fresh proposal? Anything unsaved will be lost.');
   if (!ok) return;
+  unlockEditorFromSignedProposal();
   currentProposalId = null;
   document.querySelectorAll('[data-save]').forEach(el=>{
     if (el.tagName === 'SELECT') return;
@@ -2785,21 +2903,50 @@ function showPrompt(message, defaultValue){
   });
 }
 
+let proposalActiveTab = 'active'; // 'active' | 'signed'
+
+function renderProposalTabs(index){
+  const signedCount = index.filter(item => item.status === 'accepted').length;
+  const activeCount = index.length - signedCount;
+  const tabs = [
+    { key: 'active', label: 'Active', count: activeCount },
+    { key: 'signed', label: '🔒 Signed', count: signedCount }
+  ];
+  const tabsEl = document.getElementById('proposalTabs');
+  tabsEl.innerHTML = tabs.map(t => `
+    <button type="button" class="proposal-tab ${proposalActiveTab === t.key ? 'active' : ''}" data-tab="${t.key}">
+      ${t.label}<span class="proposal-tab-count">${t.count}</span>
+    </button>
+  `).join('');
+  tabsEl.querySelectorAll('.proposal-tab').forEach(btn => {
+    btn.addEventListener('click', () => { proposalActiveTab = btn.dataset.tab; renderSidebar(); });
+  });
+}
+
 async function renderSidebar(){
   const listEl = document.getElementById('sidebarList');
   const badge = document.getElementById('savedCountBadge');
   const index = await getIndex();
 
   badge.textContent = index.length ? index.length : '';
+  renderProposalTabs(index);
 
-  if (!index.length) {
-    listEl.innerHTML = '<div class="sidebar-empty">No proposals saved yet.<br>Fill this one out, then click<br>"Save This Proposal" above.</div>';
+  const filtered = index.filter(item => {
+    const isSigned = item.status === 'accepted';
+    return proposalActiveTab === 'signed' ? isSigned : !isSigned;
+  });
+
+  if (!filtered.length) {
+    listEl.innerHTML = proposalActiveTab === 'signed'
+      ? '<div class="sidebar-empty">No signed proposals yet.<br>Once a client signs, it shows up here<br>and gets locked from editing.</div>'
+      : '<div class="sidebar-empty">No proposals saved yet.<br>Fill this one out, then click<br>"Save This Proposal" above.</div>';
     return;
   }
 
   listEl.innerHTML = '';
-  index.forEach(item=>{
+  filtered.forEach(item=>{
     const status = item.status || 'draft';
+    const isSigned = status === 'accepted';
     const owner = item.owner || 'Unknown';
     const expiration = status === 'sent' ? expirationInfo(item.sentAt) : null;
     const effectiveStatus = (status === 'sent' && expiration && expiration.expired) ? 'expired' : status;
@@ -2820,7 +2967,7 @@ async function renderSidebar(){
     }
 
     const card = document.createElement('div');
-    card.className = 'sidebar-card';
+    card.className = 'sidebar-card' + (isSigned ? ' signed-locked' : '');
     card.innerHTML = `
       <span class="brand-pill">${item.brand}</span>
       <span class="status-badge status-${effectiveStatus}">${statusLabels[effectiveStatus] || effectiveStatus}</span>
@@ -2830,14 +2977,15 @@ async function renderSidebar(){
         Recurring <span class="card-total">${item.recurringTotal}</span>
       </div>
       <div class="card-owner">Owner: ${owner}</div>
+      ${isSigned ? '<div class="signed-lock-note">🔒 Locked from editing</div>' : ''}
       ${actionsHtml}
       <div class="card-actions">
-        <button class="load-btn">Load</button>
+        <button class="load-btn">${isSigned ? 'View' : 'Load'}</button>
         <button class="sign-link-btn">🔗 Signing Link</button>
         <button class="delete-btn">Delete</button>
       </div>
     `;
-    card.querySelector('.load-btn').addEventListener('click', ()=>loadProposal(item.id));
+    card.querySelector('.load-btn').addEventListener('click', ()=>loadProposal(item.id, status));
     card.querySelector('.sign-link-btn').addEventListener('click', (e)=>copySigningLink(item.id, e));
     card.querySelector('.delete-btn').addEventListener('click', (e)=>deleteProposal(item.id, e));
     const sentBtn = card.querySelector('.sent-btn');
