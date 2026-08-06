@@ -1161,9 +1161,10 @@
         <table class="pricing" id="addonTable">
           <thead>
             <tr>
-              <th style="width:56%;">Item</th>
-              <th style="width:18%;">Frequency</th>
-              <th style="width:18%;">Price</th>
+              <th class="drag-header" style="width:24px;"></th>
+              <th style="width:54%;">Item</th>
+              <th style="width:16%;">Frequency</th>
+              <th style="width:16%;">Price</th>
               <th></th>
             </tr>
           </thead>
@@ -1949,6 +1950,7 @@ function addAddonRow(item, qty, price, description){
   const tbody = document.getElementById('addonTableBody');
   const tr = document.createElement('tr');
   tr.id = 'addon-row-' + addonRowId;
+  tr.draggable = true;
   const isKnownItem = addonItems.includes(item);
   const selectedOption = isKnownItem ? item : 'Other (custom)';
   const customValue = isKnownItem ? '' : (item || '');
@@ -1956,6 +1958,7 @@ function addAddonRow(item, qty, price, description){
   const descEscaped = (description || '').replace(/"/g, '&quot;');
   const freqEscaped = (qty != null ? qty : 'As-Needed').toString().replace(/"/g, '&quot;');
   tr.innerHTML = `
+    <td class="drag" draggable="true">&#8942;&#8942;</td>
     <td>
       <select onchange="onAddonItemChange(this);">${makeOptionsHtml(selectedOption, addonItems)}</select><textarea class="custom-item-input" placeholder="Type item name" style="display:${selectedOption === 'Other (custom)' ? 'block' : 'none'};" oninput="resizeTextarea(this); syncItemText(this.previousElementSibling)">${customValueEscaped}</textarea><span class="print-item-text"></span>
       <textarea class="addon-desc-input" placeholder="Optional short description">${descEscaped}</textarea>
@@ -1964,6 +1967,22 @@ function addAddonRow(item, qty, price, description){
     <td class="num"><input type="text" inputmode="decimal" class="addon-price-input" value="${price != null ? price : 0}" oninput="syncAddonPriceText(this)"><span class="addon-price-print print-item-text"></span></td>
     <td class="del"><button type="button" onclick="this.closest('tr').remove();">&times;</button></td>
   `;
+  tr.addEventListener('dragstart', (e)=>{
+    draggingRow = tr;
+    tr.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  tr.addEventListener('dragend', ()=>{
+    tr.classList.remove('dragging');
+    draggingRow = null;
+  });
+  tr.addEventListener('dragover', (e)=>{
+    e.preventDefault();
+    if(!draggingRow || draggingRow === tr) return;
+    const rect = tr.getBoundingClientRect();
+    const after = (e.clientY - rect.top) > rect.height / 2;
+    tbody.insertBefore(draggingRow, after ? tr.nextSibling : tr);
+  });
   tbody.appendChild(tr);
   toggleCustomItemInput(tr.querySelector('select'));
   syncAddonPriceText(tr.querySelector('.addon-price-input'));
