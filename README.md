@@ -16,8 +16,13 @@ accepted / rejected).
   username in it; that's now disabled in favor of this one.)
 - **Saved Proposals data** is stored in a free **Supabase** project (a
   hosted Postgres database with a built-in REST API). The page talks to it
-  directly from the browser using a public "anon" key — see
+  directly from the browser, but only once you're signed in — see
   `supabase-setup.sql` for the one-time setup.
+- **Signing links** (the ones you send to clients) are handled by a small
+  serverless function at `functions/api/proposal.js`, which Cloudflare Pages
+  deploys automatically alongside the site — no separate hosting needed. It's
+  the only part of the database a logged-out visitor can ever reach, and only
+  one proposal at a time (see "Login and access control" below).
 
 ## One-time setup (only needs to happen once)
 
@@ -37,6 +42,56 @@ accepted / rejected).
 Until step 4 is done, the page shows a red banner at the top and the
 Saved Proposals sidebar will show an error when you try to save/load. The
 proposal builder itself (pricing, terms, PDF export) works fine either way.
+
+## Login and access control
+
+The editor and CRM are private now — anyone who opens the site's URL sees a
+login screen, not your proposals. This closed a real gap: the app's public
+key used to be enough on its own to read or edit everything in Saved
+Proposals and the CRM (anyone who ever received a signing link could just
+delete the `?view=...` part of the URL and land in your full database). Now
+that key alone gets nothing — every request to the database has to come
+from someone who's actually signed in.
+
+Client Signing Links still work exactly as before and still need no login
+— a client opening one is routed straight past the login screen. That flow
+now goes through the serverless function (`functions/api/proposal.js`)
+instead of talking to the database directly, and it can only ever reach
+the one proposal the link points to, never the rest of your data.
+
+**One-time setup, three steps — do these in order, since the site is
+locked out of its own database until all three are done:**
+
+1. **Create your login.** In the Supabase dashboard: **Authentication →
+   Users → Add user**. Set an email + password and mark the email
+   confirmed. That's the account you (and your team, if you want to share
+   it) sign in with. There's no public sign-up page, by design — accounts
+   are only ever created here, directly in the dashboard. Optionally, turn
+   off **Authentication → Providers → Email → Allow new users to sign up**
+   too, as a second layer against anyone else creating an account.
+2. **Run the updated database rules.** SQL Editor → New query → paste the
+   current contents of `supabase-setup.sql` → Run. (If you already ran an
+   older version of this file, running it again is safe — it replaces the
+   old "anyone with the key" rule with one that requires a signed-in user.)
+3. **Add the service-role key to Cloudflare** — this is what lets the
+   signing-link function reach the database without needing its own login.
+   - Supabase: **Project Settings → API → service_role secret** → copy it.
+   - Cloudflare Pages: open this project's dashboard → **Settings →
+     Environment variables** → add a variable named
+     `SUPABASE_SERVICE_ROLE_KEY` with that value, for **Production** (and
+     Preview, if you want signing links to work on preview deployments
+     too).
+   - **Keep this one private** — unlike the anon key, it bypasses all
+     database rules. Don't commit it to the repo or paste it into chat;
+     Cloudflare's environment variables page is the only place it should
+     ever live. A new deployment (the next `git push`, or "Retry
+     deployment" in Cloudflare) is needed after adding it for the function
+     to pick it up.
+
+Until all three are done, the login screen won't let anyone in (no account
+exists yet) and signing links will show an error (the function has no key
+to work with yet) — so it's worth doing all three in one sitting rather
+than leaving the site in between states.
 
 ## Email notification when a proposal is signed (optional)
 
@@ -93,7 +148,12 @@ falls back to text-only branding until that file is added.
 
 ## Security note
 
-There's no login system on this site or on the Supabase table — it's
-built around the same "anyone with the link" trust model as the original
-template. Don't store anything more sensitive than proposal drafts in
-Saved Proposals.
+The editor and CRM require a login (see "Login and access control" above)
+and the database rejects any request that isn't signed in. The one
+intentional exception is a client's Signing Link, which can only ever read
+or sign the single proposal it points to — via the serverless function, not
+direct database access — never anything else in your data. Signing links
+themselves are still unauthenticated by design (a client shouldn't need an
+account to sign one document), so anyone who gets hold of a specific link
+can view and sign that one proposal; don't send links for proposals you
+wouldn't want a stranger to be able to open.

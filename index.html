@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root{
     --pp-green:#8FB94E;
@@ -821,11 +822,60 @@
   }
   #configBanner a{color:#fff; text-decoration:underline;}
   @media print{ #configBanner{display:none !important;} }
+
+  /* ============== Login gate ==============
+     Everything in the normal editor/CRM requires a signed-in Supabase Auth
+     session. A client opening a Signing Link never sees this -- that path
+     is checked and routed to enterSigningViewMode() before this gate ever
+     applies (see the bottom of the script). */
+  #authGate{
+    display:none; position:fixed; inset:0; z-index:200; background:var(--bg, #f2f1ec);
+    align-items:center; justify-content:center;
+  }
+  body.auth-locked #authGate{display:flex;}
+  body.auth-locked .toolbar, body.auth-locked #controlsPanel, body.auth-locked .sheet,
+  body.auth-locked #proposalSidebar, body.auth-locked #sidebarOverlay, body.auth-locked #customersView,
+  body.auth-locked #togglePageGuidesBtn, body.auth-locked .page-guide{
+    display:none !important;
+  }
+  .auth-card{
+    width:340px; max-width:90vw; background:var(--paper); border-radius:10px;
+    box-shadow:0 18px 48px -12px rgba(0,0,0,.25); padding:32px 30px; font-family:var(--sans);
+  }
+  .auth-card h2{font-family:var(--serif); font-size:24px; margin:0 0 4px; color:var(--accent-dark);}
+  .auth-card p{font-size:13px; color:var(--secondary); margin:0 0 22px;}
+  .auth-card .field{margin-bottom:16px;}
+  .auth-card label{display:block; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--secondary); margin-bottom:5px; font-weight:600;}
+  .auth-card input{
+    width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:6px;
+    padding:9px 10px; font-family:inherit; font-size:14px; background:#fff;
+  }
+  .auth-card input:focus{outline:none; border-color:var(--accent);}
+  .auth-card button{
+    width:100%; margin-top:6px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer;
+    background:var(--accent); color:#fff; border:none; padding:11px; border-radius:20px;
+  }
+  .auth-card button:disabled{opacity:.6; cursor:default;}
+  #authError{color:#B2472A; font-size:12.5px; margin-bottom:12px;}
+  #signOutBtn{margin-left:auto;}
+  @media print{ #authGate, #signOutBtn{display:none !important;} }
+  body.signing-view #authGate, body.signing-view #signOutBtn{display:none !important;}
 </style>
 </head>
 <body>
 
 <div id="configBanner">Shared storage isn't configured yet — edit the SUPABASE_URL / SUPABASE_ANON_KEY constants near the top of the &lt;script&gt; tag. Saved Proposals won't work until then.</div>
+
+<div id="authGate">
+  <div class="auth-card">
+    <h2>Pest Pro</h2>
+    <p>Sign in to access proposals</p>
+    <div class="field"><label>Email</label><input type="email" id="authEmail" autocomplete="username"></div>
+    <div class="field"><label>Password</label><input type="password" id="authPassword" autocomplete="current-password" onkeydown="if(event.key==='Enter')handleSignIn();"></div>
+    <div id="authError" style="display:none;"></div>
+    <button type="button" id="authSubmitBtn" onclick="handleSignIn()">Sign In</button>
+  </div>
+</div>
 
 <div class="toolbar">
   <label>Brand
@@ -854,6 +904,7 @@
   <button id="pdfBtn" onclick="savePDFFile()">Print / Save PDF</button>
   <button id="toggleCustomersBtn" onclick="toggleCustomersView()">📇 Customers</button>
   <button id="togglePageGuidesBtn" onclick="togglePageGuides()">📏 Show Page Breaks</button>
+  <button id="signOutBtn" onclick="handleSignOut()">🔒 Sign Out</button>
 </div>
 
 <div id="controlsPanel">
@@ -1222,6 +1273,43 @@
 const SUPABASE_URL = 'https://girqzwoadjovqeudypnw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpcnF6d29hZGpvdnFldWR5cG53Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTY5OTgsImV4cCI6MjEwMDU3Mjk5OH0.ONIV8rxUTlLPBFQYA3gqb9Te3ax5LvOmqtbI2nz5djI';
 
+// Auth client for the login gate. Everything in the normal editor/CRM now
+// requires a signed-in session -- see supabase-setup.sql and README.md.
+// A client's Signing Link (?view=<id>) never touches this; it's routed to
+// enterSigningViewMode() before the login gate applies, and reaches its one
+// proposal through /api/proposal (a serverless function) instead.
+const sbAuth = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function getAuthToken(){
+  const { data } = await sbAuth.auth.getSession();
+  return data.session ? data.session.access_token : null;
+}
+
+async function handleSignIn(){
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.style.display = 'none';
+  const btn = document.getElementById('authSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+  const { error } = await sbAuth.auth.signInWithPassword({ email, password });
+  btn.disabled = false;
+  btn.textContent = 'Sign In';
+  if (error) {
+    errEl.textContent = error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+  document.body.classList.remove('auth-locked');
+  await renderSidebar();
+}
+
+async function handleSignOut(){
+  await sbAuth.auth.signOut();
+  window.location.reload();
+}
+
 /* =================================================================
    SIGNING NOTIFICATION EMAIL (optional)
    Fill these in with your EmailJS account's values to get an email
@@ -1267,8 +1355,9 @@ const dbStorage = {
       return v !== null ? { value: v } : null;
     }
     if (!this._configured()) { this._warnUnconfigured(); throw new Error('Shared storage not configured'); }
+    const token = await getAuthToken();
     const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store?key=eq.${encodeURIComponent(key)}&select=value`, {
-      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token || SUPABASE_ANON_KEY}` }
     });
     if (!res.ok) throw new Error('Storage read failed: ' + res.status);
     const rows = await res.json();
@@ -1280,11 +1369,12 @@ const dbStorage = {
       return;
     }
     if (!this._configured()) { this._warnUnconfigured(); throw new Error('Shared storage not configured'); }
+    const token = await getAuthToken();
     const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store`, {
       method: 'POST',
       headers: {
         apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: `Bearer ${token || SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
         Prefer: 'resolution=merge-duplicates'
       },
@@ -1298,9 +1388,10 @@ const dbStorage = {
       return;
     }
     if (!this._configured()) { this._warnUnconfigured(); throw new Error('Shared storage not configured'); }
+    const token = await getAuthToken();
     const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store?key=eq.${encodeURIComponent(key)}`, {
       method: 'DELETE',
-      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token || SUPABASE_ANON_KEY}` }
     });
     if (!res.ok) throw new Error('Storage delete failed: ' + res.status);
   }
@@ -2732,7 +2823,13 @@ function getUrlProposalId(){
 }
 
 async function enterSigningViewMode(id){
-  const result = await dbStorage.get('proposal-data:' + id, true);
+  let result = null;
+  try {
+    const res = await fetch('/api/proposal?id=' + encodeURIComponent(id));
+    if (res.ok) result = await res.json();
+  } catch (err) {
+    console.error('Could not load proposal for signing', err);
+  }
   if (!result || !result.value) {
     document.body.innerHTML =
       '<div style="max-width:440px;margin:120px auto;text-align:center;font-family:sans-serif;color:#555;padding:0 24px;">' +
@@ -2795,8 +2892,18 @@ async function submitSignature(){
   btn.textContent = 'Submitting…';
   try {
     const state = collectFormState();
-    await dbStorage.set('proposal-data:' + currentProposalId, JSON.stringify(state), true);
-    await setProposalStatus(currentProposalId, 'accepted');
+    const res = await fetch('/api/proposal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: currentProposalId, state })
+    });
+    if (res.status === 409) {
+      signingAlreadyCompleted = true;
+      refreshSigningActionBar();
+      showAlert('This proposal has already been signed.');
+      return;
+    }
+    if (!res.ok) throw new Error('submit failed: ' + res.status);
     sendSignatureNotificationEmail(state);
     signingAlreadyCompleted = true;
     document.getElementById('clientSigLine').setAttribute('contenteditable', 'false');
@@ -3485,7 +3592,18 @@ const urlProposalId = getUrlProposalId();
 if (urlProposalId) {
   enterSigningViewMode(urlProposalId);
 } else {
-  renderSidebar();
+  (async function initAuthGate(){
+    const { data } = await sbAuth.auth.getSession();
+    if (data.session) {
+      document.body.classList.remove('auth-locked');
+      await renderSidebar();
+    } else {
+      document.body.classList.add('auth-locked');
+    }
+    sbAuth.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') document.body.classList.add('auth-locked');
+    });
+  })();
 }
 </script>
 
