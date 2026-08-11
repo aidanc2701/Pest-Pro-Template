@@ -2454,7 +2454,14 @@ function collectFormState(){
     const key = el.dataset.save;
     if (el.tagName === 'SELECT' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
       state[key] = el.value;
-    } else if (el.isContentEditable) {
+    } else if (el.hasAttribute('contenteditable')) {
+      // Deliberately not gated on el.isContentEditable. lockForSigning()
+      // sets contenteditable="false" on every field except the signature
+      // line the instant a client opens a signing link -- and this
+      // function runs again on submit. Gating on live editability meant
+      // every signature submission silently dropped Inspection Notes,
+      // Service Methodology, What's Included, and the rep signature from
+      // what got saved, since they were locked (by design) at that point.
       state[key] = el.classList.contains('rich-text-field') ? sanitizeInlineHtml(el.innerHTML) : el.textContent;
     }
   });
