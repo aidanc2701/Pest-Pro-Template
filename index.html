@@ -2498,7 +2498,13 @@ function applyFormState(state){
     if(!(key in state)) return;
     if (el.tagName === 'SELECT' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
       el.value = state[key];
-    } else if (el.isContentEditable) {
+    } else if (el.hasAttribute('contenteditable')) {
+      // Deliberately not gated on el.isContentEditable -- that reflects the
+      // element's CURRENT lock state (see lockForSigning() /
+      // lockEditorForSignedProposal()), which can still be "false" here if
+      // a previously-viewed locked/signed proposal left it that way earlier
+      // in the same page session. Restoring saved content must not depend
+      // on whatever the last-viewed proposal happened to leave behind.
       if (el.classList.contains('rich-text-field')) {
         el.innerHTML = sanitizeInlineHtml(state[key]);
       } else {
