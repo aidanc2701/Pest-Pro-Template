@@ -121,21 +121,21 @@
   /* A locked, read-only rendition of one saved proposal a client opens
      directly from a link -- no login, no editor chrome, nothing but the
      proposal itself and a place to sign. Both bars are screen-only. */
-  #signingBanner{
+  #signingBanner, #net30Banner{
     position:sticky; top:0; z-index:60; background:var(--accent-dark); color:#fff;
     font-family:var(--sans); font-size:13px; text-align:center; padding:12px 20px;
   }
-  #signingActionBar{
+  #signingActionBar, #net30ActionBar{
     position:fixed; left:0; right:0; bottom:0; z-index:60; background:var(--ink); color:#fff;
     font-family:var(--sans); font-size:13px; padding:14px 24px;
     display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
     box-shadow:0 -4px 16px rgba(0,0,0,.18);
   }
-  #signingActionBar button{
+  #signingActionBar button, #net30ActionBar button{
     font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;
     background:var(--accent); color:#fff; border:none; padding:10px 24px; border-radius:20px;
   }
-  #signingActionBar button:disabled{opacity:.6; cursor:default;}
+  #signingActionBar button:disabled, #net30ActionBar button:disabled{opacity:.6; cursor:default;}
 
   /* ============== Locked view for a SIGNED proposal in the owner's own
      editor (distinct from #signingBanner above, which is client-facing).
@@ -202,7 +202,42 @@
   body.signing-view .terms li.warranty-legal-clause, body.editor-locked-signed .terms li.warranty-legal-clause{
     border-bottom:none; background:none; padding-left:22px; padding-top:0; padding-bottom:0; padding-right:0;
   }
-  @media print{ #signingBanner, #signingActionBar{display:none !important;} }
+  @media print{ #signingBanner, #signingActionBar, #net30Banner, #net30ActionBar{display:none !important;} }
+
+  /* ============== NET 30 credit application (?net30=<proposalId>) ==============
+     A separate document from the proposal itself, reached by its own link
+     sent only when a client asks for credit terms. Reuses the same
+     draw-to-sign pad and locked/submitted pattern as the signing view. */
+  body.net30-view{padding-bottom:64px;}
+  body.net30-view .toolbar, body.net30-view #controlsPanel, body.net30-view .sheet,
+  body.net30-view #sidebarOverlay, body.net30-view #proposalSidebar,
+  body.net30-view #customersView, body.net30-view #togglePageGuidesBtn{
+    display:none !important;
+  }
+  #net30View{display:none;}
+  .net30-sheet{
+    max-width:850px; margin:36px auto 90px; background:var(--paper);
+    box-shadow:0 1px 2px rgba(0,0,0,.04), 0 18px 48px -12px rgba(0,0,0,.18);
+    padding:48px 56px; border-radius:2px; font-family:var(--sans);
+  }
+  .net30-sheet .header{display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding-bottom:20px; margin-bottom:24px;}
+  .net30-sheet .logo-img{height:56px; width:auto; display:block;}
+  .net30-sheet h1{font-family:var(--serif); font-size:20px; color:var(--ink); margin:0; font-weight:600;}
+  .net30-readonly{
+    font-family:var(--sans); font-size:14.5px; color:var(--ink); padding:5px 2px;
+    border-bottom:1px solid var(--line);
+  }
+  .net30-fillable{
+    width:100%; box-sizing:border-box; border:1px solid rgba(196,138,74,.5); background:rgba(240,178,110,.14);
+    border-radius:4px; font-family:var(--sans); font-size:14px; color:var(--ink); padding:7px 8px;
+  }
+  .net30-fillable:focus{outline:none; border-color:var(--accent); background:rgba(240,178,110,.24);}
+  .net30-fillable:disabled{background:transparent; border-color:var(--line); color:var(--ink);}
+  .net30-org-type{display:flex; gap:20px; flex-wrap:wrap; font-family:var(--sans); font-size:13.5px; color:var(--ink); margin-top:4px;}
+  .net30-org-type label{display:flex; align-items:center; gap:7px; cursor:pointer;}
+  .net30-org-type input{width:15px; height:15px; accent-color:var(--accent); cursor:pointer; margin:0;}
+  .net30-agreement{font-family:var(--serif); font-size:13px; line-height:1.75; color:var(--ink); white-space:pre-line;}
+  @media print{ .net30-fillable{border-color:var(--line); background:none;} }
 
   .sheet{
     max-width:850px; margin:36px auto 90px; background:var(--paper);
@@ -991,6 +1026,96 @@
   <span>🔒 This proposal has been signed and is locked from editing.</span>
   <button type="button" onclick="duplicateSignedProposal(currentProposalId)">Duplicate to Edit</button>
   <button type="button" class="unsign-btn" onclick="unsignProposal(currentProposalId)">Not signed correctly? Move back to Active</button>
+</div>
+
+<div id="net30Banner" style="display:none;"></div>
+<div id="net30ActionBar" style="display:none;">
+  <span id="net30StatusText">Fill out the required fields, sign, then submit.</span>
+  <button type="button" id="submitNet30Btn" onclick="submitNet30Application()">Submit Application</button>
+</div>
+<div id="net30View">
+  <div class="net30-sheet">
+    <div class="header">
+      <img class="logo-img" src="assets/logo-pestpro.png?v=2" alt="Pest Pro logo" onerror="this.style.display='none';">
+      <h1>NET 30 Credit Application</h1>
+    </div>
+
+    <div class="section">
+      <h2>Company Information</h2>
+      <div class="grid2">
+        <div class="field"><label>Company Name</label><div class="net30-readonly" id="net30CompanyName"></div></div>
+        <div class="field"><label>DBA (if applicable)</label><input type="text" id="net30Dba" data-save="net30Dba" class="net30-fillable"></div>
+      </div>
+      <div class="field"><label>Company Address</label><div class="net30-readonly" id="net30CompanyAddress"></div></div>
+      <div class="grid2">
+        <div class="field"><label>Email Address</label><div class="net30-readonly" id="net30Email"></div></div>
+        <div class="field"><label>Phone Number</label><div class="net30-readonly" id="net30Phone"></div></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Website</label><input type="text" id="net30Website" data-save="net30Website" class="net30-fillable"></div>
+        <div class="field"><label>D&amp;B Number</label><input type="text" id="net30DbNumber" data-save="net30DbNumber" class="net30-fillable"></div>
+      </div>
+      <div class="field">
+        <label>Organization Type</label>
+        <div class="net30-org-type">
+          <label><input type="checkbox" id="net30OrgCorp" onchange="setNet30OrgType('corporation')"> Corporation</label>
+          <label><input type="checkbox" id="net30OrgPartner" onchange="setNet30OrgType('partnership')"> Partnership</label>
+          <label><input type="checkbox" id="net30OrgSoleProp" onchange="setNet30OrgType('sole_prop')"> Sole-Proprietorship/Single Member LLC</label>
+        </div>
+        <input type="hidden" id="net30OrgType" data-save="net30OrgType">
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Federal Tax Identification Number (FEIN)</label><input type="text" id="net30Fein" data-save="net30Fein" class="net30-fillable"></div>
+        <div class="field"><label>Years in Business</label><input type="text" id="net30YearsInBusiness" data-save="net30YearsInBusiness" class="net30-fillable"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Accounts Payable Information</h2>
+      <div class="grid2">
+        <div class="field"><label>A/P Contact Name</label><input type="text" id="net30ApContactName" data-save="net30ApContactName" class="net30-fillable"></div>
+        <div class="field"><label>Billing Address</label><input type="text" id="net30ApBillingAddress" data-save="net30ApBillingAddress" class="net30-fillable"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>A/P Email Address</label><input type="text" id="net30ApEmail" data-save="net30ApEmail" class="net30-fillable"></div>
+        <div class="field"><label>Phone Number</label><input type="text" id="net30ApPhone" data-save="net30ApPhone" class="net30-fillable"></div>
+      </div>
+      <div class="field"><label>Does this Company have a set payment cycle? If so, what is it?</label><input type="text" id="net30PaymentCycle" data-save="net30PaymentCycle" class="net30-fillable"></div>
+    </div>
+
+    <div class="section">
+      <h2>NET 30 Agreement</h2>
+      <div class="net30-agreement">We hereby apply for credit with Pest Pro and certify that the information provided is current and correct. We agree to notify Pest Pro at the address below if any information on this application changes and authorize Pest Pro to verify any information provided.
+
+We understand that the terms of credit are NET 30 (thirty) days from the date of invoicing, and we agree to meet these terms. We understand that payments received by Pest Pro after thirty days will be considered late. We recognize that at 31 days after invoicing, invoices are subject to a minimum $25 late fee plus a 2.5% monthly financing charge on the total amount of all past due balances, in addition to any fees, charges, or other expenses incurred in a collection process.
+
+We recognize that projects exceeding $5,000 may require a prepayment covering direct costs required to complete the job. The prepayment amount will be determined based on the specific requirements of the project.
+
+I certify that I am authorized to execute this agreement on behalf of the above referenced Company.</div>
+    </div>
+
+    <div class="section">
+      <h2>Acceptance</h2>
+      <div class="sign-grid">
+        <div class="sign-block">
+          <div class="sig-pad-wrap">
+            <canvas id="net30SigCanvas" class="sig-canvas" width="320" height="90"></canvas>
+            <img id="net30SigImage" class="sig-image" style="display:none;" alt="Applicant signature">
+            <button type="button" id="net30SigClearBtn" class="sig-clear-btn" onclick="clearSignaturePad('net30')">Clear</button>
+          </div>
+          <input type="hidden" id="net30SigLine" data-save="net30SigLine">
+          <div class="cap"><span>Applicant Signature</span></div>
+          <div class="field" style="margin-top:14px;"><label>Applicant Name</label><input type="text" id="net30ApplicantName" data-save="net30ApplicantName"></div>
+          <div class="field"><label>Title</label><input type="text" id="net30ApplicantTitle" data-save="net30ApplicantTitle"></div>
+        </div>
+        <div class="sign-block">
+          <div class="field" style="margin-top:56px;"><label>Date</label><input type="text" id="net30Date" data-save="net30Date" readonly placeholder="Auto-fills when signed"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">Pest Pro Pest Control &middot; 3335 S 900 E STE 200, Salt Lake City, UT 84106 &middot; (801) 810-PEST (7378) &middot; pestproutah.com</div>
+  </div>
 </div>
 
 <div id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
@@ -2981,10 +3106,139 @@ function copySigningLink(id, evt){
   }
 }
 
+function copyNet30Link(id, evt){
+  if (evt) evt.stopPropagation();
+  const url = window.location.origin + window.location.pathname + '?net30=' + encodeURIComponent(id);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(() => showAlert('NET 30 application link copied! Send it to a client who\'s requesting credit terms -- their company info from this proposal fills in automatically, and they fill in the rest and sign.'))
+      .catch(() => showPrompt('Could not copy automatically -- here\'s the link to copy manually:', url));
+  } else {
+    showPrompt('Here\'s the NET 30 application link -- copy it to send to your client:', url);
+  }
+}
+
 /* ============== Send-for-signature view ============== */
 
 function getUrlProposalId(){
   return new URLSearchParams(window.location.search).get('view');
+}
+
+function getNet30Id(){
+  return new URLSearchParams(window.location.search).get('net30');
+}
+
+const NET30_FIELD_KEYS = [
+  'net30Dba', 'net30Website', 'net30DbNumber', 'net30OrgType', 'net30Fein',
+  'net30YearsInBusiness', 'net30ApContactName', 'net30ApBillingAddress',
+  'net30ApEmail', 'net30ApPhone', 'net30PaymentCycle', 'net30ApplicantName',
+  'net30ApplicantTitle', 'net30SigLine', 'net30Date'
+];
+
+let currentNet30Id = null;
+
+function setNet30OrgType(value){
+  const map = { corporation: 'net30OrgCorp', partnership: 'net30OrgPartner', sole_prop: 'net30OrgSoleProp' };
+  Object.keys(map).forEach(key => {
+    document.getElementById(map[key]).checked = (key === value);
+  });
+  document.getElementById('net30OrgType').value = value;
+}
+
+function syncNet30OrgTypeCheckboxes(){
+  const value = document.getElementById('net30OrgType').value;
+  const map = { corporation: 'net30OrgCorp', partnership: 'net30OrgPartner', sole_prop: 'net30OrgSoleProp' };
+  Object.keys(map).forEach(key => {
+    document.getElementById(map[key]).checked = (key === value);
+  });
+}
+
+function lockNet30Form(){
+  document.querySelectorAll('#net30View input:not([type="hidden"]), #net30View textarea').forEach(el => { el.disabled = true; });
+  lockSignaturePad('net30');
+}
+
+async function enterNet30ViewMode(id){
+  let result = null;
+  try {
+    const res = await fetch('/api/proposal?id=' + encodeURIComponent(id));
+    if (res.ok) result = await res.json();
+  } catch (err) {
+    console.error('Could not load proposal for NET 30 application', err);
+  }
+  if (!result || !result.value) {
+    document.body.innerHTML =
+      '<div style="max-width:440px;margin:120px auto;text-align:center;font-family:sans-serif;color:#555;padding:0 24px;">' +
+      'This application link is no longer valid. Please contact us for an updated copy.</div>';
+    return;
+  }
+  const state = JSON.parse(result.value);
+  currentNet30Id = id;
+  document.body.classList.add('net30-view');
+  document.getElementById('net30View').style.display = 'block';
+
+  applyFormState(state);
+  document.getElementById('net30CompanyName').textContent = state.propName || '';
+  document.getElementById('net30CompanyAddress').textContent = state.propertyAddress || '';
+  document.getElementById('net30Email').textContent = state.email || '';
+  document.getElementById('net30Phone').textContent = state.phone || '';
+  syncNet30OrgTypeCheckboxes();
+
+  const banner = document.getElementById('net30Banner');
+  const statusText = document.getElementById('net30StatusText');
+  const btn = document.getElementById('submitNet30Btn');
+  const alreadySubmitted = !!(state.net30SigLine && state.net30SigLine.trim());
+  if (alreadySubmitted) {
+    lockNet30Form();
+    banner.textContent = '✓ Thank you -- your NET 30 application has been submitted.';
+    statusText.textContent = 'Submitted on ' + (state.net30Date || '') + '. Thank you!';
+    btn.textContent = 'Submitted ✓';
+    btn.disabled = true;
+  } else {
+    banner.textContent = 'Please complete this NET 30 credit application and sign at the bottom.';
+    statusText.textContent = 'Fill out the required fields, sign, then submit.';
+  }
+  banner.style.display = 'block';
+  document.getElementById('net30ActionBar').style.display = 'flex';
+  window.scrollTo({ top: 0 });
+}
+
+async function submitNet30Application(){
+  const hasSignature = document.getElementById('net30SigLine').value.trim() !== '';
+  if (!hasSignature) {
+    showAlert('Please sign in the Applicant Signature box before submitting.');
+    return;
+  }
+  const btn = document.getElementById('submitNet30Btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+  try {
+    const fullState = collectFormState();
+    const fields = {};
+    NET30_FIELD_KEYS.forEach(k => { fields[k] = fullState[k]; });
+    const res = await fetch('/api/net30', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: currentNet30Id, fields })
+    });
+    if (res.status === 409) {
+      lockNet30Form();
+      document.getElementById('net30StatusText').textContent = 'This application has already been submitted.';
+      btn.textContent = 'Submitted ✓';
+      showAlert('This application has already been submitted.');
+      return;
+    }
+    if (!res.ok) throw new Error('submit failed: ' + res.status);
+    lockNet30Form();
+    document.getElementById('net30Banner').textContent = '✓ Thank you -- your NET 30 application has been submitted.';
+    document.getElementById('net30StatusText').textContent = 'Submitted. Thank you!';
+    btn.textContent = 'Submitted ✓';
+  } catch (err) {
+    console.error('Could not submit NET 30 application', err);
+    btn.disabled = false;
+    btn.textContent = 'Submit Application';
+    showAlert('Something went wrong submitting your application. Please check your connection and try again.');
+  }
 }
 
 async function enterSigningViewMode(id){
@@ -3296,9 +3550,13 @@ async function renderSidebar(){
         <button class="sign-link-btn">🔗 Signing Link</button>
         <button class="delete-btn">Delete</button>
       </div>
+      <div class="card-actions" style="margin-top:6px;">
+        <button class="net30-link-btn">📋 NET 30 Application</button>
+      </div>
     `;
     card.querySelector('.load-btn').addEventListener('click', ()=>loadProposal(item.id, status));
     card.querySelector('.sign-link-btn').addEventListener('click', (e)=>copySigningLink(item.id, e));
+    card.querySelector('.net30-link-btn').addEventListener('click', (e)=>copyNet30Link(item.id, e));
     card.querySelector('.delete-btn').addEventListener('click', (e)=>deleteProposal(item.id, e));
     const unsignBtn = card.querySelector('.unsign-link');
     if (unsignBtn) unsignBtn.addEventListener('click', (e)=>unsignProposal(item.id, e));
@@ -3758,7 +4016,10 @@ initPageBreakToggles();
 if (!dbStorage._configured()) dbStorage._warnUnconfigured();
 
 const urlProposalId = getUrlProposalId();
-if (urlProposalId) {
+const urlNet30Id = getNet30Id();
+if (urlNet30Id) {
+  enterNet30ViewMode(urlNet30Id);
+} else if (urlProposalId) {
   enterSigningViewMode(urlProposalId);
 } else {
   (async function initAuthGate(){
