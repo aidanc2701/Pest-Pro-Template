@@ -571,6 +571,27 @@
   .sign-block .line:focus{outline:none;}
   .sign-block .cap{font-family:var(--sans); font-size:10.5px; letter-spacing:.5px; color:var(--secondary); display:flex; justify-content:space-between; text-transform:uppercase; font-weight:600;}
 
+  /* Draw-to-sign pad: a canvas the client draws on, swapped for a plain
+     <img> the moment there's a saved stroke (so print/export always shows
+     a flat image, never a live canvas element -- more reliable across
+     browsers and the html2pdf export path than rendering canvas directly). */
+  .sig-pad-wrap{position:relative; border-bottom:1px solid var(--ink); height:90px; margin-bottom:8px; background:rgba(0,0,0,.012);}
+  .sig-canvas{display:block; width:100%; height:90px; touch-action:none; cursor:crosshair;}
+  .sig-image{display:block; max-width:100%; max-height:90px; object-fit:contain; object-position:left bottom;}
+  .sig-pad-wrap:empty:before{content:'Draw here';} /* fallback, unused once JS renders in */
+  .sig-clear-btn{
+    position:absolute; top:3px; right:3px; font-family:var(--sans); font-size:10px; font-weight:700;
+    background:rgba(255,255,255,.9); border:1px solid var(--line); border-radius:10px; padding:3px 9px;
+    cursor:pointer; color:var(--secondary); letter-spacing:.3px;
+  }
+  .sig-clear-btn:hover{color:var(--ink); border-color:var(--accent);}
+  /* Visible while a client is actively signing (so they can redo a stroke) --
+     lockSignaturePad() hides it via inline style once actually submitted or
+     already signed. Only Aidan's own read-only view of a signed proposal
+     hides it unconditionally, since there's nothing to clear there. */
+  body.editor-locked-signed .sig-clear-btn{display:none !important;}
+  @media print{ .sig-clear-btn{display:none !important;} .sig-canvas{display:none !important;} }
+
   .footer-note{
     margin-top:44px; padding-top:20px; border-top:1px solid var(--line);
     font-family:var(--sans); font-size:10.5px; letter-spacing:.3px; color:var(--secondary); text-align:center; position:relative; z-index:1;
@@ -1247,7 +1268,12 @@
     <h2>Acceptance</h2>
     <div class="sign-grid">
       <div class="sign-block">
-        <div class="line sigline" id="clientSigLine" data-save="clientSigLine" contenteditable="true" data-target="clientDate"></div>
+        <div class="sig-pad-wrap">
+          <canvas id="clientSigCanvas" class="sig-canvas" width="320" height="90"></canvas>
+          <img id="clientSigImage" class="sig-image" style="display:none;" alt="Client signature">
+          <button type="button" id="clientSigClearBtn" class="sig-clear-btn" onclick="clearSignaturePad('client')">Clear</button>
+        </div>
+        <input type="hidden" id="clientSigLine" data-save="clientSigLine">
         <div class="cap"><span>Client Signature</span></div>
         <div class="field" style="margin-top:14px;"><label>Print Name</label><input type="text" id="clientPrintName" data-save="clientPrintName"></div>
         <div class="field"><label>Date</label><input type="text" id="clientDate" data-save="clientDate" readonly placeholder="Auto-fills when signed"></div>
@@ -1333,7 +1359,7 @@ async function sendSignatureNotificationEmail(state){
   try {
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
       property_name: state.propName || '(unnamed property)',
-      client_name: state.clientSigLine || '',
+      client_name: state.clientPrintName || '',
       print_name: state.clientPrintName || '',
       signed_date: state.clientDate || '',
       signing_link: window.location.href
@@ -1776,6 +1802,126 @@ document.querySelectorAll('.sigline').forEach(line=>{
   });
 });
 
+/* ============== Draw-to-sign pad (client signature) ==============
+   The client draws with mouse/touch on a canvas; on every stroke we bake
+   it down to a PNG data URL stored in the paired hidden <input> (same
+   data-save key the rest of the app already knows how to save/restore),
+   and fire a synthetic 'input' event so the existing signing-action-bar
+   listener keeps working unchanged. Once there's a saved value, an <img>
+   is shown instead of the live canvas -- prints/exports reliably and
+   can't be redrawn over once locked. */
+function isCanvasBlank(canvas){
+  const ctx = canvas.getContext('2d');
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  for (let i = 3; i < data.length; i += 4) { if (data[i] !== 0) return false; }
+  return true;
+}
+
+function syncSignatureCanvasToInput(canvas){
+  const prefix = canvas.id.replace('SigCanvas', '');
+  const input = document.getElementById(prefix + 'SigLine');
+  const dateField = document.getElementById(prefix + 'Date');
+  const empty = isCanvasBlank(canvas);
+  input.value = empty ? '' : canvas.toDataURL('image/png');
+  if (dateField) {
+    if (empty) {
+      dateField.value = '';
+    } else if (!dateField.value) {
+      const today = new Date();
+      dateField.value = (today.getMonth()+1).toString().padStart(2,'0') + '/' +
+                         today.getDate().toString().padStart(2,'0') + '/' +
+                         today.getFullYear();
+    }
+  }
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function initSignaturePad(canvas){
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#3F5C42';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  let drawing = false, lastX = 0, lastY = 0;
+
+  function getPos(e){
+    const rect = canvas.getBoundingClientRect();
+    const point = e.touches && e.touches.length ? e.touches[0] : e;
+    return {
+      x: (point.clientX - rect.left) * (canvas.width / rect.width),
+      y: (point.clientY - rect.top) * (canvas.height / rect.height)
+    };
+  }
+  function start(e){
+    if (canvas.style.pointerEvents === 'none') return;
+    e.preventDefault();
+    drawing = true;
+    const p = getPos(e);
+    lastX = p.x; lastY = p.y;
+  }
+  function move(e){
+    if (!drawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastX = p.x; lastY = p.y;
+  }
+  function end(){
+    if (!drawing) return;
+    drawing = false;
+    syncSignatureCanvasToInput(canvas);
+  }
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+}
+
+function clearSignaturePad(prefix){
+  const canvas = document.getElementById(prefix + 'SigCanvas');
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  syncSignatureCanvasToInput(canvas);
+  renderSignaturePad(prefix);
+}
+
+// Shows the drawn <img> once a signature is saved, otherwise the blank
+// live canvas. Called after any load/restore of saved state.
+function renderSignaturePad(prefix){
+  const canvas = document.getElementById(prefix + 'SigCanvas');
+  if (!canvas) return;
+  const input = document.getElementById(prefix + 'SigLine');
+  const img = document.getElementById(prefix + 'SigImage');
+  if (input.value) {
+    img.src = input.value;
+    img.style.display = 'block';
+    canvas.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    canvas.style.display = 'block';
+  }
+}
+
+function lockSignaturePad(prefix){
+  const canvas = document.getElementById(prefix + 'SigCanvas');
+  if (canvas) canvas.style.pointerEvents = 'none';
+  const clearBtn = document.getElementById(prefix + 'SigClearBtn');
+  if (clearBtn) clearBtn.style.display = 'none';
+}
+
+function unlockSignaturePad(prefix){
+  const canvas = document.getElementById(prefix + 'SigCanvas');
+  if (canvas) canvas.style.pointerEvents = '';
+  const clearBtn = document.getElementById(prefix + 'SigClearBtn');
+  if (clearBtn) clearBtn.style.display = '';
+}
+
+document.querySelectorAll('.sig-canvas').forEach(initSignaturePad);
+
 let rowId = 0;
 let draggingRow = null;
 function makeOptionsHtml(selected, list){
@@ -2195,7 +2341,7 @@ async function savePDFFile(){
         windowWidth: document.documentElement.scrollWidth,
         onclone: (clonedDoc) => {
           clonedDoc.querySelectorAll(
-            '.toolbar, #sidebarOverlay, #proposalSidebar, #modalOverlay, .add-row-btn, td.del, td.drag, th.drag-header, .term-del, .photo-del, #photoUploadInput, #togglePhotosBtn, .onetime-toggle, .optional-toggle, .terms-select-row, .warranty-select-row, .addon-mode-row, #configBanner'
+            '.toolbar, #sidebarOverlay, #proposalSidebar, #modalOverlay, .add-row-btn, td.del, td.drag, th.drag-header, .term-del, .photo-del, #photoUploadInput, #togglePhotosBtn, .onetime-toggle, .optional-toggle, .terms-select-row, .warranty-select-row, .addon-mode-row, #configBanner, .sig-clear-btn'
           ).forEach(el => { el.style.display = 'none'; });
 
           // Trim the sheet's screen-only bottom padding for export. Left in
@@ -2519,6 +2665,7 @@ function applyFormState(state){
       }
     }
   });
+  renderSignaturePad('client');
 
   const brandSelect = document.getElementById('brandSelect');
   if (state.brand) {
@@ -2648,6 +2795,7 @@ function lockEditorForSignedProposal(){
   document.body.classList.add('editor-locked-signed');
   document.querySelectorAll('.sheet input, .sheet textarea, .sheet select').forEach(el => { el.disabled = true; });
   document.querySelectorAll('.sheet [contenteditable="true"]').forEach(el => { el.setAttribute('contenteditable', 'false'); });
+  lockSignaturePad('client');
   document.getElementById('signedLockBanner').style.display = 'flex';
 }
 
@@ -2656,6 +2804,7 @@ function unlockEditorFromSignedProposal(){
   document.body.classList.remove('editor-locked-signed');
   document.querySelectorAll('.sheet input, .sheet textarea, .sheet select').forEach(el => { el.disabled = false; });
   document.querySelectorAll('.sheet [contenteditable]').forEach(el => { el.setAttribute('contenteditable', 'true'); });
+  unlockSignaturePad('client');
   document.getElementById('signedLockBanner').style.display = 'none';
 }
 
@@ -2872,35 +3021,36 @@ function lockForSigning(){
     el.disabled = true;
   });
   sheet.querySelectorAll('[contenteditable="true"]').forEach(el => {
-    if (el.id === 'clientSigLine') return; // the one field the client signs in
     el.setAttribute('contenteditable', 'false');
   });
+  // clientSigLine's own interactivity is the canvas, not a contenteditable
+  // element -- left unlocked here on purpose so the client can draw.
 }
 
 function refreshSigningActionBar(){
   const statusText = document.getElementById('signingStatusText');
   const btn = document.getElementById('submitSignatureBtn');
   const alreadySigned = signingAlreadyCompleted;
-  const hasSignature = document.getElementById('clientSigLine').textContent.trim() !== '';
+  const hasSignature = document.getElementById('clientSigLine').value.trim() !== '';
   if (alreadySigned) {
     statusText.textContent = 'Signed on ' + document.getElementById('clientDate').value + '. Thank you! A representative will reach out shortly to schedule.';
     btn.textContent = 'Signed ✓';
     btn.disabled = true;
-    document.getElementById('clientSigLine').setAttribute('contenteditable', 'false');
+    lockSignaturePad('client');
     document.getElementById('clientPrintName').disabled = true;
   } else {
     statusText.textContent = hasSignature
       ? 'Ready to submit.'
-      : 'Type your name in the Client Signature box below, then submit.';
+      : 'Draw your signature below, then submit.';
     btn.textContent = 'Submit Signature';
     btn.disabled = false;
   }
 }
 
 async function submitSignature(){
-  const nameTyped = document.getElementById('clientSigLine').textContent.trim();
-  if (!nameTyped) {
-    showAlert('Please sign in the Client Signature box before submitting.');
+  const hasSignature = document.getElementById('clientSigLine').value.trim() !== '';
+  if (!hasSignature) {
+    showAlert('Please draw your signature in the box before submitting.');
     return;
   }
   const btn = document.getElementById('submitSignatureBtn');
@@ -2922,7 +3072,7 @@ async function submitSignature(){
     if (!res.ok) throw new Error('submit failed: ' + res.status);
     sendSignatureNotificationEmail(state);
     signingAlreadyCompleted = true;
-    document.getElementById('clientSigLine').setAttribute('contenteditable', 'false');
+    lockSignaturePad('client');
     document.getElementById('clientPrintName').disabled = true;
     document.getElementById('signingBanner').textContent = '✓ Thank you -- this proposal has been signed and accepted. A representative will reach out shortly to schedule your service.';
     refreshSigningActionBar();
@@ -2944,6 +3094,9 @@ async function startNewProposal(){
     if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = '';
     else if (el.isContentEditable) el.textContent = '';
   });
+  const clientSigCanvas = document.getElementById('clientSigCanvas');
+  clientSigCanvas.getContext('2d').clearRect(0, 0, clientSigCanvas.width, clientSigCanvas.height);
+  renderSignaturePad('client');
   document.getElementById('clientType').value = 'commercial';
   document.getElementById('includeMgmtCo').checked = true;
   applyClientType();
