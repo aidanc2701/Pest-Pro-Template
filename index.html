@@ -249,6 +249,7 @@
     box-shadow:0 1px 2px rgba(0,0,0,.04), 0 18px 48px -12px rgba(0,0,0,.18);
     padding:48px 56px; border-radius:2px; font-family:var(--sans);
   }
+  @media print{ .net30-sheet{background:#fff !important; box-shadow:none; margin:0; padding:30px;} }
   .net30-sheet .header{display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding-bottom:20px; margin-bottom:24px;}
   .net30-sheet .logo-img{height:56px; width:auto; display:block;}
   .net30-sheet h1{font-family:var(--serif); font-size:20px; color:var(--ink); margin:0; font-weight:600;}
@@ -635,7 +636,21 @@
      already signed. Only Aidan's own read-only view of a signed proposal
      hides it unconditionally, since there's nothing to clear there. */
   body.editor-locked-signed .sig-clear-btn{display:none !important;}
-  @media print{ .sig-clear-btn{display:none !important;} .sig-canvas{display:none !important;} }
+  @media print{ .sig-clear-btn, .sig-save-default-btn{display:none !important;} .sig-canvas{display:none !important;} }
+  /* A proposal saved before the draw pad existed has a plain typed name in
+     this field -- render it the same script-font way the old contenteditable
+     line used to, instead of trying to load it as an image. */
+  .legacy-sig-text{
+    align-items:flex-end; height:100%; padding:0 4px 6px;
+    font-family:'Brush Script MT','Segoe Script',cursive; font-size:24px; color:var(--accent-dark);
+  }
+  .sig-save-default-btn{
+    position:absolute; top:3px; left:3px; font-family:var(--sans); font-size:10px; font-weight:700;
+    background:rgba(255,255,255,.9); border:1px solid var(--line); border-radius:10px; padding:3px 9px;
+    cursor:pointer; color:var(--secondary); letter-spacing:.3px;
+  }
+  .sig-save-default-btn:hover{color:var(--accent-dark); border-color:var(--accent);}
+  body.editor-locked-signed .sig-save-default-btn{display:none !important;}
 
   .footer-note{
     margin-top:44px; padding-top:20px; border-top:1px solid var(--line);
@@ -679,7 +694,10 @@
   @media print{
     .toolbar, .add-row-btn, td.del, td.drag, th.drag-header{display:none !important;}
     body{background:#fff;}
-    .sheet{box-shadow:none; margin:0; padding:30px; border-radius:0; overflow:visible !important;}
+    /* .sheet's own background is a warm off-white ("paper") for a nicer
+       on-screen look -- left alone, that same tint prints across the
+       whole page instead of true white. */
+    .sheet{background:#fff !important; box-shadow:none; margin:0; padding:30px; border-radius:0; overflow:visible !important;}
     .sheet:after{display:none;}
     table.pricing select{display:none !important;}
     table.pricing .custom-item-input{display:none !important;}
@@ -1481,7 +1499,14 @@ I certify that I am authorized to execute this agreement on behalf of the above 
         <div class="field"><label>Date</label><input type="text" id="clientDate" data-save="clientDate" readonly placeholder="Auto-fills when signed"></div>
       </div>
       <div class="sign-block">
-        <div class="line sigline" id="repSigLine" data-save="repSigLine" contenteditable="true" data-target="repDate"></div>
+        <div class="sig-pad-wrap">
+          <canvas id="repSigCanvas" class="sig-canvas" width="320" height="90"></canvas>
+          <img id="repSigImage" class="sig-image" style="display:none;" alt="Representative signature">
+          <div id="repSigLegacyText" class="legacy-sig-text" style="display:none;"></div>
+          <button type="button" id="repSigClearBtn" class="sig-clear-btn" onclick="clearSignaturePad('rep')">Clear</button>
+          <button type="button" id="repSigSaveDefaultBtn" class="sig-save-default-btn" onclick="saveDefaultRepSignature()">Save as Default</button>
+        </div>
+        <input type="hidden" id="repSigLine" data-save="repSigLine">
         <div class="cap"><span id="repCap">Pest Pro Representative</span></div>
         <div class="field" style="margin-top:14px;"><label>Print Name</label><input type="text" id="repPrintName" data-save="repPrintName"></div>
         <div class="field"><label>Date</label><input type="text" id="repDate" data-save="repDate" readonly placeholder="Auto-fills when signed"></div>
@@ -2093,19 +2118,24 @@ function clearSignaturePad(prefix){
 }
 
 // Shows the drawn <img> once a signature is saved, otherwise the blank
-// live canvas. Called after any load/restore of saved state.
+// live canvas. Called after any load/restore of saved state. Proposals
+// saved before the draw pad existed have a plain typed name (e.g. "Aidan
+// Cluff") in this same field -- show that as script-font text instead of
+// trying to load it as an image.
 function renderSignaturePad(prefix){
   const canvas = document.getElementById(prefix + 'SigCanvas');
   if (!canvas) return;
   const input = document.getElementById(prefix + 'SigLine');
   const img = document.getElementById(prefix + 'SigImage');
-  if (input.value) {
-    img.src = input.value;
-    img.style.display = 'block';
-    canvas.style.display = 'none';
-  } else {
-    img.style.display = 'none';
-    canvas.style.display = 'block';
+  const legacyText = document.getElementById(prefix + 'SigLegacyText');
+  const isImage = input.value && input.value.startsWith('data:image');
+  const isLegacyText = input.value && !isImage;
+  img.style.display = isImage ? 'block' : 'none';
+  if (isImage) img.src = input.value;
+  canvas.style.display = (isImage || isLegacyText) ? 'none' : 'block';
+  if (legacyText) {
+    legacyText.style.display = isLegacyText ? 'flex' : 'none';
+    legacyText.textContent = isLegacyText ? input.value : '';
   }
 }
 
@@ -2114,6 +2144,8 @@ function lockSignaturePad(prefix){
   if (canvas) canvas.style.pointerEvents = 'none';
   const clearBtn = document.getElementById(prefix + 'SigClearBtn');
   if (clearBtn) clearBtn.style.display = 'none';
+  const saveDefaultBtn = document.getElementById(prefix + 'SigSaveDefaultBtn');
+  if (saveDefaultBtn) saveDefaultBtn.style.display = 'none';
 }
 
 function unlockSignaturePad(prefix){
@@ -2121,6 +2153,49 @@ function unlockSignaturePad(prefix){
   if (canvas) canvas.style.pointerEvents = '';
   const clearBtn = document.getElementById(prefix + 'SigClearBtn');
   if (clearBtn) clearBtn.style.display = '';
+  const saveDefaultBtn = document.getElementById(prefix + 'SigSaveDefaultBtn');
+  if (saveDefaultBtn) saveDefaultBtn.style.display = '';
+}
+
+// Draw once, reuse on every future proposal instead of redrawing by hand
+// each time. Stored as a single shared value (not per-user) since this is
+// a shared-team login today.
+const DEFAULT_REP_SIGNATURE_KEY = 'default-rep-signature';
+
+async function saveDefaultRepSignature(){
+  const value = document.getElementById('repSigLine').value;
+  if (!value || !value.startsWith('data:image')) {
+    showAlert('Draw your signature above first, then click "Save as Default."');
+    return;
+  }
+  try {
+    await dbStorage.set(DEFAULT_REP_SIGNATURE_KEY, value, true);
+    showAlert('Saved -- this signature will now auto-fill on new proposals.');
+  } catch (err) {
+    console.error('Could not save default signature', err);
+    showAlert('Could not save your default signature. Check your connection and try again.');
+  }
+}
+
+async function applyDefaultRepSignatureIfEmpty(){
+  const input = document.getElementById('repSigLine');
+  if (input.value) return;
+  try {
+    const result = await dbStorage.get(DEFAULT_REP_SIGNATURE_KEY, true);
+    if (!result || !result.value || !result.value.startsWith('data:image')) return;
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.getElementById('repSigCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      syncSignatureCanvasToInput(canvas);
+      renderSignaturePad('rep');
+    };
+    img.src = result.value;
+  } catch (err) {
+    console.error('Could not load default signature', err);
+  }
 }
 
 document.querySelectorAll('.sig-canvas').forEach(initSignaturePad);
@@ -3000,6 +3075,7 @@ async function loadProposal(id, status){
       lockEditorForSignedProposal();
     } else {
       unlockEditorFromSignedProposal();
+      await applyDefaultRepSignatureIfEmpty();
     }
     toggleSidebar(false);
     window.scrollTo({top:0, behavior:'smooth'});
@@ -3322,6 +3398,11 @@ async function startNewProposal(){
   const clientSigCanvas = document.getElementById('clientSigCanvas');
   clientSigCanvas.getContext('2d').clearRect(0, 0, clientSigCanvas.width, clientSigCanvas.height);
   renderSignaturePad('client');
+  const repSigCanvas = document.getElementById('repSigCanvas');
+  repSigCanvas.getContext('2d').clearRect(0, 0, repSigCanvas.width, repSigCanvas.height);
+  renderSignaturePad('rep');
+  document.getElementById('repDate').value = '';
+  await applyDefaultRepSignatureIfEmpty();
   document.getElementById('clientType').value = 'commercial';
   document.getElementById('includeMgmtCo').checked = true;
   applyClientType();
