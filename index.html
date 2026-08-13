@@ -66,13 +66,16 @@
     position:sticky; top:0; z-index:50;
     background:var(--accent-dark);
     color:#fff;
-    padding:16px 32px;
-    display:flex; gap:32px; align-items:center; flex-wrap:wrap;
-    row-gap:12px;
+    padding:14px 32px;
+    display:flex; flex-direction:column; gap:12px;
     font-family:var(--sans);
     font-size:13px;
     box-shadow:0 2px 14px rgba(0,0,0,.18);
   }
+  .toolbar-row{display:flex; gap:24px; align-items:center; flex-wrap:wrap; row-gap:10px;}
+  .toolbar-row-actions{gap:0;}
+  .toolbar-group{display:flex; gap:10px; align-items:center; flex-wrap:wrap; row-gap:10px;}
+  .toolbar-group + .toolbar-group{margin-left:18px; padding-left:18px; border-left:1px solid rgba(255,255,255,.18);}
   .toolbar label{display:flex; align-items:center; gap:10px; opacity:.92; font-weight:500; letter-spacing:.2px;}
   .toolbar select{
     font-family:inherit; font-size:13px; padding:8px 14px;
@@ -95,6 +98,17 @@
   .toolbar button:hover{transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,.2);}
   .toolbar button.active{background:#fff; color:var(--accent-dark); box-shadow:inset 0 0 0 2px var(--accent-dark), inset 0 2px 5px rgba(0,0,0,.25);}
   .toolbar .spacer{flex:1; min-width:12px;}
+  /* Save is the one action that matters most -- give it real visual
+     weight instead of blending into a row of identical white pills. */
+  #saveProposalBtn{background:var(--accent); color:#fff; box-shadow:0 2px 8px rgba(0,0,0,.15);}
+  #saveProposalBtn:hover{background:#7ba33f; box-shadow:0 4px 10px rgba(0,0,0,.25);}
+  /* Secondary/occasional actions (diagnostics, account) get a quieter
+     treatment so they don't visually compete with Save/Print/navigate. */
+  .toolbar-group-secondary button{
+    background:rgba(255,255,255,.14); color:#fff; font-weight:600; font-size:12px; padding:8px 16px;
+  }
+  .toolbar-group-secondary button:hover{background:rgba(255,255,255,.24);}
+  .toolbar-group-secondary button.active{background:#fff; color:var(--accent-dark);}
 
   /* All the editing-only controls (include/exclude toggles, page-break
      toggles, add-discount buttons) live here instead of inline in the
@@ -170,39 +184,62 @@
      text stand-ins those controls already keep in sync. The signed-and-
      locked editor view (body.editor-locked-signed) reuses the exact same
      treatment -- a signed proposal should look just as "finished" to the
-     owner as it does to the client who signed it. */
-  body.signing-view table.pricing select, body.editor-locked-signed table.pricing select,
-  body.signing-view table.pricing .custom-item-input, body.editor-locked-signed table.pricing .custom-item-input,
-  body.signing-view table.pricing .addon-price-input, body.editor-locked-signed table.pricing .addon-price-input,
-  body.signing-view .add-row-btn, body.editor-locked-signed .add-row-btn,
-  body.signing-view td.del, body.editor-locked-signed td.del,
-  body.signing-view td.drag, body.editor-locked-signed td.drag,
-  body.signing-view th.drag-header, body.editor-locked-signed th.drag-header,
-  body.signing-view .term-row .term-del, body.editor-locked-signed .term-row .term-del,
-  body.signing-view .photo-cell .photo-del, body.editor-locked-signed .photo-cell .photo-del,
-  body.signing-view #photoUploadInput, body.editor-locked-signed #photoUploadInput,
-  body.signing-view #togglePhotosBtn, body.editor-locked-signed #togglePhotosBtn,
-  body.signing-view .onetime-toggle, body.editor-locked-signed .onetime-toggle,
-  body.signing-view .optional-toggle, body.editor-locked-signed .optional-toggle,
-  body.signing-view .terms-select-row, body.editor-locked-signed .terms-select-row,
-  body.signing-view .warranty-select-row, body.editor-locked-signed .warranty-select-row,
-  body.signing-view .addon-mode-row, body.editor-locked-signed .addon-mode-row,
+     owner as it does to the client who signed it. The in-app print
+     preview (body.print-preview-active) reuses it too, for the same
+     reason: what you're checking should look exactly like the finished
+     document, not like a half-locked form. */
+  body.signing-view table.pricing select, body.editor-locked-signed table.pricing select, body.print-preview-active table.pricing select,
+  body.signing-view table.pricing .custom-item-input, body.editor-locked-signed table.pricing .custom-item-input, body.print-preview-active table.pricing .custom-item-input,
+  body.signing-view table.pricing .addon-price-input, body.editor-locked-signed table.pricing .addon-price-input, body.print-preview-active table.pricing .addon-price-input,
+  body.signing-view .add-row-btn, body.editor-locked-signed .add-row-btn, body.print-preview-active .add-row-btn,
+  body.signing-view td.del, body.editor-locked-signed td.del, body.print-preview-active td.del,
+  body.signing-view td.drag, body.editor-locked-signed td.drag, body.print-preview-active td.drag,
+  body.signing-view th.drag-header, body.editor-locked-signed th.drag-header, body.print-preview-active th.drag-header,
+  body.signing-view .term-row .term-del, body.editor-locked-signed .term-row .term-del, body.print-preview-active .term-row .term-del,
+  body.signing-view .photo-cell .photo-del, body.editor-locked-signed .photo-cell .photo-del, body.print-preview-active .photo-cell .photo-del,
+  body.signing-view #photoUploadInput, body.editor-locked-signed #photoUploadInput, body.print-preview-active #photoUploadInput,
+  body.signing-view #togglePhotosBtn, body.editor-locked-signed #togglePhotosBtn, body.print-preview-active #togglePhotosBtn,
+  body.signing-view .onetime-toggle, body.editor-locked-signed .onetime-toggle, body.print-preview-active .onetime-toggle,
+  body.signing-view .optional-toggle, body.editor-locked-signed .optional-toggle, body.print-preview-active .optional-toggle,
+  body.signing-view .terms-select-row, body.editor-locked-signed .terms-select-row, body.print-preview-active .terms-select-row,
+  body.signing-view .warranty-select-row, body.editor-locked-signed .warranty-select-row, body.print-preview-active .warranty-select-row,
+  body.signing-view .addon-mode-row, body.editor-locked-signed .addon-mode-row, body.print-preview-active .addon-mode-row,
   body.signing-view .page-guide, body.editor-locked-signed .page-guide,
-  body.signing-view #configBanner, body.editor-locked-signed #configBanner,
-  body.signing-view .discount-row .discount-del, body.editor-locked-signed .discount-row .discount-del,
-  body.signing-view .discount-row select, body.editor-locked-signed .discount-row select,
-  body.signing-view .discount-row input.discount-label, body.editor-locked-signed .discount-row input.discount-label,
-  body.signing-view .discount-row input.discount-value, body.editor-locked-signed .discount-row input.discount-value{
+  body.signing-view #configBanner, body.editor-locked-signed #configBanner, body.print-preview-active #configBanner,
+  body.signing-view .discount-row .discount-del, body.editor-locked-signed .discount-row .discount-del, body.print-preview-active .discount-row .discount-del,
+  body.signing-view .discount-row select, body.editor-locked-signed .discount-row select, body.print-preview-active .discount-row select,
+  body.signing-view .discount-row input.discount-label, body.editor-locked-signed .discount-row input.discount-label, body.print-preview-active .discount-row input.discount-label,
+  body.signing-view .discount-row input.discount-value, body.editor-locked-signed .discount-row input.discount-value, body.print-preview-active .discount-row input.discount-value{
     display:none !important;
   }
-  body.signing-view .print-item-text, body.editor-locked-signed .print-item-text{height:auto !important; overflow:visible !important;}
-  body.signing-view .discount-row, body.editor-locked-signed .discount-row{border:none; padding:4px 0; background:none; margin-bottom:6px;}
-  body.signing-view .term-row textarea, body.editor-locked-signed .term-row textarea{border:none; resize:none;}
-  body.signing-view .terms li.template-clause, body.editor-locked-signed .terms li.template-clause,
-  body.signing-view .terms li.warranty-legal-clause, body.editor-locked-signed .terms li.warranty-legal-clause{
+  body.signing-view .print-item-text, body.editor-locked-signed .print-item-text, body.print-preview-active .print-item-text{height:auto !important; overflow:visible !important;}
+  body.signing-view .discount-row, body.editor-locked-signed .discount-row, body.print-preview-active .discount-row{border:none; padding:4px 0; background:none; margin-bottom:6px;}
+  body.signing-view .term-row textarea, body.editor-locked-signed .term-row textarea, body.print-preview-active .term-row textarea{border:none; resize:none;}
+  body.signing-view .terms li.template-clause, body.editor-locked-signed .terms li.template-clause, body.print-preview-active .terms li.template-clause,
+  body.signing-view .terms li.warranty-legal-clause, body.editor-locked-signed .terms li.warranty-legal-clause, body.print-preview-active .terms li.warranty-legal-clause{
     border-bottom:none; background:none; padding-left:22px; padding-top:0; padding-bottom:0; padding-right:0;
   }
   @media print{ #signingBanner, #signingActionBar, #net30Banner, #net30ActionBar{display:none !important;} }
+
+  /* ============== In-app print preview ==============
+     Toggled from the toolbar. Shows the document at the real print
+     content width (8.5in page minus the same margins the PDF export
+     uses) with every editing control hidden -- reusing the exact
+     treatment above -- plus the page-break ruler switched on
+     automatically. The toolbar stays visible (just the sidebar/panel
+     hide) so there's an obvious way back to editing. */
+  body.print-preview-active #controlsPanel, body.print-preview-active #sidebarOverlay,
+  body.print-preview-active #proposalSidebar, body.print-preview-active #customersView{
+    display:none !important;
+  }
+  body.print-preview-active .sheet{
+    max-width:730px; box-shadow:0 1px 2px rgba(0,0,0,.04), 0 18px 48px -12px rgba(0,0,0,.18), 0 0 0 1px var(--line);
+  }
+  body.print-preview-active .toolbar-row-meta,
+  body.print-preview-active .toolbar button:not(#printPreviewBtn):not(#signOutBtn){
+    opacity:.4; pointer-events:none;
+  }
+  @media print{ body.print-preview-active .sheet{max-width:none;} }
 
   /* ============== NET 30 credit application (?net30=<proposalId>) ==============
      A separate document from the proposal itself, reached by its own link
@@ -936,33 +973,44 @@
 </div>
 
 <div class="toolbar">
-  <label>Brand
-    <select id="brandSelect">
-      <option value="pp">Pest Pro</option>
-      <option value="bcu">Bird Control Utah</option>
-    </select>
-  </label>
-  <label>Job Type
-    <select id="jobType"></select>
-  </label>
-  <input type="text" id="jobTypeCustomInput" placeholder="Type job type" style="display:none;">
-  <label id="clientTypeWrap">Client Type
-    <select id="clientType">
-      <option value="commercial">Commercial</option>
-      <option value="residential">Residential</option>
-    </select>
-  </label>
-  <label>You
-    <input type="text" id="ownerNameInput" placeholder="Your name" style="width:110px;">
-  </label>
-  <div class="spacer"></div>
-  <button id="saveProposalBtn" onclick="saveProposal()">💾 Save This Proposal</button>
-  <button id="toggleSidebarBtn" onclick="toggleSidebar()">📁 Saved Proposals <span id="savedCountBadge"></span></button>
-  <button onclick="startNewProposal()">＋ New</button>
-  <button id="pdfBtn" onclick="savePDFFile()">Print / Save PDF</button>
-  <button id="toggleCustomersBtn" onclick="toggleCustomersView()">📇 Customers</button>
-  <button id="togglePageGuidesBtn" onclick="togglePageGuides()">📏 Show Page Breaks</button>
-  <button id="signOutBtn" onclick="handleSignOut()">🔒 Sign Out</button>
+  <div class="toolbar-row toolbar-row-meta">
+    <label>Brand
+      <select id="brandSelect">
+        <option value="pp">Pest Pro</option>
+        <option value="bcu">Bird Control Utah</option>
+      </select>
+    </label>
+    <label>Job Type
+      <select id="jobType"></select>
+    </label>
+    <input type="text" id="jobTypeCustomInput" placeholder="Type job type" style="display:none;">
+    <label id="clientTypeWrap">Client Type
+      <select id="clientType">
+        <option value="commercial">Commercial</option>
+        <option value="residential">Residential</option>
+      </select>
+    </label>
+    <label>You
+      <input type="text" id="ownerNameInput" placeholder="Your name" style="width:110px;">
+    </label>
+  </div>
+  <div class="toolbar-row toolbar-row-actions">
+    <div class="toolbar-group">
+      <button id="saveProposalBtn" onclick="saveProposal()">💾 Save This Proposal</button>
+      <button id="printPreviewBtn" onclick="togglePrintPreview()">👁️ Print Preview</button>
+      <button id="pdfBtn" onclick="savePDFFile()">Print / Save PDF</button>
+    </div>
+    <div class="toolbar-group">
+      <button id="toggleSidebarBtn" onclick="toggleSidebar()">📁 Saved Proposals <span id="savedCountBadge"></span></button>
+      <button onclick="startNewProposal()">＋ New</button>
+      <button id="toggleCustomersBtn" onclick="toggleCustomersView()">📇 Customers</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="toolbar-group toolbar-group-secondary">
+      <button id="togglePageGuidesBtn" onclick="togglePageGuides()">📏 Show Page Breaks</button>
+      <button id="signOutBtn" onclick="handleSignOut()">🔒 Sign Out</button>
+    </div>
+  </div>
 </div>
 
 <div id="controlsPanel">
@@ -3964,6 +4012,19 @@ function togglePageGuides(){
   showPageGuides = !showPageGuides;
   document.getElementById('togglePageGuidesBtn').classList.toggle('active', showPageGuides);
   renderPageGuides();
+}
+
+function togglePrintPreview(){
+  const active = document.body.classList.toggle('print-preview-active');
+  const btn = document.getElementById('printPreviewBtn');
+  btn.textContent = active ? '✕ Exit Preview' : '👁️ Print Preview';
+  btn.classList.toggle('active', active);
+  if (active && !showPageGuides) {
+    togglePageGuides();
+  } else {
+    schedulePageGuideRender();
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function renderPageGuides(){
