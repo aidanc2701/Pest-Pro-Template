@@ -6,7 +6,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -92,23 +91,30 @@
   .toolbar button{
     font-family:inherit; font-size:13px; cursor:pointer;
     background:#fff; color:var(--accent-dark); font-weight:700; border:none;
-    padding:10px 22px; border-radius:20px; letter-spacing:.3px;
+    padding:10px 20px; border-radius:20px; letter-spacing:.3px;
+    display:inline-flex; align-items:center; gap:8px;
     transition:transform .12s ease, box-shadow .12s ease;
   }
   .toolbar button:hover{transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,.2);}
   .toolbar button.active{background:#fff; color:var(--accent-dark); box-shadow:inset 0 0 0 2px var(--accent-dark), inset 0 2px 5px rgba(0,0,0,.25);}
   .toolbar .spacer{flex:1; min-width:12px;}
+  .btn-icon{width:15px; height:15px; flex-shrink:0;}
   /* Save is the one action that matters most -- give it real visual
      weight instead of blending into a row of identical white pills. */
   #saveProposalBtn{background:var(--accent); color:#fff; box-shadow:0 2px 8px rgba(0,0,0,.15);}
   #saveProposalBtn:hover{background:#7ba33f; box-shadow:0 4px 10px rgba(0,0,0,.25);}
-  /* Secondary/occasional actions (diagnostics, account) get a quieter
-     treatment so they don't visually compete with Save/Print/navigate. */
-  .toolbar-group-secondary button{
-    background:rgba(255,255,255,.14); color:#fff; font-weight:600; font-size:12px; padding:8px 16px;
+  /* Sign Out is an account action, not a workflow one -- a quiet outline
+     treatment keeps it out of the way instead of matching Save/Print's
+     visual weight. */
+  .toolbar-btn-quiet{
+    background:none !important; color:#fff !important; font-weight:600 !important;
+    font-size:12px !important; padding:8px 16px !important;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.35) !important;
   }
-  .toolbar-group-secondary button:hover{background:rgba(255,255,255,.24);}
-  .toolbar-group-secondary button.active{background:#fff; color:var(--accent-dark);}
+  .toolbar-btn-quiet:hover{background:rgba(255,255,255,.12) !important;}
+  #autosaveStatus{
+    font-size:11.5px; color:rgba(255,255,255,.6); font-style:italic; white-space:nowrap;
+  }
 
   /* All the editing-only controls (include/exclude toggles, page-break
      toggles, add-discount buttons) live here instead of inline in the
@@ -145,11 +151,16 @@
     display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
     box-shadow:0 -4px 16px rgba(0,0,0,.18);
   }
+  .action-bar-buttons{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
   #signingActionBar button, #net30ActionBar button{
     font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;
     background:var(--accent); color:#fff; border:none; padding:10px 24px; border-radius:20px;
   }
   #signingActionBar button:disabled, #net30ActionBar button:disabled{opacity:.6; cursor:default;}
+  .action-bar-print-btn{
+    background:none !important; box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);
+  }
+  .action-bar-print-btn:hover{background:rgba(255,255,255,.1) !important;}
 
   /* ============== Locked view for a SIGNED proposal in the owner's own
      editor (distinct from #signingBanner above, which is client-facing).
@@ -175,7 +186,7 @@
   body.signing-view{padding-bottom:64px;}
   body.signing-view .toolbar, body.signing-view #controlsPanel,
   body.signing-view #sidebarOverlay, body.signing-view #proposalSidebar,
-  body.signing-view #customersView, body.signing-view #togglePageGuidesBtn{
+  body.signing-view #customersView{
     display:none !important;
   }
   /* The client only ever sees this locked view -- it should read like the
@@ -184,62 +195,38 @@
      text stand-ins those controls already keep in sync. The signed-and-
      locked editor view (body.editor-locked-signed) reuses the exact same
      treatment -- a signed proposal should look just as "finished" to the
-     owner as it does to the client who signed it. The in-app print
-     preview (body.print-preview-active) reuses it too, for the same
-     reason: what you're checking should look exactly like the finished
-     document, not like a half-locked form. */
-  body.signing-view table.pricing select, body.editor-locked-signed table.pricing select, body.print-preview-active table.pricing select,
-  body.signing-view table.pricing .custom-item-input, body.editor-locked-signed table.pricing .custom-item-input, body.print-preview-active table.pricing .custom-item-input,
-  body.signing-view table.pricing .addon-price-input, body.editor-locked-signed table.pricing .addon-price-input, body.print-preview-active table.pricing .addon-price-input,
-  body.signing-view .add-row-btn, body.editor-locked-signed .add-row-btn, body.print-preview-active .add-row-btn,
-  body.signing-view td.del, body.editor-locked-signed td.del, body.print-preview-active td.del,
-  body.signing-view td.drag, body.editor-locked-signed td.drag, body.print-preview-active td.drag,
-  body.signing-view th.drag-header, body.editor-locked-signed th.drag-header, body.print-preview-active th.drag-header,
-  body.signing-view .term-row .term-del, body.editor-locked-signed .term-row .term-del, body.print-preview-active .term-row .term-del,
-  body.signing-view .photo-cell .photo-del, body.editor-locked-signed .photo-cell .photo-del, body.print-preview-active .photo-cell .photo-del,
-  body.signing-view #photoUploadInput, body.editor-locked-signed #photoUploadInput, body.print-preview-active #photoUploadInput,
-  body.signing-view #togglePhotosBtn, body.editor-locked-signed #togglePhotosBtn, body.print-preview-active #togglePhotosBtn,
-  body.signing-view .onetime-toggle, body.editor-locked-signed .onetime-toggle, body.print-preview-active .onetime-toggle,
-  body.signing-view .optional-toggle, body.editor-locked-signed .optional-toggle, body.print-preview-active .optional-toggle,
-  body.signing-view .terms-select-row, body.editor-locked-signed .terms-select-row, body.print-preview-active .terms-select-row,
-  body.signing-view .warranty-select-row, body.editor-locked-signed .warranty-select-row, body.print-preview-active .warranty-select-row,
-  body.signing-view .addon-mode-row, body.editor-locked-signed .addon-mode-row, body.print-preview-active .addon-mode-row,
-  body.signing-view .page-guide, body.editor-locked-signed .page-guide,
-  body.signing-view #configBanner, body.editor-locked-signed #configBanner, body.print-preview-active #configBanner,
-  body.signing-view .discount-row .discount-del, body.editor-locked-signed .discount-row .discount-del, body.print-preview-active .discount-row .discount-del,
-  body.signing-view .discount-row select, body.editor-locked-signed .discount-row select, body.print-preview-active .discount-row select,
-  body.signing-view .discount-row input.discount-label, body.editor-locked-signed .discount-row input.discount-label, body.print-preview-active .discount-row input.discount-label,
-  body.signing-view .discount-row input.discount-value, body.editor-locked-signed .discount-row input.discount-value, body.print-preview-active .discount-row input.discount-value{
+     owner as it does to the client who signed it. */
+  body.signing-view table.pricing select, body.editor-locked-signed table.pricing select,
+  body.signing-view table.pricing .custom-item-input, body.editor-locked-signed table.pricing .custom-item-input,
+  body.signing-view table.pricing .addon-price-input, body.editor-locked-signed table.pricing .addon-price-input,
+  body.signing-view .add-row-btn, body.editor-locked-signed .add-row-btn,
+  body.signing-view td.del, body.editor-locked-signed td.del,
+  body.signing-view td.drag, body.editor-locked-signed td.drag,
+  body.signing-view th.drag-header, body.editor-locked-signed th.drag-header,
+  body.signing-view .term-row .term-del, body.editor-locked-signed .term-row .term-del,
+  body.signing-view .photo-cell .photo-del, body.editor-locked-signed .photo-cell .photo-del,
+  body.signing-view #photoUploadInput, body.editor-locked-signed #photoUploadInput,
+  body.signing-view #togglePhotosBtn, body.editor-locked-signed #togglePhotosBtn,
+  body.signing-view .onetime-toggle, body.editor-locked-signed .onetime-toggle,
+  body.signing-view .optional-toggle, body.editor-locked-signed .optional-toggle,
+  body.signing-view .terms-select-row, body.editor-locked-signed .terms-select-row,
+  body.signing-view .warranty-select-row, body.editor-locked-signed .warranty-select-row,
+  body.signing-view .addon-mode-row, body.editor-locked-signed .addon-mode-row,
+  body.signing-view #configBanner, body.editor-locked-signed #configBanner,
+  body.signing-view .discount-row .discount-del, body.editor-locked-signed .discount-row .discount-del,
+  body.signing-view .discount-row select, body.editor-locked-signed .discount-row select,
+  body.signing-view .discount-row input.discount-label, body.editor-locked-signed .discount-row input.discount-label,
+  body.signing-view .discount-row input.discount-value, body.editor-locked-signed .discount-row input.discount-value{
     display:none !important;
   }
-  body.signing-view .print-item-text, body.editor-locked-signed .print-item-text, body.print-preview-active .print-item-text{height:auto !important; overflow:visible !important;}
-  body.signing-view .discount-row, body.editor-locked-signed .discount-row, body.print-preview-active .discount-row{border:none; padding:4px 0; background:none; margin-bottom:6px;}
-  body.signing-view .term-row textarea, body.editor-locked-signed .term-row textarea, body.print-preview-active .term-row textarea{border:none; resize:none;}
-  body.signing-view .terms li.template-clause, body.editor-locked-signed .terms li.template-clause, body.print-preview-active .terms li.template-clause,
-  body.signing-view .terms li.warranty-legal-clause, body.editor-locked-signed .terms li.warranty-legal-clause, body.print-preview-active .terms li.warranty-legal-clause{
+  body.signing-view .print-item-text, body.editor-locked-signed .print-item-text{height:auto !important; overflow:visible !important;}
+  body.signing-view .discount-row, body.editor-locked-signed .discount-row{border:none; padding:4px 0; background:none; margin-bottom:6px;}
+  body.signing-view .term-row textarea, body.editor-locked-signed .term-row textarea{border:none; resize:none;}
+  body.signing-view .terms li.template-clause, body.editor-locked-signed .terms li.template-clause,
+  body.signing-view .terms li.warranty-legal-clause, body.editor-locked-signed .terms li.warranty-legal-clause{
     border-bottom:none; background:none; padding-left:22px; padding-top:0; padding-bottom:0; padding-right:0;
   }
   @media print{ #signingBanner, #signingActionBar, #net30Banner, #net30ActionBar{display:none !important;} }
-
-  /* ============== In-app print preview ==============
-     Toggled from the toolbar. Shows the document at the real print
-     content width (8.5in page minus the same margins the PDF export
-     uses) with every editing control hidden -- reusing the exact
-     treatment above -- plus the page-break ruler switched on
-     automatically. The toolbar stays visible (just the sidebar/panel
-     hide) so there's an obvious way back to editing. */
-  body.print-preview-active #controlsPanel, body.print-preview-active #sidebarOverlay,
-  body.print-preview-active #proposalSidebar, body.print-preview-active #customersView{
-    display:none !important;
-  }
-  body.print-preview-active .sheet{
-    max-width:730px; box-shadow:0 1px 2px rgba(0,0,0,.04), 0 18px 48px -12px rgba(0,0,0,.18), 0 0 0 1px var(--line);
-  }
-  body.print-preview-active .toolbar-row-meta,
-  body.print-preview-active .toolbar button:not(#printPreviewBtn):not(#signOutBtn){
-    opacity:.4; pointer-events:none;
-  }
-  @media print{ body.print-preview-active .sheet{max-width:none;} }
 
   /* ============== NET 30 credit application (?net30=<proposalId>) ==============
      A separate document from the proposal itself, reached by its own link
@@ -248,7 +235,7 @@
   body.net30-view{padding-bottom:64px;}
   body.net30-view .toolbar, body.net30-view #controlsPanel, body.net30-view .sheet,
   body.net30-view #sidebarOverlay, body.net30-view #proposalSidebar,
-  body.net30-view #customersView, body.net30-view #togglePageGuidesBtn{
+  body.net30-view #customersView{
     display:none !important;
   }
   #net30View{display:none;}
@@ -440,35 +427,16 @@
     .page-break-toggle{display:none !important;}
   }
 
-  /* Approximate ruler showing where a real print page boundary would fall,
-     based on Letter-size paper at the same margins savePDFFile()/native
-     print use (11in tall, 0.4in top+bottom margin = 10.2in of content per
-     page, i.e. 979.2px at the CSS-standard 96px/inch). This is an estimate,
-     not a guarantee -- actual browser pagination can still shift things by
-     a line or two to honor break-inside:avoid/orphans/widows -- but it's
-     close enough to tell you where to place a "Start on a new page" toggle. */
-  .page-guide{
-    position:absolute; left:0; right:0; height:0; border-top:2px dashed #C0574A;
-    pointer-events:none; z-index:50;
-  }
-  .page-guide span{
-    position:absolute; top:-11px; right:8px; background:#C0574A; color:#fff;
-    font-family:var(--sans); font-size:10px; font-weight:700; letter-spacing:.3px;
-    padding:2px 8px; border-radius:4px; white-space:nowrap;
-  }
-  @media print{ .page-guide{display:none !important;} }
-
   @media print{
     /* Keep short, self-contained blocks whole rather than letting them
        split between an intro line and the content that explains it (e.g.
        a methodology paragraph separated from the location list right
-       after it). Deliberately NOT applied to Inspection Notes, Terms, or
-       the As-Needed pricing table -- those can all run to any length (an
-       open-ended list of add-on items in the As-Needed case), so forcing
-       them whole just relocates the blank-space problem onto a bigger
-       block instead of removing it. Those get row-level protection plus
-       the repeating table header below instead. */
-    #pricingInitialSection, #recurringSection,
+       after it). Deliberately NOT applied to Inspection Notes, Terms, the
+       As-Needed pricing table, or the Initial/Recurring pricing sections --
+       all of those can run to any length (an open-ended list of line
+       items), so forcing the whole block whole just relocates the blank-
+       space problem onto a bigger block instead of removing it. Those get
+       row-level protection plus the repeating table header below instead. */
     #serviceMethodologyField, #whatsIncludedField, #warrantySection .field{
       break-inside:avoid; page-break-inside:avoid;
     }
@@ -644,9 +612,9 @@
   .sign-block .cap{font-family:var(--sans); font-size:10.5px; letter-spacing:.5px; color:var(--secondary); display:flex; justify-content:space-between; text-transform:uppercase; font-weight:600;}
 
   /* Draw-to-sign pad: a canvas the client draws on, swapped for a plain
-     <img> the moment there's a saved stroke (so print/export always shows
-     a flat image, never a live canvas element -- more reliable across
-     browsers and the html2pdf export path than rendering canvas directly). */
+     <img> the moment there's a saved stroke (so print always shows a flat
+     image, never a live canvas element -- more reliable across browsers
+     than rendering canvas directly). */
   .sig-pad-wrap{position:relative; border-bottom:1px solid var(--ink); height:90px; margin-bottom:8px; background:rgba(0,0,0,.012);}
   .sig-canvas{display:block; width:100%; height:90px; touch-action:none; cursor:crosshair;}
   .sig-image{display:block; max-width:100%; max-height:90px; object-fit:contain; object-position:left bottom;}
@@ -862,6 +830,16 @@
     display:block; width:100%; margin-top:5px; font-family:var(--sans); font-size:13.5px; padding:7px 8px;
     border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink); text-transform:none; letter-spacing:normal;
   }
+  .customer-draft-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--accent-tint); border-radius:8px; padding:10px 12px; margin-bottom:16px;
+    font-family:var(--sans); font-size:12.5px; color:var(--ink);
+  }
+  .draft-proposal-link{
+    font-family:inherit; font-size:12px; font-weight:700; cursor:pointer;
+    background:none; border:none; color:var(--accent-dark); padding:0; white-space:nowrap;
+  }
+  .draft-proposal-link:hover{text-decoration:underline;}
   .followup-section{border-top:1px solid var(--line); padding-top:14px; margin-bottom:6px;}
   .followup-add-row{display:flex; flex-direction:column; gap:8px; margin-bottom:14px;}
   .followup-add-row input[type="date"]{
@@ -929,8 +907,7 @@
   }
   body.auth-locked #authGate{display:flex;}
   body.auth-locked .toolbar, body.auth-locked #controlsPanel, body.auth-locked .sheet,
-  body.auth-locked #proposalSidebar, body.auth-locked #sidebarOverlay, body.auth-locked #customersView,
-  body.auth-locked #togglePageGuidesBtn, body.auth-locked .page-guide{
+  body.auth-locked #proposalSidebar, body.auth-locked #sidebarOverlay, body.auth-locked #customersView{
     display:none !important;
   }
   .auth-card{
@@ -996,19 +973,36 @@
   </div>
   <div class="toolbar-row toolbar-row-actions">
     <div class="toolbar-group">
-      <button id="saveProposalBtn" onclick="saveProposal()">💾 Save This Proposal</button>
-      <button id="printPreviewBtn" onclick="togglePrintPreview()">👁️ Print Preview</button>
-      <button id="pdfBtn" onclick="savePDFFile()">Print / Save PDF</button>
+      <button id="saveProposalBtn" onclick="saveProposal()">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save This Proposal
+      </button>
+      <button id="pdfBtn" onclick="printDocument()">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print
+      </button>
     </div>
     <div class="toolbar-group">
-      <button id="toggleSidebarBtn" onclick="toggleSidebar()">📁 Saved Proposals <span id="savedCountBadge"></span></button>
-      <button onclick="startNewProposal()">＋ New</button>
-      <button id="toggleCustomersBtn" onclick="toggleCustomersView()">📇 Customers</button>
+      <button id="toggleSidebarBtn" onclick="toggleSidebar()">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Saved Proposals <span id="savedCountBadge"></span>
+      </button>
+      <button onclick="startNewProposal()">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New
+      </button>
+      <button id="toggleCustomersBtn" onclick="toggleCustomersView()">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Customers
+      </button>
     </div>
     <div class="spacer"></div>
-    <div class="toolbar-group toolbar-group-secondary">
-      <button id="togglePageGuidesBtn" onclick="togglePageGuides()">📏 Show Page Breaks</button>
-      <button id="signOutBtn" onclick="handleSignOut()">🔒 Sign Out</button>
+    <div class="toolbar-group">
+      <span id="autosaveStatus"></span>
+      <button id="signOutBtn" class="toolbar-btn-quiet" onclick="handleSignOut()">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
     </div>
   </div>
 </div>
@@ -1067,7 +1061,10 @@
 </div>
 <div id="signingActionBar" style="display:none;">
   <span id="signingStatusText">Type your name in the Client Signature box below, then submit.</span>
-  <button type="button" id="submitSignatureBtn" onclick="submitSignature()">Submit Signature</button>
+  <div class="action-bar-buttons">
+    <button type="button" class="action-bar-print-btn" onclick="printDocument()">Print / Download PDF</button>
+    <button type="button" id="submitSignatureBtn" onclick="submitSignature()">Submit Signature</button>
+  </div>
 </div>
 
 <div id="signedLockBanner" style="display:none;">
@@ -1079,7 +1076,10 @@
 <div id="net30Banner" style="display:none;"></div>
 <div id="net30ActionBar" style="display:none;">
   <span id="net30StatusText">Fill out the required fields, sign, then submit.</span>
-  <button type="button" id="submitNet30Btn" onclick="submitNet30Application()">Submit Application</button>
+  <div class="action-bar-buttons">
+    <button type="button" class="action-bar-print-btn" onclick="printDocument()">Print / Download PDF</button>
+    <button type="button" id="submitNet30Btn" onclick="submitNet30Application()">Submit Application</button>
+  </div>
 </div>
 <div id="net30View">
   <div class="net30-sheet">
@@ -1217,6 +1217,10 @@ I certify that I am authorized to execute this agreement on behalf of the above 
         <option value="lost">Lost</option>
       </select>
     </label>
+    <div id="customerDraftProposalRow" class="customer-draft-row" style="display:none;">
+      <span id="customerDraftProposalLabel"></span>
+      <button type="button" class="draft-proposal-link" onclick="openDraftProposalFromCustomer()">Continue Draft →</button>
+    </div>
     <div class="followup-section">
       <div class="followup-add-row">
         <input type="date" id="newFollowUpDate">
@@ -2110,25 +2114,6 @@ function syncItemText(select){
     span.textContent = select.options[select.selectedIndex] ? select.options[select.selectedIndex].text : '';
   }
 }
-function preparePricingItemsForExport(){
-  document.querySelectorAll('table.pricing select').forEach(sel => { sel.style.display = 'none'; });
-  document.querySelectorAll('table.pricing .custom-item-input').forEach(el => { el.style.display = 'none'; });
-  document.querySelectorAll('.print-item-text').forEach(span => {
-    span.style.height = 'auto';
-    span.style.overflow = 'visible';
-  });
-}
-
-function restorePricingItemsAfterExport(){
-  document.querySelectorAll('table.pricing select').forEach(sel => {
-    sel.style.display = '';
-    toggleCustomItemInput(sel);
-  });
-  document.querySelectorAll('.print-item-text').forEach(span => {
-    span.style.height = '';
-    span.style.overflow = '';
-  });
-}
 
 function toggleCustomItemInput(select){
   const customInput = select.nextElementSibling;
@@ -2465,121 +2450,17 @@ window.addEventListener('beforeprint', resizeAllTextareas);
 
 /* ================= PDF export ================= */
 
-async function savePDFFile(){
-  const btn = document.getElementById('pdfBtn');
-  const originalLabel = btn.textContent;
-
-  const propName = (document.getElementById('propNameInput').value || '').trim();
-  const defaultName = 'Pest Pro Proposal' + (propName ? ' - ' + propName : '');
-  const chosenName = await showPrompt('Name this PDF:', defaultName);
-  if (chosenName === null) return;
-
-  const safeName = chosenName.replace(/[\\/:*?"<>|]/g, '').trim() || defaultName;
-  const filename = safeName.toLowerCase().endsWith('.pdf') ? safeName : safeName + '.pdf';
-
-  btn.textContent = 'Generating PDF…';
-  btn.disabled = true;
-
-  // html2canvas captures relative to the current scroll position, not the
-  // top of the page. If the user has scrolled down before clicking, the
-  // capture comes out offset -- rendering blank leading pages followed by
-  // content that starts partway down. Force the page to the top before
-  // capturing, and put the scroll position back afterward.
-  const scrollX = window.scrollX;
-  const scrollY = window.scrollY;
-  window.scrollTo(0, 0);
-
-  try {
-    if (document.fonts && document.fonts.ready) {
-      await document.fonts.ready;
-    }
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-
-    resizeAllTextareas();
-    const sheet = document.querySelector('.sheet');
-    const hasPhotos = photosArray.length > 0;
-
-    preparePricingItemsForExport();
-
-    const opt = {
-      margin: [0.4, 0.45, 0.4, 0.45],
-      filename: filename,
-      image: { type: 'jpeg', quality: 0.95 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: document.documentElement.scrollWidth,
-        onclone: (clonedDoc) => {
-          clonedDoc.querySelectorAll(
-            '.toolbar, #sidebarOverlay, #proposalSidebar, #modalOverlay, .add-row-btn, td.del, td.drag, th.drag-header, .term-del, .photo-del, #photoUploadInput, #togglePhotosBtn, .onetime-toggle, .optional-toggle, .terms-select-row, .warranty-select-row, .addon-mode-row, #configBanner, .sig-clear-btn'
-          ).forEach(el => { el.style.display = 'none'; });
-
-          // Trim the sheet's screen-only bottom padding for export. Left in
-          // place, this trailing whitespace is just small enough to tip
-          // html2pdf's page-count rounding into an extra, fully blank page
-          // at the end of every PDF.
-          const clonedSheet = clonedDoc.querySelector('.sheet');
-          if (clonedSheet) clonedSheet.style.paddingBottom = '4px';
-
-          const photosSection = clonedDoc.getElementById('photosSection');
-          const photosContent = clonedDoc.getElementById('photosContent');
-          if (hasPhotos && photosContent) {
-            photosContent.style.display = 'block';
-          } else if (photosSection) {
-            photosSection.style.display = 'none';
-          }
-
-          clonedDoc.querySelectorAll('table.pricing .addon-price-input').forEach(el => { el.style.display = 'none'; });
-
-          clonedDoc.querySelectorAll('.discount-row select, .discount-row input.discount-label, .discount-row input.discount-value, .discount-row .discount-amount, .discount-row .discount-del')
-            .forEach(el => { el.style.display = 'none'; });
-
-          clonedDoc.querySelectorAll('.sheet input[type="text"]:not(.custom-item-input):not(.addon-price-input), .sheet textarea:not(.custom-item-input)').forEach(el => {
-            const cs = clonedDoc.defaultView.getComputedStyle(el);
-            const div = clonedDoc.createElement('div');
-            div.textContent = el.value || '';
-            div.style.display = 'block';
-            div.style.width = '100%';
-            div.style.boxSizing = 'border-box';
-            div.style.fontFamily = cs.fontFamily;
-            div.style.fontSize = cs.fontSize;
-            div.style.fontStyle = cs.fontStyle;
-            div.style.fontWeight = cs.fontWeight;
-            div.style.color = cs.color;
-            div.style.lineHeight = cs.lineHeight;
-            div.style.whiteSpace = 'pre-wrap';
-            div.style.wordWrap = 'break-word';
-            div.style.padding = cs.padding;
-            div.style.minHeight = cs.minHeight;
-            el.insertAdjacentElement('beforebegin', div);
-            el.style.display = 'none';
-          });
-
-          clonedDoc.querySelectorAll('.rich-text-field').forEach(el => {
-            if (!el.textContent.trim()) el.removeAttribute('data-placeholder');
-          });
-        }
-      },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-      pagebreak: {
-        mode: ['css'],
-        avoid: ['tr', '.photo-cell', '.sign-block', '.totals', '#pricingInitialSection', '#recurringSection']
-      }
-    };
-
-    await html2pdf().set(opt).from(sheet).save();
-    btn.textContent = 'Saved ✓';
-  } catch (err) {
-    console.error('PDF export failed', err);
-    btn.textContent = 'Export failed';
-  } finally {
-    restorePricingItemsAfterExport();
-    window.scrollTo(scrollX, scrollY);
-    setTimeout(() => { btn.textContent = originalLabel; btn.disabled = false; }, 1800);
+// One rendering path for print/PDF, everywhere: the browser's own native
+// print (real @media print CSS, real text -- not a screenshot-based
+// export). This is also what a client sees when they click "Print /
+// Download PDF" on a signing or NET 30 link, so what you check here is
+// exactly what they get too.
+async function printDocument(){
+  resizeAllTextareas();
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
   }
+  window.print();
 }
 
 /* ================= Inspection Photos ================= */
@@ -2999,15 +2880,20 @@ async function duplicateSignedProposal(id){
   }
 }
 
-async function saveProposal(){
+async function saveProposal(silent){
   if (editorLockedSigned) {
-    showAlert('This proposal has been signed and is locked. Click "Duplicate to Edit" at the top to make changes in a new copy.');
+    if (!silent) showAlert('This proposal has been signed and is locked. Click "Duplicate to Edit" at the top to make changes in a new copy.');
     return;
   }
   const btn = document.getElementById('saveProposalBtn');
   const originalLabel = btn.textContent;
-  btn.textContent = 'Saving…';
-  btn.disabled = true;
+  const statusEl = document.getElementById('autosaveStatus');
+  if (silent) {
+    statusEl.textContent = 'Saving draft…';
+  } else {
+    btn.textContent = 'Saving…';
+    btn.disabled = true;
+  }
 
   try {
     const state = collectFormState();
@@ -3053,16 +2939,27 @@ async function saveProposal(){
 
     await ensureCrmCustomerExists(state.propName);
     await renderSidebar();
-    toggleSidebar(true);
-    btn.textContent = 'Saved ✓';
+    if (silent) {
+      const t = new Date();
+      statusEl.textContent = 'Draft saved ' + t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    } else {
+      toggleSidebar(true);
+      btn.textContent = 'Saved ✓';
+    }
   } catch (err) {
     console.error('Save failed', err);
-    btn.textContent = 'Save failed';
-    if (!dbStorage._configured()) {
-      await showAlert('Shared storage isn\'t configured yet. See the red banner at the top of the page for setup instructions.');
+    if (silent) {
+      statusEl.textContent = 'Autosave failed';
+    } else {
+      btn.textContent = 'Save failed';
+      if (!dbStorage._configured()) {
+        await showAlert('Shared storage isn\'t configured yet. See the red banner at the top of the page for setup instructions.');
+      }
     }
   } finally {
-    setTimeout(()=>{ btn.textContent = originalLabel; btn.disabled = false; }, 1800);
+    if (!silent) {
+      setTimeout(()=>{ btn.textContent = originalLabel; btn.disabled = false; }, 1800);
+    }
   }
 }
 
@@ -3866,6 +3763,8 @@ async function addCustomer(){
   openCustomerModal(customer.id);
 }
 
+let customerDraftProposalId = null;
+
 async function openCustomerModal(id){
   const customer = await loadCustomerRecord(id);
   if (!customer) { showAlert('Could not load that customer.'); return; }
@@ -3876,7 +3775,29 @@ async function openCustomerModal(id){
   dateInput.value = new Date().toISOString().slice(0, 10);
   document.getElementById('newFollowUpNote').value = '';
   renderFollowUpList(customer);
+
+  customerDraftProposalId = null;
+  const draftRow = document.getElementById('customerDraftProposalRow');
+  const custName = (customer.name || '').trim().toLowerCase();
+  const index = await getIndex();
+  const match = custName ? index.find(item => item.status === 'draft' && (item.propName || '').trim().toLowerCase() === custName) : null;
+  if (match) {
+    customerDraftProposalId = match.id;
+    document.getElementById('customerDraftProposalLabel').textContent = '📄 Draft proposal saved ' + fmtDate(match.savedAt);
+    draftRow.style.display = 'flex';
+  } else {
+    draftRow.style.display = 'none';
+  }
+
   document.getElementById('customerModalOverlay').classList.add('open');
+}
+
+async function openDraftProposalFromCustomer(){
+  if (!customerDraftProposalId) return;
+  const id = customerDraftProposalId;
+  await closeCustomerModal();
+  await toggleCustomersView(false);
+  await loadProposal(id, 'draft');
 }
 
 async function closeCustomerModal(){
@@ -3990,7 +3911,6 @@ function applyPageBreak(checkboxId, sectionId){
   const section = document.getElementById(sectionId);
   if (!checkbox || !section) return;
   section.classList.toggle('force-new-page', checkbox.checked);
-  renderPageGuides();
 }
 
 function initPageBreakToggles(){
@@ -4000,79 +3920,26 @@ function initPageBreakToggles(){
   });
 }
 
-// Letter paper, 11in tall, 0.4in top + bottom margin (matches savePDFFile()'s
-// export settings and native print's default margins closely enough to be
-// a useful estimate) = 10.2in of content per page = 979.2px at the
-// CSS-standard 96px/inch, regardless of the viewer's actual screen DPI.
-const PAGE_CONTENT_HEIGHT_PX = 979.2;
-let showPageGuides = false;
-let pageGuideRenderScheduled = false;
-
-function togglePageGuides(){
-  showPageGuides = !showPageGuides;
-  document.getElementById('togglePageGuidesBtn').classList.toggle('active', showPageGuides);
-  renderPageGuides();
-}
-
-function togglePrintPreview(){
-  const active = document.body.classList.toggle('print-preview-active');
-  const btn = document.getElementById('printPreviewBtn');
-  btn.textContent = active ? '✕ Exit Preview' : '👁️ Print Preview';
-  btn.classList.toggle('active', active);
-  if (active && !showPageGuides) {
-    togglePageGuides();
-  } else {
-    schedulePageGuideRender();
-  }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function renderPageGuides(){
-  const sheet = document.querySelector('.sheet');
-  sheet.querySelectorAll('.page-guide').forEach(el => el.remove());
-  if (!showPageGuides) return;
-
-  const children = Array.from(sheet.children).filter(el =>
-    el.offsetParent !== null && !el.classList.contains('page-guide')
-  );
-  if (!children.length) return;
-
-  const breakPoints = [0];
-  children.forEach(child => {
-    if (child.classList.contains('force-new-page')) breakPoints.push(child.offsetTop);
-  });
-  breakPoints.push(sheet.scrollHeight);
-
-  let pageNumber = 1;
-  for (let i = 0; i < breakPoints.length - 1; i++) {
-    const segStart = breakPoints[i];
-    const segEnd = breakPoints[i + 1];
-    let y = segStart + PAGE_CONTENT_HEIGHT_PX;
-    while (y < segEnd - 20) {
-      pageNumber++;
-      const guide = document.createElement('div');
-      guide.className = 'page-guide';
-      guide.style.top = y + 'px';
-      guide.innerHTML = `<span>Page ${pageNumber} starts ~here</span>`;
-      sheet.appendChild(guide);
-      y += PAGE_CONTENT_HEIGHT_PX;
-    }
-    pageNumber++;
-  }
-}
-
-function schedulePageGuideRender(){
-  if (pageGuideRenderScheduled) return;
-  pageGuideRenderScheduled = true;
-  setTimeout(() => { pageGuideRenderScheduled = false; renderPageGuides(); }, 250);
-}
-
-new MutationObserver(schedulePageGuideRender).observe(document.querySelector('.sheet'), {
-  childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'], characterData: true
-});
-window.addEventListener('resize', schedulePageGuideRender);
-
 initPageBreakToggles();
+
+/* ============== Autosave ==============
+   If you leave a proposal half-finished, it quietly saves itself as a
+   draft a few seconds after you stop typing -- same draft you'd get from
+   clicking "Save This Proposal" yourself, just without the button flash
+   or the sidebar popping open. Only runs in the normal editor (never for
+   a client on a signing/NET 30 link, never once a proposal is signed and
+   locked), and only once there's at least a property name to save under. */
+let autosaveTimer = null;
+function scheduleAutosave(){
+  if (isRestoringState) return;
+  if (editorLockedSigned) return;
+  if (document.body.classList.contains('signing-view') || document.body.classList.contains('net30-view') || document.body.classList.contains('auth-locked')) return;
+  if (!document.getElementById('propNameInput').value.trim()) return;
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => { saveProposal(true); }, 3000);
+}
+document.querySelector('.sheet').addEventListener('input', scheduleAutosave);
+document.querySelector('.sheet').addEventListener('change', scheduleAutosave);
 
 if (!dbStorage._configured()) dbStorage._warnUnconfigured();
 
