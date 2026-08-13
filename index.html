@@ -1296,7 +1296,7 @@ I certify that I am authorized to execute this agreement on behalf of the above 
           <input type="text" id="mgmtCoInput" data-save="mgmtCo" placeholder="e.g. Greystar">
         </div>
       </div>
-      <div class="field"><label>Contact Name</label><input type="text" id="contactName" data-save="contactName"></div>
+      <div class="field" id="contactNameField"><label>Contact Name</label><input type="text" id="contactName" data-save="contactName"></div>
       <div class="field" id="contactTitleField"><label>Contact Title</label><input type="text" id="contactTitle" data-save="contactTitle"></div>
       <div class="field"><label>Phone</label><input type="text" id="phoneInput" data-save="phone" oninput="formatPhoneInput(this)"></div>
       <div class="field"><label>Email</label><input type="text" id="emailInput" data-save="email"></div>
@@ -1984,6 +1984,7 @@ function applyClientType(){
   document.getElementById('propNameLabel').textContent = isResidential ? 'Homeowner Name' : 'Property / Company Name';
   document.getElementById('propNameInput').placeholder = isResidential ? 'e.g. John & Jane Smith' : 'e.g. Ashford Apartment Homes';
   updateMgmtCoVisibility();
+  document.getElementById('contactNameField').style.display = isResidential ? 'none' : 'block';
   document.getElementById('contactTitleField').style.display = isResidential ? 'none' : 'block';
   autoSelectTermsTemplate();
 }
