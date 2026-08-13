@@ -722,6 +722,13 @@
     font-size:10.5px; letter-spacing:.3px; text-transform:uppercase;
     color:var(--secondary); padding:0 20px 14px; border-bottom:1px solid var(--line);
   }
+  .sidebar-search{padding:14px 16px 0;}
+  .sidebar-search input{
+    width:100%; box-sizing:border-box; font-family:var(--sans); font-size:13px;
+    padding:8px 12px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink);
+  }
+  .sidebar-search input:focus{outline:none; border-color:var(--accent);}
+  .sidebar-search input::placeholder{color:var(--secondary);}
   .proposal-tabs{display:flex; gap:4px; padding:12px 16px 0; border-bottom:1px solid var(--line);}
   .proposal-tab{
     font-family:var(--sans); font-size:12px; font-weight:600; color:var(--secondary); cursor:pointer;
@@ -798,6 +805,13 @@
   .crm-header{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; gap:16px; flex-wrap:wrap;}
   .crm-header h2{font-family:var(--serif); font-size:24px; margin:0; color:var(--ink);}
   .crm-sub{font-family:var(--sans); font-size:12.5px; color:var(--secondary); margin-top:2px;}
+  .crm-search{margin-bottom:16px;}
+  .crm-search input{
+    width:100%; max-width:360px; box-sizing:border-box; font-family:var(--sans); font-size:13.5px;
+    padding:9px 14px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink);
+  }
+  .crm-search input:focus{outline:none; border-color:var(--accent);}
+  .crm-search input::placeholder{color:var(--secondary);}
   .crm-tabs{display:flex; gap:6px; border-bottom:1px solid var(--line); margin-bottom:18px; flex-wrap:wrap;}
   .crm-tab{
     font-family:var(--sans); font-size:13px; font-weight:600; color:var(--secondary); cursor:pointer;
@@ -1178,6 +1192,9 @@ I certify that I am authorized to execute this agreement on behalf of the above 
     <button class="sidebar-close" onclick="toggleSidebar(false)">&times;</button>
   </div>
   <div class="sidebar-sub">Shared with your whole team</div>
+  <div class="sidebar-search">
+    <input type="text" id="proposalSearchInput" placeholder="Search by name, job type, owner…" oninput="handleProposalSearch(this.value)">
+  </div>
   <div class="proposal-tabs" id="proposalTabs"></div>
   <div id="sidebarList" class="sidebar-list">
     <div class="sidebar-empty" id="sidebarLoading">Loading&hellip;</div>
@@ -1202,6 +1219,9 @@ I certify that I am authorized to execute this agreement on behalf of the above 
       <div class="crm-sub">Shared with your whole team</div>
     </div>
     <button class="add-row-btn" onclick="addCustomer()">+ New Customer</button>
+  </div>
+  <div class="crm-search">
+    <input type="text" id="crmSearchInput" placeholder="Search customers by name or note…" oninput="handleCrmSearch(this.value)">
   </div>
   <div class="crm-tabs" id="crmTabs"></div>
   <div class="crm-list" id="crmList"></div>
@@ -3439,6 +3459,13 @@ function renderProposalTabs(index){
   });
 }
 
+let proposalSearchQuery = '';
+
+function handleProposalSearch(value){
+  proposalSearchQuery = value;
+  renderSidebar();
+}
+
 async function renderSidebar(){
   const listEl = document.getElementById('sidebarList');
   const badge = document.getElementById('savedCountBadge');
@@ -3447,15 +3474,23 @@ async function renderSidebar(){
   badge.textContent = index.length ? index.length : '';
   renderProposalTabs(index);
 
+  const query = proposalSearchQuery.trim().toLowerCase();
   const filtered = index.filter(item => {
     const isSigned = item.status === 'accepted';
-    return proposalActiveTab === 'signed' ? isSigned : !isSigned;
+    if ((proposalActiveTab === 'signed') !== isSigned) return false;
+    if (!query) return true;
+    const haystack = [item.propName, item.jobType, item.owner, item.brand].join(' ').toLowerCase();
+    return haystack.includes(query);
   });
 
   if (!filtered.length) {
-    listEl.innerHTML = proposalActiveTab === 'signed'
-      ? '<div class="sidebar-empty">No signed proposals yet.<br>Once a client signs, it shows up here<br>and gets locked from editing.</div>'
-      : '<div class="sidebar-empty">No proposals saved yet.<br>Fill this one out, then click<br>"Save This Proposal" above.</div>';
+    if (query) {
+      listEl.innerHTML = '<div class="sidebar-empty">No proposals match "' + escapeHtml(proposalSearchQuery.trim()) + '".</div>';
+    } else {
+      listEl.innerHTML = proposalActiveTab === 'signed'
+        ? '<div class="sidebar-empty">No signed proposals yet.<br>Once a client signs, it shows up here<br>and gets locked from editing.</div>'
+        : '<div class="sidebar-empty">No proposals saved yet.<br>Fill this one out, then click<br>"Save This Proposal" above.</div>';
+    }
     return;
   }
 
@@ -3690,14 +3725,25 @@ function renderCrmTabs(){
   });
 }
 
+let crmSearchQuery = '';
+
+function handleCrmSearch(value){
+  crmSearchQuery = value;
+  renderCrmList();
+}
+
 function renderCrmList(){
   const listEl = document.getElementById('crmList');
+  const query = crmSearchQuery.trim().toLowerCase();
   const inStage = crmIndexCache
     .filter(c => (c.stage || 'lead') === crmActiveStage)
+    .filter(c => !query || [c.name, c.lastFollowUpNote].join(' ').toLowerCase().includes(query))
     .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
 
   if (!inStage.length) {
-    listEl.innerHTML = '<div class="crm-list-empty">No customers here yet.</div>';
+    listEl.innerHTML = query
+      ? '<div class="crm-list-empty">No customers match "' + escapeHtml(crmSearchQuery.trim()) + '".</div>'
+      : '<div class="crm-list-empty">No customers here yet.</div>';
     return;
   }
 
