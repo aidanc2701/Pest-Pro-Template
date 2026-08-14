@@ -1128,13 +1128,13 @@
     <div class="section">
       <h2>Company Information</h2>
       <div class="grid2">
-        <div class="field"><label>Company Name</label><div class="net30-readonly" id="net30CompanyName"></div></div>
+        <div class="field"><label>Company Name</label><input type="text" id="net30CompanyName" data-save="net30CompanyName" class="net30-fillable"></div>
         <div class="field"><label>DBA (if applicable)</label><input type="text" id="net30Dba" data-save="net30Dba" class="net30-fillable"></div>
       </div>
-      <div class="field"><label>Company Address</label><div class="net30-readonly" id="net30CompanyAddress"></div></div>
+      <div class="field"><label>Company Address</label><input type="text" id="net30CompanyAddress" data-save="net30CompanyAddress" class="net30-fillable"></div>
       <div class="grid2">
-        <div class="field"><label>Email Address</label><div class="net30-readonly" id="net30Email"></div></div>
-        <div class="field"><label>Phone Number</label><div class="net30-readonly" id="net30Phone"></div></div>
+        <div class="field"><label>Email Address</label><input type="text" id="net30Email" data-save="net30Email" class="net30-fillable"></div>
+        <div class="field"><label>Phone Number</label><input type="text" id="net30Phone" data-save="net30Phone" class="net30-fillable"></div>
       </div>
       <div class="grid2">
         <div class="field"><label>Website</label><input type="text" id="net30Website" data-save="net30Website" class="net30-fillable"></div>
@@ -3158,7 +3158,7 @@ function copyNet30Link(id, evt){
   const url = window.location.origin + window.location.pathname + '?net30=' + encodeURIComponent(id);
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(url)
-      .then(() => showAlert('NET 30 application link copied! Send it to a client who\'s requesting credit terms -- their company info from this proposal fills in automatically, and they fill in the rest and sign.'))
+      .then(() => showAlert('NET 30 application link copied! Send it to a client who\'s requesting credit terms -- they fill out the whole form themselves and sign.'))
       .catch(() => showPrompt('Could not copy automatically -- here\'s the link to copy manually:', url));
   } else {
     showPrompt('Here\'s the NET 30 application link -- copy it to send to your client:', url);
@@ -3176,6 +3176,7 @@ function getNet30Id(){
 }
 
 const NET30_FIELD_KEYS = [
+  'net30CompanyName', 'net30CompanyAddress', 'net30Email', 'net30Phone',
   'net30Dba', 'net30Website', 'net30DbNumber', 'net30OrgType', 'net30Fein',
   'net30YearsInBusiness', 'net30ApContactName', 'net30ApBillingAddress',
   'net30ApEmail', 'net30ApPhone', 'net30PaymentCycle', 'net30ApplicantName',
@@ -3225,10 +3226,6 @@ async function enterNet30ViewMode(id){
   document.getElementById('net30View').style.display = 'block';
 
   applyFormState(state);
-  document.getElementById('net30CompanyName').textContent = state.propName || '';
-  document.getElementById('net30CompanyAddress').textContent = state.propertyAddress || '';
-  document.getElementById('net30Email').textContent = state.email || '';
-  document.getElementById('net30Phone').textContent = state.phone || '';
   syncNet30OrgTypeCheckboxes();
 
   const banner = document.getElementById('net30Banner');

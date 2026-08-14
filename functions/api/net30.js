@@ -9,6 +9,7 @@ const SUPABASE_URL = 'https://girqzwoadjovqeudypnw.supabase.co';
 const ID_PATTERN = /^p[0-9]+-[a-z0-9]+$/;
 
 const NET30_FIELDS = [
+  'net30CompanyName', 'net30CompanyAddress', 'net30Email', 'net30Phone',
   'net30Dba', 'net30Website', 'net30DbNumber', 'net30OrgType', 'net30Fein',
   'net30YearsInBusiness', 'net30ApContactName', 'net30ApBillingAddress',
   'net30ApEmail', 'net30ApPhone', 'net30PaymentCycle', 'net30ApplicantName',
