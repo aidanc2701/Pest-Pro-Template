@@ -64,5 +64,33 @@ export async function onRequestPost({ request, env }) {
   });
   if (!saveRes.ok) return json({ error: 'save failed' }, 502);
 
+  // Best-effort: flag this proposal's index entry as NET30-signed so the
+  // owner can see it was submitted from the Saved Proposals list, instead
+  // of having to open each client link to check. The application itself
+  // is already saved above -- a failure here shouldn't fail the client's
+  // submission, just leave the badge to catch up next time this runs.
+  try {
+    const idxRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/kv_store?key=eq.proposal-index&select=value`,
+      { headers: serviceHeaders(env) }
+    );
+    if (idxRes.ok) {
+      const idxRows = await idxRes.json();
+      const index = idxRows.length ? JSON.parse(idxRows[0].value) : [];
+      const item = index.find(i => i.id === id);
+      if (item) {
+        item.net30Signed = true;
+        item.net30SignedAt = new Date().toISOString();
+        await fetch(`${SUPABASE_URL}/rest/v1/kv_store`, {
+          method: 'POST',
+          headers: { ...serviceHeaders(env), 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+          body: JSON.stringify({ key: 'proposal-index', value: JSON.stringify(index), updated_at: new Date().toISOString() })
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Could not update proposal-index with net30Signed', err);
+  }
+
   return json({ ok: true });
 }
