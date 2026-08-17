@@ -225,7 +225,21 @@
     display:none !important;
   }
   body.signing-view .print-item-text, body.editor-locked-signed .print-item-text{height:auto !important; overflow:visible !important;}
-  body.signing-view .discount-row, body.editor-locked-signed .discount-row{border:none; padding:4px 0; background:none; margin-bottom:6px;}
+  /* Read-only discount rows: rendered as a clean two-column line item
+     (description left, amount right) instead of the editable-mode dashed
+     box -- previously the amount and description each forced their own
+     full-width line and drifted to the far left, looking like a stray
+     unrelated number instead of a discount tied to the item above it. */
+  body.signing-view .discount-row, body.editor-locked-signed .discount-row{
+    display:flex; flex-wrap:nowrap; align-items:baseline; justify-content:space-between; gap:14px;
+    border:none; border-left:2px solid var(--line); padding:3px 0 3px 14px; background:none; margin-bottom:4px;
+  }
+  body.signing-view .discount-row .discount-print-text, body.editor-locked-signed .discount-row .discount-print-text{
+    width:auto; flex:1 1 auto; height:auto; overflow:visible; padding:0; color:var(--secondary); font-style:italic;
+  }
+  body.signing-view .discount-row .discount-amount, body.editor-locked-signed .discount-row .discount-amount{
+    flex-shrink:0; min-width:0;
+  }
   body.signing-view .term-row textarea, body.editor-locked-signed .term-row textarea{border:none; resize:none;}
   body.signing-view .terms li.template-clause, body.editor-locked-signed .terms li.template-clause,
   body.signing-view .terms li.warranty-legal-clause, body.editor-locked-signed .terms li.warranty-legal-clause{
@@ -568,7 +582,12 @@
   @media print{
     .discount-row .discount-del{display:none !important;}
     .discount-row select, .discount-row input.discount-label, .discount-row input.discount-value{display:none !important;}
-    .discount-row{border:none; padding:4px 0; background:none; margin-bottom:6px;}
+    .discount-row{
+      display:flex; flex-wrap:nowrap; align-items:baseline; justify-content:space-between; gap:14px;
+      border:none; border-left:2px solid var(--line); padding:3px 0 3px 14px; background:none; margin-bottom:4px;
+    }
+    .discount-row .discount-print-text{width:auto; flex:1 1 auto; height:auto; overflow:visible; padding:0; color:var(--secondary); font-style:italic;}
+    .discount-row .discount-amount{flex-shrink:0; min-width:0;}
   }
 
   .warranty-select-row{
@@ -2330,7 +2349,7 @@ function recalc(kind){
     const label = row.querySelector('.discount-label').value.trim() || 'Discount';
     const targetLabel = target === 'subtotal' ? 'subtotal' : (row.querySelector('.discount-target').selectedOptions[0]?.textContent || 'item');
     const suffix = type === 'percent' ? (value || 0) + '% off ' + targetLabel : 'off ' + targetLabel;
-    row.querySelector('.discount-print-text').textContent = label + ' (' + suffix + '): -' + formatMoney(Math.max(0, amount));
+    row.querySelector('.discount-print-text').textContent = label + ' (' + suffix + ')';
     totalDiscount += Math.max(0, amount);
   });
 
@@ -2822,6 +2841,7 @@ function applyFormState(state){
     }
   });
   renderSignaturePad('client');
+  renderSignaturePad('rep');
 
   const brandSelect = document.getElementById('brandSelect');
   if (state.brand) {
@@ -2952,6 +2972,7 @@ function lockEditorForSignedProposal(){
   document.querySelectorAll('.sheet input, .sheet textarea, .sheet select').forEach(el => { el.disabled = true; });
   document.querySelectorAll('.sheet [contenteditable="true"]').forEach(el => { el.setAttribute('contenteditable', 'false'); });
   lockSignaturePad('client');
+  lockSignaturePad('rep');
   document.getElementById('signedLockBanner').style.display = 'flex';
 }
 
@@ -2961,6 +2982,7 @@ function unlockEditorFromSignedProposal(){
   document.querySelectorAll('.sheet input, .sheet textarea, .sheet select').forEach(el => { el.disabled = false; });
   document.querySelectorAll('.sheet [contenteditable]').forEach(el => { el.setAttribute('contenteditable', 'true'); });
   unlockSignaturePad('client');
+  unlockSignaturePad('rep');
   document.getElementById('signedLockBanner').style.display = 'none';
 }
 
@@ -3324,6 +3346,12 @@ function lockForSigning(){
   });
   // clientSigLine's own interactivity is the canvas, not a contenteditable
   // element -- left unlocked here on purpose so the client can draw.
+  // repSigLine is a hidden <input>, so the disabled-inputs loop above never
+  // touches its Clear/Save-as-Default buttons or its canvas -- without this,
+  // anyone with the signing link could wipe (or overwrite) the rep's
+  // signature, and since submission overwrites the whole saved record,
+  // that wipe would silently become permanent.
+  lockSignaturePad('rep');
 }
 
 function refreshSigningActionBar(){
