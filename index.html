@@ -101,6 +101,7 @@
     transition:transform .12s ease, box-shadow .12s ease;
   }
   .toolbar button:hover{transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,.2);}
+  .toolbar button:disabled{opacity:.45; cursor:default; pointer-events:none;}
   .toolbar button.active{background:#fff; color:var(--accent-dark); box-shadow:inset 0 0 0 2px var(--accent-dark), inset 0 2px 5px rgba(0,0,0,.25);}
   .toolbar .spacer{flex:1; min-width:12px;}
   .btn-icon{width:15px; height:15px; flex-shrink:0;}
@@ -209,6 +210,7 @@
   body.signing-view td.drag, body.editor-locked-signed td.drag,
   body.signing-view th.drag-header, body.editor-locked-signed th.drag-header,
   body.signing-view .term-row .term-del, body.editor-locked-signed .term-row .term-del,
+  body.signing-view .clause-del, body.editor-locked-signed .clause-del,
   body.signing-view .photo-cell .photo-del, body.editor-locked-signed .photo-cell .photo-del,
   body.signing-view #photoUploadInput, body.editor-locked-signed #photoUploadInput,
   body.signing-view #togglePhotosBtn, body.editor-locked-signed #togglePhotosBtn,
@@ -241,7 +243,7 @@
     flex-shrink:0; min-width:0;
   }
   body.signing-view .term-row textarea, body.editor-locked-signed .term-row textarea{border:none; resize:none;}
-  body.signing-view .terms li.template-clause, body.editor-locked-signed .terms li.template-clause,
+  body.signing-view .clause-text, body.editor-locked-signed .clause-text{border-bottom:none; background:none; padding:0;}
   body.signing-view .terms li.warranty-legal-clause, body.editor-locked-signed .terms li.warranty-legal-clause{
     border-bottom:none; background:none; padding-left:22px; padding-top:0; padding-bottom:0; padding-right:0;
   }
@@ -499,14 +501,22 @@
     position:absolute; left:0; top:0;
     font-family:var(--serif); font-weight:400; color:inherit;
   }
-  .terms li.template-clause{
-    border-bottom:1px solid transparent; padding-left:22px; padding-top:1px; padding-bottom:1px; padding-right:2px;
+  .terms li.template-clause{padding-top:1px; padding-bottom:1px;}
+  .clause-row{display:flex; align-items:flex-start; gap:8px;}
+  .clause-text{
+    flex:1; min-width:0; border-bottom:1px solid transparent; padding:0 2px;
     transition:border-color .15s ease, background .15s ease;
   }
-  .terms li.template-clause:hover{background:rgba(0,0,0,.015);}
-  .terms li.template-clause:focus{outline:none; border-bottom:1.5px solid var(--accent); background:rgba(0,0,0,.015);}
+  .clause-text:hover{background:rgba(0,0,0,.015);}
+  .clause-text:focus{outline:none; border-bottom:1.5px solid var(--accent); background:rgba(0,0,0,.015);}
+  .clause-del{
+    border:none; background:none; color:#B23A48; cursor:pointer; font-size:17px; line-height:1;
+    font-family:Arial,sans-serif; opacity:.5; transition:opacity .15s ease; padding-top:1px; flex-shrink:0;
+  }
+  .clause-del:hover{opacity:1;}
   @media print{
-    .terms li.template-clause{border-bottom:none; background:none; padding-left:22px; padding-top:0; padding-bottom:0; padding-right:0;}
+    .clause-del{display:none !important;}
+    .clause-text{border-bottom:none; background:none; padding:0;}
   }
   .terms-preamble{
     font-family:var(--serif); font-size:12.5px; line-height:1.7; color:var(--secondary);
@@ -1036,6 +1046,10 @@
       <button id="saveProposalBtn" onclick="saveProposal()">
         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Save This Proposal
+      </button>
+      <button id="undoBtn" onclick="undoLastChange()" disabled title="Undo the last deleted row, discount, or term">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+        Undo
       </button>
       <button id="pdfBtn" onclick="printDocument()">
         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -1812,9 +1826,18 @@ function renderTermsTemplate(templateId){
   template.clauses.forEach(text => {
     const li = document.createElement('li');
     li.className = 'template-clause';
-    li.contentEditable = 'true';
     li.dataset.default = text;
-    li.textContent = text;
+    li.innerHTML = `
+      <div class="clause-row">
+        <div class="clause-text" contenteditable="true"></div>
+        <button type="button" class="clause-del" title="Remove this term">&times;</button>
+      </div>
+    `;
+    li.querySelector('.clause-text').textContent = text;
+    li.querySelector('.clause-del').addEventListener('click', () => {
+      pushUndoSnapshot();
+      li.remove();
+    });
     frag.appendChild(li);
   });
   list.prepend(frag);
@@ -2279,7 +2302,7 @@ function addRow(kind, item, description){
     <td class="num"><input type="text" inputmode="decimal" value="1" oninput="recalc('${kind}')"></td>
     <td class="num"><input type="text" inputmode="decimal" value="0" oninput="recalc('${kind}')"></td>
     <td class="linetotal">$0.00</td>
-    <td class="del"><button onclick="this.closest('tr').remove(); recalc('${kind}');">&times;</button></td>
+    <td class="del"><button onclick="pushUndoSnapshot(); this.closest('tr').remove(); recalc('${kind}');">&times;</button></td>
   `;
   toggleCustomItemInput(tr.querySelector('select'));
   tr.addEventListener('dragstart', (e)=>{
@@ -2388,7 +2411,7 @@ function addDiscountRow(kind, data){
     <select class="discount-target" onchange="recalc('${kind}')"></select>
     <span class="discount-amount">-$0.00</span>
     <span class="discount-print-text print-item-text"></span>
-    <button type="button" class="discount-del" onclick="this.closest('.discount-row').remove(); recalc('${kind}');">&times;</button>
+    <button type="button" class="discount-del" onclick="pushUndoSnapshot(); this.closest('.discount-row').remove(); recalc('${kind}');">&times;</button>
   `;
   container.appendChild(row);
   const targetSelect = row.querySelector('.discount-target');
@@ -2487,7 +2510,7 @@ function addAddonRow(item, qty, price, description){
     </td>
     <td class="num"><input type="text" value="${freqEscaped}"></td>
     <td class="num"><input type="text" inputmode="decimal" class="addon-price-input" value="${price != null ? price : 0}" oninput="syncAddonPriceText(this)"><span class="addon-price-print print-item-text"></span></td>
-    <td class="del"><button type="button" onclick="this.closest('tr').remove();">&times;</button></td>
+    <td class="del"><button type="button" onclick="pushUndoSnapshot(); this.closest('tr').remove();">&times;</button></td>
   `;
   tr.addEventListener('dragstart', (e)=>{
     draggingRow = tr;
@@ -2544,7 +2567,7 @@ function addTermRow(text){
   li.innerHTML = `
     <div class="term-row">
       <textarea placeholder="e.g. Solar panel access requires 48 hours advance notice to property management.">${text ? text : ''}</textarea>
-      <button class="term-del" onclick="this.closest('li').remove();">&times;</button>
+      <button class="term-del" onclick="pushUndoSnapshot(); this.closest('li').remove();">&times;</button>
     </div>
   `;
   list.appendChild(li);
@@ -2809,7 +2832,7 @@ function collectFormState(){
   state.pricingRecurring = collectRows('pricingBodyRecurring');
   state.additionalTerms = Array.from(document.querySelectorAll('#termsList .term-row textarea')).map(t => t.value);
   state.termsTemplateId = document.getElementById('termsTemplateSelect').value;
-  state.termsClauses = Array.from(document.querySelectorAll('#termsList li.template-clause')).map(li => sanitizeInlineHtml(li.innerHTML));
+  state.termsClauses = Array.from(document.querySelectorAll('#termsList li.template-clause .clause-text')).map(el => sanitizeInlineHtml(el.innerHTML));
   state.warrantyType = document.getElementById('warrantyTypeSelect').value;
   const warrantyLegalLi = document.getElementById('warrantyLegalLi');
   state.warrantyLegalText = warrantyLegalLi ? sanitizeInlineHtml(warrantyLegalLi.innerHTML) : '';
@@ -2900,9 +2923,20 @@ function applyFormState(state){
     isRestoringState = false;
     autoSelectTermsTemplate();
   }
-  if (state.termsClauses && state.termsClauses.length) {
-    const clauseEls = document.querySelectorAll('#termsList li.template-clause');
-    state.termsClauses.forEach((text, i) => { if (clauseEls[i]) clauseEls[i].innerHTML = sanitizeInlineHtml(text); });
+  if (Array.isArray(state.termsClauses)) {
+    // renderTermsTemplate() above always rebuilds the template's FULL
+    // default clause list -- if the user had removed some clauses, the
+    // saved list is shorter than that default. Overlay saved text onto
+    // the clauses we're keeping, then drop whatever's left over so a
+    // removed clause doesn't silently reappear on reload.
+    const clauseLis = document.querySelectorAll('#termsList li.template-clause');
+    clauseLis.forEach((li, i) => {
+      if (i < state.termsClauses.length) {
+        li.querySelector('.clause-text').innerHTML = sanitizeInlineHtml(state.termsClauses[i]);
+      } else {
+        li.remove();
+      }
+    });
   }
   document.getElementById('warrantyTypeSelect').value = state.warrantyType || '';
   document.getElementById('customWarrantyNameField').style.display = (state.warrantyType === 'custom') ? 'block' : 'none';
@@ -2930,6 +2964,44 @@ function applyFormState(state){
   });
 
   resizeAllTextareas();
+}
+
+/* ================= Undo (row/clause deletions) =================
+   Captures a full state snapshot right before a destructive click --
+   deleting a pricing row, a discount, a custom term, or a terms-template
+   clause -- so a misclick can be undone instead of retyped from memory
+   (especially painful for legal boilerplate). Scoped to whichever
+   proposal is currently open: loadProposal/duplicateSignedProposal/
+   startNewProposal all clear the stack, since restoring a snapshot from
+   a different proposal would silently overwrite whatever's open now. */
+let undoStack = [];
+const UNDO_STACK_LIMIT = 20;
+
+function pushUndoSnapshot(){
+  try {
+    undoStack.push(JSON.stringify(collectFormState()));
+    if (undoStack.length > UNDO_STACK_LIMIT) undoStack.shift();
+    refreshUndoButton();
+  } catch (err) {
+    console.error('Could not capture undo snapshot', err);
+  }
+}
+
+function clearUndoStack(){
+  undoStack = [];
+  refreshUndoButton();
+}
+
+function refreshUndoButton(){
+  const btn = document.getElementById('undoBtn');
+  if (btn) btn.disabled = undoStack.length === 0;
+}
+
+function undoLastChange(){
+  if (!undoStack.length) return;
+  const snapshot = undoStack.pop();
+  applyFormState(JSON.parse(snapshot));
+  refreshUndoButton();
 }
 
 function moneyLabel(kind){
@@ -2995,6 +3067,7 @@ async function duplicateSignedProposal(id){
     if (!result || !result.value) { showAlert('Could not load that proposal.'); return; }
     const state = JSON.parse(result.value);
     applyFormState(state);
+    clearUndoStack();
     unlockEditorFromSignedProposal();
     currentProposalId = null;
     document.getElementById('propNameInput').value = (state.propName || '') + ' (Copy)';
@@ -3096,6 +3169,7 @@ async function loadProposal(id, status){
     if (!result || !result.value) { showAlert('Could not find that saved proposal.'); return; }
     const state = JSON.parse(result.value);
     applyFormState(state);
+    clearUndoStack();
     currentProposalId = id;
     if (status === 'accepted') {
       lockEditorForSignedProposal();
@@ -3418,6 +3492,7 @@ async function startNewProposal(){
   const ok = await showConfirm('Clear the form to start a fresh proposal? Anything unsaved will be lost.');
   if (!ok) return;
   unlockEditorFromSignedProposal();
+  clearUndoStack();
   currentProposalId = null;
   document.querySelectorAll('[data-save]').forEach(el=>{
     if (el.tagName === 'SELECT') return;
