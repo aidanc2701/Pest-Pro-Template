@@ -856,6 +856,17 @@
   .crm-header{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; gap:16px; flex-wrap:wrap;}
   .crm-header h2{font-family:var(--serif); font-size:24px; margin:0; color:var(--ink);}
   .crm-sub{font-family:var(--sans); font-size:12.5px; color:var(--secondary); margin-top:2px;}
+  .crm-due-banner{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#FBE7E2; border:1px solid #E8BBAE;
+    border-radius:8px; padding:12px 16px; margin-bottom:16px; font-family:var(--sans); font-size:13px; color:#8A3A24;
+  }
+  .crm-due-banner-title{font-weight:700; flex-shrink:0;}
+  .crm-due-banner-list{display:flex; gap:8px; flex-wrap:wrap;}
+  .crm-due-chip{
+    background:#fff; border:1px solid #E8BBAE; border-radius:14px; padding:4px 12px; font-weight:600;
+    cursor:pointer; color:#8A3A24;
+  }
+  .crm-due-chip:hover{background:#8A3A24; color:#fff;}
   .crm-search{margin-bottom:16px;}
   .crm-search input{
     width:100%; max-width:360px; box-sizing:border-box; font-family:var(--sans); font-size:13.5px;
@@ -896,6 +907,13 @@
   }
   .crm-reached-badge.reached-yes{background:#E4F3E6; color:#2E7D42;}
   .crm-reached-badge.reached-no{background:#FBE7E2; color:#B2472A;}
+  .crm-due-badge{
+    display:inline-block; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.3px;
+    padding:1px 7px; border-radius:8px; margin-right:2px; white-space:nowrap;
+  }
+  .crm-due-badge.due-overdue{background:#FBE7E2; color:#B2472A;}
+  .crm-due-badge.due-today{background:#FDECD2; color:#9A6A16;}
+  .crm-due-badge.due-future{background:rgba(0,0,0,.05); color:var(--secondary);}
   .crm-list-empty{font-family:var(--sans); font-size:13px; color:var(--secondary); text-align:center; padding:60px 10px;}
 
   .customer-modal-box{width:420px; max-width:90vw; text-align:left;}
@@ -929,10 +947,29 @@
   }
   .signed-checklist-title{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--accent-dark);}
   .signed-checklist label{display:flex; align-items:center; gap:8px; cursor:pointer;}
+  .lost-reason-section{
+    background:#FBE7E2; border-radius:8px; padding:12px 14px; margin-bottom:16px;
+    font-family:var(--sans); font-size:13px; color:var(--ink); display:flex; flex-direction:column; gap:8px;
+  }
+  .lost-reason-title{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#B2472A;}
+  .lost-reason-section select{
+    font-family:var(--sans); font-size:13px; padding:6px 8px; border-radius:6px; border:1px solid var(--line); background:#fff; color:var(--ink);
+  }
+  .lost-reason-section textarea{
+    font-family:var(--sans); font-size:12.5px; padding:7px 8px; border-radius:6px; border:1px solid var(--line);
+    resize:vertical; min-height:44px;
+  }
   .followup-section{border-top:1px solid var(--line); padding-top:14px; margin-bottom:6px;}
   .followup-add-row{display:flex; flex-direction:column; gap:8px; margin-bottom:14px;}
-  .followup-add-row input[type="date"]{
-    font-family:var(--sans); font-size:13px; padding:6px 8px; border-radius:6px; border:1px solid var(--line); width:fit-content;
+  .followup-date-row{display:flex; gap:12px;}
+  .followup-current-hint{font-family:var(--sans); font-size:11.5px; color:var(--secondary); font-style:italic;}
+  .followup-field-label{
+    display:flex; flex-direction:column; gap:3px; font-family:var(--sans); font-size:10.5px;
+    font-weight:600; color:var(--secondary); text-transform:uppercase; letter-spacing:.3px;
+  }
+  .followup-field-label input[type="date"]{
+    font-family:var(--sans); font-size:13px; padding:6px 8px; border-radius:6px; border:1px solid var(--line);
+    text-transform:none; letter-spacing:normal; font-weight:400; color:var(--ink);
   }
   .followup-meta-row{display:flex; gap:8px;}
   .followup-meta-row select{
@@ -1302,6 +1339,7 @@ I certify that I am authorized to execute this agreement on behalf of the above 
     </div>
     <button class="add-row-btn" onclick="addCustomer()">+ New Customer</button>
   </div>
+  <div id="crmDueBanner" class="crm-due-banner" style="display:none;"></div>
   <div class="crm-search">
     <input type="text" id="crmSearchInput" placeholder="Search customers by name or note…" oninput="handleCrmSearch(this.value)">
   </div>
@@ -1335,9 +1373,26 @@ I certify that I am authorized to execute this agreement on behalf of the above 
       <label><input type="checkbox" id="customerScheduledCheck"> Scheduled first service</label>
       <label><input type="checkbox" id="customerPaymentCheck"> Payment method / card on file</label>
     </div>
+    <div id="lostReasonSection" class="lost-reason-section" style="display:none;">
+      <div class="lost-reason-title">Why Lost?</div>
+      <select id="customerLostReasonSelect">
+        <option value="">Select a reason…</option>
+        <option value="price">Price too high</option>
+        <option value="competitor">Chose a competitor</option>
+        <option value="timing">Bad timing / not ready</option>
+        <option value="no_longer_needed">No longer needs service</option>
+        <option value="unresponsive">Went unresponsive</option>
+        <option value="other">Other</option>
+      </select>
+      <textarea id="customerLostReasonNote" placeholder="Any detail worth remembering (optional)"></textarea>
+    </div>
     <div class="followup-section">
       <div class="followup-add-row">
-        <input type="date" id="newFollowUpDate">
+        <div class="followup-date-row">
+          <label class="followup-field-label">Contact Date<input type="date" id="newFollowUpDate"></label>
+          <label class="followup-field-label">Next Follow-Up<input type="date" id="newFollowUpNextDate"></label>
+        </div>
+        <div id="currentNextFollowUpHint" class="followup-current-hint"></div>
         <div class="followup-meta-row">
           <select id="newFollowUpMethod">
             <option value="call">Phone Call</option>
@@ -3894,8 +3949,29 @@ function summarizeCustomer(record){
     lastFollowUpNote: lastFollowUp ? lastFollowUp.note : null,
     lastFollowUpMethod: lastFollowUp ? lastFollowUp.method : null,
     lastFollowUpReached: lastFollowUp ? lastFollowUp.reached : null,
+    nextFollowUpDate: record.nextFollowUpDate || null,
     updatedAt: record.updatedAt || record.createdAt || new Date().toISOString()
   };
+}
+
+// Date-only comparison (no time component) so "due today" means the
+// calendar date, not the next 24 hours from whatever time it is now.
+function daysUntil(dateStr){
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const target = new Date(y, m - 1, d);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target - today) / 86400000);
+}
+
+function formatDueBadge(dateStr){
+  const days = daysUntil(dateStr);
+  if (days === null) return null;
+  if (days < 0) return { label: 'Overdue ' + Math.abs(days) + 'd', className: 'due-overdue' };
+  if (days === 0) return { label: 'Due Today', className: 'due-today' };
+  return { label: 'Follow up ' + fmtPlainDate(dateStr), className: 'due-future' };
 }
 
 async function saveCustomerRecord(record){
@@ -3958,6 +4034,26 @@ async function renderCustomers(){
   await syncCrmWithSignedProposals();
   renderCrmTabs();
   renderCrmList();
+  renderCrmDueBanner();
+}
+
+// A customer past Signed/Active/Lost has nothing left to chase, so a
+// leftover next-follow-up date on one of those doesn't count as due --
+// it's just whatever was last set before they moved on.
+function renderCrmDueBanner(){
+  const banner = document.getElementById('crmDueBanner');
+  const due = crmIndexCache.filter(c => {
+    if (['signed', 'active', 'lost'].includes(remapLegacyStage(c.stage))) return false;
+    const days = daysUntil(c.nextFollowUpDate);
+    return days !== null && days <= 0;
+  });
+  if (!due.length) { banner.style.display = 'none'; banner.innerHTML = ''; return; }
+  banner.style.display = 'flex';
+  const chips = due.map(c => `<button type="button" class="crm-due-chip" data-id="${c.id}">${escapeHtml(c.name || '(untitled)')}</button>`).join('');
+  banner.innerHTML = `<span class="crm-due-banner-title">⏰ ${due.length} follow-up${due.length > 1 ? 's' : ''} due</span><span class="crm-due-banner-list">${chips}</span>`;
+  banner.querySelectorAll('.crm-due-chip').forEach(chip => {
+    chip.addEventListener('click', () => openCustomerModal(chip.dataset.id));
+  });
 }
 
 // Keeps the board honest without any manual clicking: (1) carries each
@@ -4045,9 +4141,11 @@ function renderCrmList(){
     } else {
       notePreview = '<span class="crm-note-preview crm-note-empty">No follow-ups logged yet</span>';
     }
+    const dueBadgeData = formatDueBadge(c.nextFollowUpDate);
+    const dueBadge = dueBadgeData ? `<span class="crm-due-badge ${dueBadgeData.className}">${dueBadgeData.label}</span>` : '';
     return `
       <div class="crm-row" data-id="${c.id}">
-        <div class="crm-row-name">${escapeHtml(c.name || '(untitled)')}</div>
+        <div class="crm-row-name">${escapeHtml(c.name || '(untitled)')} ${dueBadge}</div>
         ${notePreview}
       </div>
     `;
@@ -4118,11 +4216,14 @@ async function openCustomerModal(id){
   document.getElementById('customerStageSelect').value = remapLegacyStage(customer.stage);
   const dateInput = document.getElementById('newFollowUpDate');
   dateInput.value = new Date().toISOString().slice(0, 10);
+  document.getElementById('newFollowUpNextDate').value = '';
   document.getElementById('newFollowUpMethod').value = 'call';
   document.getElementById('newFollowUpReached').value = 'yes';
   document.getElementById('newFollowUpNote').value = '';
   renderFollowUpList(customer);
   refreshSignedChecklist(customer);
+  refreshLostReasonSection(customer);
+  refreshCurrentNextFollowUpHint(customer);
 
   customerDraftProposalId = null;
   const draftRow = document.getElementById('customerDraftProposalRow');
@@ -4212,6 +4313,30 @@ async function handleSignedChecklistChange(){
 document.getElementById('customerScheduledCheck').addEventListener('change', handleSignedChecklistChange);
 document.getElementById('customerPaymentCheck').addEventListener('change', handleSignedChecklistChange);
 
+// The date input itself always resets blank when the modal opens (blank
+// means "no change" on save, not "clear it") -- so without this, there'd
+// be no way to see whether a reminder is already set before deciding
+// whether to update it.
+function refreshCurrentNextFollowUpHint(customer){
+  const hint = document.getElementById('currentNextFollowUpHint');
+  hint.textContent = customer.nextFollowUpDate
+    ? 'Currently set for ' + fmtPlainDate(customer.nextFollowUpDate) + '. Leave blank above to keep it.'
+    : '';
+}
+
+// Shown only once a customer is marked Lost -- a quick reason now is
+// worth far more than trying to remember why months later when looking
+// back for patterns (too expensive, chose a competitor, and so on).
+function refreshLostReasonSection(customer){
+  const section = document.getElementById('lostReasonSection');
+  const isLost = remapLegacyStage(customer.stage) === 'lost';
+  section.style.display = isLost ? 'flex' : 'none';
+  if (isLost) {
+    document.getElementById('customerLostReasonSelect').value = customer.lostReason || '';
+    document.getElementById('customerLostReasonNote').value = customer.lostReasonNote || '';
+  }
+}
+
 async function saveCustomerModalFields(){
   if (!openCustomerId) return;
   // Changing the stage is exactly the "move it to a new section" action
@@ -4225,13 +4350,18 @@ async function saveCustomerModalFields(){
   if (!customer) return;
   customer.name = document.getElementById('customerNameInput').value.trim() || '(untitled)';
   customer.stage = document.getElementById('customerStageSelect').value;
+  customer.lostReason = document.getElementById('customerLostReasonSelect').value;
+  customer.lostReasonNote = document.getElementById('customerLostReasonNote').value.trim();
   customer.updatedAt = new Date().toISOString();
   await saveCustomerRecord(customer);
   refreshSignedChecklist(customer);
+  refreshLostReasonSection(customer);
 }
 
 document.getElementById('customerNameInput').addEventListener('change', saveCustomerModalFields);
 document.getElementById('customerStageSelect').addEventListener('change', saveCustomerModalFields);
+document.getElementById('customerLostReasonSelect').addEventListener('change', saveCustomerModalFields);
+document.getElementById('customerLostReasonNote').addEventListener('change', saveCustomerModalFields);
 
 // Commits whatever is currently typed in the follow-up note box as a new
 // journal entry, if anything's there. Shared by the explicit "+ Add
@@ -4245,6 +4375,7 @@ async function commitDraftFollowUp(){
   const customer = await loadCustomerRecord(openCustomerId);
   if (!customer) return null;
   const dateVal = document.getElementById('newFollowUpDate').value;
+  const nextDateVal = document.getElementById('newFollowUpNextDate').value;
   if (!customer.followUps) customer.followUps = [];
   customer.followUps.unshift({
     date: dateVal || new Date().toISOString().slice(0, 10),
@@ -4252,10 +4383,16 @@ async function commitDraftFollowUp(){
     reached: document.getElementById('newFollowUpReached').value,
     note: noteVal
   });
+  // Leaving "Next Follow-Up" blank means "no change" rather than "clear
+  // it" -- logging today's contact shouldn't silently wipe out a
+  // reminder you already set for later unless you're actually updating it.
+  if (nextDateVal) customer.nextFollowUpDate = nextDateVal;
   customer.updatedAt = new Date().toISOString();
   await saveCustomerRecord(customer);
   document.getElementById('newFollowUpNote').value = '';
+  document.getElementById('newFollowUpNextDate').value = '';
   renderFollowUpList(customer);
+  refreshCurrentNextFollowUpHint(customer);
   return customer;
 }
 
