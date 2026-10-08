@@ -861,15 +861,21 @@
     border-radius:8px; padding:12px 16px; margin-bottom:16px; font-family:var(--sans); font-size:13px; color:#8A3A24;
   }
   .crm-due-banner-title{font-weight:700; flex-shrink:0;}
-  .crm-due-banner-list{display:flex; gap:8px; flex-wrap:wrap;}
+  .crm-due-banner-list{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
   .crm-due-chip{
     background:#fff; border:1px solid #E8BBAE; border-radius:14px; padding:4px 12px; font-weight:600;
-    cursor:pointer; color:#8A3A24;
+    cursor:pointer; color:#8A3A24; font-family:inherit; font-size:inherit;
   }
   .crm-due-chip:hover{background:#8A3A24; color:#fff;}
+  .crm-due-chip-note{font-weight:500; opacity:.8;}
+  .crm-due-more{font-weight:600; opacity:.8;}
+  .crm-due-viewall{
+    margin-left:auto; background:none; border:none; font-family:inherit; font-size:inherit; font-weight:700;
+    color:#8A3A24; cursor:pointer; text-decoration:underline;
+  }
   .crm-search{margin-bottom:16px;}
   .crm-search input{
-    width:100%; max-width:360px; box-sizing:border-box; font-family:var(--sans); font-size:13.5px;
+    width:100%; max-width:440px; box-sizing:border-box; font-family:var(--sans); font-size:13.5px;
     padding:9px 14px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink);
   }
   .crm-search input:focus{outline:none; border-color:var(--accent);}
@@ -884,6 +890,10 @@
   .crm-tab.active{color:var(--accent-dark); border-bottom-color:var(--accent);}
   .crm-tab-count{background:rgba(0,0,0,.06); border-radius:10px; padding:1px 8px; font-size:11px; font-weight:800;}
   .crm-tab.active .crm-tab-count{background:var(--accent-tint-strong); color:var(--accent-dark);}
+  /* Needs Attention is the one tab that's a to-do list rather than a stage;
+     when it has anyone in it, its count turns red so it can't be missed. */
+  .crm-tab-hot .crm-tab-count{background:#B2472A; color:#fff;}
+  .crm-tab-attention.active{color:#B2472A; border-bottom-color:#B2472A;}
   /* Lost sits apart from the main pipeline -- pushed to the far right and
      visually quieter (smaller, no bold underline treatment even when
      active) so the board stays focused on active work by default, while
@@ -891,49 +901,111 @@
   .crm-tab-lost{margin-left:auto; font-size:11.5px; font-weight:500; opacity:.7;}
   .crm-tab-lost:hover{opacity:1;}
   .crm-tab-lost.active{opacity:1; color:var(--secondary); border-bottom-color:var(--line);}
-  .crm-list{display:flex; flex-direction:column; gap:10px;}
-  .crm-row{
-    background:#fff; border:1px solid var(--line); border-radius:9px; padding:14px 18px; cursor:pointer;
-    display:flex; align-items:baseline; justify-content:space-between; gap:18px; flex-wrap:wrap;
+  .crm-list{display:flex; flex-direction:column; gap:14px;}
+  .crm-list-empty{font-family:var(--sans); font-size:13px; color:var(--secondary); text-align:center; padding:60px 10px;}
+  .crm-search-note{font-family:var(--sans); font-size:12px; color:var(--secondary); font-weight:600;}
+
+  /* ---- A customer on the board: details left, full note history right ---- */
+  .crm-card{
+    background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px 18px; cursor:pointer;
+    display:grid; grid-template-columns:minmax(300px, 440px) 1fr; gap:14px 26px; font-family:var(--sans);
     transition:border-color .15s ease, box-shadow .15s ease;
   }
-  .crm-row:hover{border-color:var(--accent); box-shadow:0 1px 5px rgba(0,0,0,.06);}
-  .crm-row-name{font-family:var(--sans); font-weight:700; font-size:14.5px; color:var(--ink); white-space:nowrap;}
-  .crm-note-preview{font-family:var(--sans); font-size:12.5px; color:var(--secondary); flex:1; min-width:200px;}
-  .crm-note-empty{font-style:italic; opacity:.75;}
-  .crm-reached-badge{
-    display:inline-block; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.3px;
-    padding:1px 7px; border-radius:8px; margin-right:2px;
+  .crm-card:hover{border-color:var(--accent); box-shadow:0 1px 6px rgba(0,0,0,.07);}
+  .crm-card.attn-due{border-left:4px solid #B2472A;}
+  .crm-card.attn-stale{border-left:4px solid #D49A2A;}
+  .crm-card-head{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .crm-card-name{font-weight:700; font-size:15.5px; color:var(--ink);}
+  .crm-stage-pill{
+    font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; color:var(--secondary);
+    background:rgba(0,0,0,.06); border-radius:9px; padding:2px 8px;
   }
-  .crm-reached-badge.reached-yes{background:#E4F3E6; color:#2E7D42;}
-  .crm-reached-badge.reached-no{background:#FBE7E2; color:#B2472A;}
-  .crm-due-badge{
-    display:inline-block; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.3px;
-    padding:1px 7px; border-radius:8px; margin-right:2px; white-space:nowrap;
+  .crm-attn-line{font-size:12px; font-weight:700; margin-top:5px;}
+  .crm-attn-line.attn-due{color:#B2472A;}
+  .crm-attn-line.attn-stale{color:#9A6A16;}
+  .crm-card-contact{display:flex; gap:14px; flex-wrap:wrap; margin-top:7px; font-size:12.5px;}
+  .crm-card-contact a{color:var(--accent-dark); font-weight:600; text-decoration:none;}
+  .crm-card-contact a:hover{text-decoration:underline;}
+  .crm-contact-empty{color:var(--secondary); font-style:italic; opacity:.8;}
+  .crm-stats{display:flex; flex-wrap:wrap; gap:6px; margin-top:9px;}
+  .crm-stat{background:rgba(0,0,0,.05); border-radius:10px; padding:2px 9px; font-size:11.5px; font-weight:600; color:var(--secondary);}
+  .crm-stat-muted{font-style:italic; font-weight:500;}
+  .crm-stat-good{background:#E4F3E6; color:#2E7D42;}
+  .crm-stat-bad{background:#FBE7E2; color:#B2472A;}
+  .crm-lost-line{margin-top:9px; font-size:12.5px; color:#B2472A; font-weight:600;}
+  .crm-next-row{display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:11px;}
+  .crm-next-label{font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:var(--secondary); width:100%;}
+  .crm-next-row input[type="date"]{
+    font-family:var(--sans); font-size:12.5px; padding:4px 7px; border-radius:6px; border:1px solid var(--line); color:var(--ink);
   }
-  .crm-due-badge.due-overdue{background:#FBE7E2; color:#B2472A;}
-  .crm-due-badge.due-today{background:#FDECD2; color:#9A6A16;}
-  .crm-due-badge.due-future{background:rgba(0,0,0,.05); color:var(--secondary);}
-  .crm-list-empty{font-family:var(--sans); font-size:13px; color:var(--secondary); text-align:center; padding:60px 10px;}
+  .crm-chip-btn{
+    font-family:var(--sans); font-size:11px; font-weight:700; cursor:pointer; color:var(--accent-dark);
+    background:#fff; border:1px solid var(--line); border-radius:12px; padding:3px 10px;
+  }
+  .crm-chip-btn:hover{border-color:var(--accent); background:var(--accent-tint);}
+  .crm-chip-clear{color:var(--secondary);}
+  .crm-card-actions{display:flex; gap:6px; flex-wrap:wrap; margin-top:12px;}
+  .crm-action-btn{
+    font-family:var(--sans); font-size:12px; font-weight:600; cursor:pointer; color:var(--ink);
+    background:#fff; border:1px solid var(--line); border-radius:14px; padding:5px 12px;
+  }
+  .crm-action-btn:hover{border-color:var(--accent);}
+  .crm-action-primary{color:var(--accent-dark); border-color:var(--accent);}
+  .crm-card-history{
+    border-left:1px solid var(--line); padding-left:24px; display:flex; flex-direction:column; gap:10px; min-width:0;
+  }
+  .crm-link-btn{
+    align-self:flex-start; background:none; border:none; padding:0; font-family:var(--sans); font-size:12px;
+    font-weight:700; color:var(--accent-dark); cursor:pointer;
+  }
+  .crm-link-btn:hover{text-decoration:underline;}
+  @media (max-width:820px){
+    .crm-card{grid-template-columns:1fr;}
+    .crm-card-history{border-left:none; padding-left:0; border-top:1px solid var(--line); padding-top:12px;}
+  }
 
-  .customer-modal-box{width:420px; max-width:90vw; text-align:left;}
+  /* ---- Customer detail modal: wide, two columns ---- */
+  .modal-box.customer-modal-box{width:940px; max-width:95vw; max-height:92vh; overflow-y:auto; text-align:left;}
   .customer-modal-head{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
   .customer-modal-head input{
-    flex:1; font-family:var(--sans); font-size:16px; font-weight:600; border:none; border-bottom:1.5px solid var(--line);
+    flex:1; font-family:var(--sans); font-size:18px; font-weight:600; border:none; border-bottom:1.5px solid var(--line);
     padding:4px 2px; color:var(--ink);
   }
   .customer-modal-head input:focus{outline:none; border-color:var(--accent);}
+  .customer-modal-grid{display:grid; grid-template-columns:minmax(280px, 1fr) minmax(320px, 1.2fr); gap:14px 28px;}
+  .customer-modal-col{display:flex; flex-direction:column; gap:14px; min-width:0;}
+  @media (max-width:760px){ .customer-modal-grid{grid-template-columns:1fr;} }
   .customer-stage-label{
     display:block; font-family:var(--sans); font-size:11.5px; font-weight:600; color:var(--secondary);
-    margin-bottom:16px; text-transform:uppercase; letter-spacing:.4px;
+    text-transform:uppercase; letter-spacing:.4px;
   }
   .customer-stage-label select{
     display:block; width:100%; margin-top:5px; font-family:var(--sans); font-size:13.5px; padding:7px 8px;
     border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink); text-transform:none; letter-spacing:normal;
   }
+  .crm-section-title{font-family:var(--sans); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--secondary);}
+  .crm-stat-tiles{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .crm-stat-tile{background:var(--accent-tint); border-radius:8px; padding:9px 12px; font-family:var(--sans);}
+  .crm-stat-tile.warn{background:#FBE7E2;}
+  .crm-stat-tile.good{background:#E4F3E6;}
+  .crm-stat-tile-label{font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--secondary);}
+  .crm-stat-tile-value{font-size:15px; font-weight:700; color:var(--ink); margin-top:1px;}
+  .crm-stat-tile.warn .crm-stat-tile-value{color:#B2472A;}
+  .crm-stat-tile.good .crm-stat-tile-value{color:#2E7D42;}
+  .crm-stat-tile-sub{font-size:11px; color:var(--secondary);}
+  .crm-next-box{display:flex; flex-direction:column; gap:6px;}
+  .crm-next-box .crm-next-row{margin-top:0;}
+  .customer-contact-grid{display:grid; grid-template-columns:1fr; gap:10px;}
+  .customer-contact-field{display:flex; align-items:center; gap:8px;}
+  .customer-contact-field input{
+    flex:1; min-width:0; font-family:var(--sans); font-size:13px; padding:6px 8px; border-radius:6px;
+    border:1px solid var(--line); text-transform:none; letter-spacing:normal; font-weight:400; color:var(--ink);
+  }
+  .customer-contact-field a{font-size:12px; font-weight:700; color:var(--accent-dark); text-decoration:none; text-transform:none; letter-spacing:normal;}
+  .customer-contact-field a:hover{text-decoration:underline;}
   .customer-draft-row{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
-    background:var(--accent-tint); border-radius:8px; padding:10px 12px; margin-bottom:16px;
+    background:var(--accent-tint); border-radius:8px; padding:10px 12px;
     font-family:var(--sans); font-size:12.5px; color:var(--ink);
   }
   .draft-proposal-link{
@@ -942,13 +1014,13 @@
   }
   .draft-proposal-link:hover{text-decoration:underline;}
   .signed-checklist{
-    background:var(--accent-tint); border-radius:8px; padding:12px 14px; margin-bottom:16px;
+    background:var(--accent-tint); border-radius:8px; padding:12px 14px;
     font-family:var(--sans); font-size:13px; color:var(--ink); display:flex; flex-direction:column; gap:8px;
   }
   .signed-checklist-title{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--accent-dark);}
   .signed-checklist label{display:flex; align-items:center; gap:8px; cursor:pointer;}
   .lost-reason-section{
-    background:#FBE7E2; border-radius:8px; padding:12px 14px; margin-bottom:16px;
+    background:#FBE7E2; border-radius:8px; padding:12px 14px;
     font-family:var(--sans); font-size:13px; color:var(--ink); display:flex; flex-direction:column; gap:8px;
   }
   .lost-reason-title{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#B2472A;}
@@ -959,36 +1031,60 @@
     font-family:var(--sans); font-size:12.5px; padding:7px 8px; border-radius:6px; border:1px solid var(--line);
     resize:vertical; min-height:44px;
   }
-  .followup-section{border-top:1px solid var(--line); padding-top:14px; margin-bottom:6px;}
-  .followup-add-row{display:flex; flex-direction:column; gap:8px; margin-bottom:14px;}
+
+  /* ---- Log form + history ---- */
+  .crm-log-box{
+    display:flex; flex-direction:column; gap:9px; background:rgba(0,0,0,.025); border:1px solid var(--line);
+    border-radius:8px; padding:12px 14px;
+  }
   .followup-date-row{display:flex; gap:12px;}
-  .followup-current-hint{font-family:var(--sans); font-size:11.5px; color:var(--secondary); font-style:italic;}
   .followup-field-label{
     display:flex; flex-direction:column; gap:3px; font-family:var(--sans); font-size:10.5px;
     font-weight:600; color:var(--secondary); text-transform:uppercase; letter-spacing:.3px;
   }
-  .followup-field-label input[type="date"]{
+  .followup-field-label input[type="date"], .followup-field-label select{
     font-family:var(--sans); font-size:13px; padding:6px 8px; border-radius:6px; border:1px solid var(--line);
-    text-transform:none; letter-spacing:normal; font-weight:400; color:var(--ink);
+    text-transform:none; letter-spacing:normal; font-weight:400; color:var(--ink); background:#fff;
   }
-  .followup-meta-row{display:flex; gap:8px;}
-  .followup-meta-row select{
-    flex:1; min-width:0; font-family:var(--sans); font-size:12.5px; padding:6px 8px;
-    border-radius:6px; border:1px solid var(--line); background:#fff; color:var(--ink);
-  }
-  .followup-add-row textarea{
+  .crm-log-box textarea{
     font-family:var(--sans); font-size:13px; padding:8px; border-radius:6px; border:1px solid var(--line);
     resize:vertical; min-height:56px;
   }
-  .followup-list{max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;}
+  .crm-log-buttons{display:flex; gap:8px;}
+  .crm-log-btn{
+    flex:1; font-family:var(--sans); font-size:13px; font-weight:700; cursor:pointer; border-radius:16px;
+    padding:8px 10px; border:1px solid var(--line); background:#fff;
+  }
+  .crm-log-btn.reached{color:#2E7D42; border-color:#9CCBA6;}
+  .crm-log-btn.reached:hover{background:#E4F3E6;}
+  .crm-log-btn.missed{color:#B2472A; border-color:#E8BBAE;}
+  .crm-log-btn.missed:hover{background:#FBE7E2;}
+  .followup-current-hint{font-family:var(--sans); font-size:11.5px; color:var(--secondary); font-style:italic; min-height:1px;}
+  .followup-list{display:flex; flex-direction:column; gap:12px;}
   .followup-entry{border-left:2px solid var(--accent); padding:2px 0 2px 10px;}
   .followup-entry-date{font-family:var(--sans); font-size:11.5px; font-weight:700; color:var(--accent-dark); display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
   .followup-entry-meta{font-weight:600; color:var(--secondary); text-transform:none;}
   .followup-entry-meta.reached-yes{color:#2E7D42;}
   .followup-entry-meta.reached-no{color:#B2472A;}
-  .followup-entry-note{font-family:var(--sans); font-size:13px; color:var(--ink); margin-top:2px; white-space:pre-wrap;}
+  .followup-entry-note{font-family:var(--sans); font-size:13px; color:var(--ink); margin-top:2px; white-space:pre-wrap; overflow-wrap:anywhere;}
+  .followup-entry-nonote{color:var(--secondary); font-style:italic; opacity:.8;}
+  .followup-entry-actions{margin-left:auto; display:flex; gap:10px;}
+  .followup-entry-actions button{
+    background:none; border:none; padding:0; font-family:var(--sans); font-size:11px; font-weight:600;
+    color:var(--secondary); cursor:pointer; text-decoration:underline;
+  }
+  .followup-entry-actions button:hover{color:var(--ink);}
+  .followup-entry.editing{border-left-color:var(--line); display:flex; flex-direction:column; gap:7px;}
+  .followup-edit-grid{display:flex; gap:6px; flex-wrap:wrap;}
+  .followup-edit-grid input, .followup-edit-grid select{
+    font-family:var(--sans); font-size:12.5px; padding:4px 6px; border-radius:6px; border:1px solid var(--line); background:#fff;
+  }
+  .followup-entry.editing textarea{
+    font-family:var(--sans); font-size:13px; padding:7px; border-radius:6px; border:1px solid var(--line); resize:vertical; min-height:50px;
+  }
+  .followup-edit-buttons{display:flex; gap:6px;}
   .followup-empty{font-family:var(--sans); font-size:12.5px; color:var(--secondary); font-style:italic;}
-  .customer-modal-actions{justify-content:space-between; margin-top:16px;}
+  .customer-modal-actions{justify-content:space-between; margin-top:18px;}
   #customerDeleteBtn{color:#B23A48; border-color:#B23A48;}
 
   /* ---- Custom confirm/alert modal (works everywhere, unlike native dialogs) ---- */
@@ -1341,7 +1437,7 @@ I certify that I am authorized to execute this agreement on behalf of the above 
   </div>
   <div id="crmDueBanner" class="crm-due-banner" style="display:none;"></div>
   <div class="crm-search">
-    <input type="text" id="crmSearchInput" placeholder="Search customers by name or note…" oninput="handleCrmSearch(this.value)">
+    <input type="text" id="crmSearchInput" placeholder="Search every customer by name, phone, email, or any note…" oninput="handleCrmSearch(this.value)">
   </div>
   <div class="crm-tabs" id="crmTabs"></div>
   <div class="crm-list" id="crmList"></div>
@@ -1353,63 +1449,86 @@ I certify that I am authorized to execute this agreement on behalf of the above 
       <input type="text" id="customerNameInput" placeholder="Customer / Property name">
       <button class="sidebar-close" onclick="closeCustomerModal()">&times;</button>
     </div>
-    <label class="customer-stage-label">Stage
-      <select id="customerStageSelect">
-        <option value="lead">Lead</option>
-        <option value="havent_heard_back">Haven't Heard Back</option>
-        <option value="negotiating">Negotiating</option>
-        <option value="verbally_agreed">Verbally Agreed</option>
-        <option value="signed">Signed</option>
-        <option value="active">Active Customer</option>
-        <option value="lost">Lost</option>
-      </select>
-    </label>
-    <div id="customerDraftProposalRow" class="customer-draft-row" style="display:none;">
-      <span id="customerDraftProposalLabel"></span>
-      <button type="button" class="draft-proposal-link" onclick="openDraftProposalFromCustomer()">Continue Draft →</button>
-    </div>
-    <div id="signedChecklistSection" class="signed-checklist" style="display:none;">
-      <div class="signed-checklist-title">Get Them Onboarded</div>
-      <label><input type="checkbox" id="customerScheduledCheck"> Scheduled first service</label>
-      <label><input type="checkbox" id="customerPaymentCheck"> Payment method / card on file</label>
-    </div>
-    <div id="lostReasonSection" class="lost-reason-section" style="display:none;">
-      <div class="lost-reason-title">Why Lost?</div>
-      <select id="customerLostReasonSelect">
-        <option value="">Select a reason…</option>
-        <option value="price">Price too high</option>
-        <option value="competitor">Chose a competitor</option>
-        <option value="timing">Bad timing / not ready</option>
-        <option value="no_longer_needed">No longer needs service</option>
-        <option value="unresponsive">Went unresponsive</option>
-        <option value="other">Other</option>
-      </select>
-      <textarea id="customerLostReasonNote" placeholder="Any detail worth remembering (optional)"></textarea>
-    </div>
-    <div class="followup-section">
-      <div class="followup-add-row">
-        <div class="followup-date-row">
-          <label class="followup-field-label">Contact Date<input type="date" id="newFollowUpDate"></label>
-          <label class="followup-field-label">Next Follow-Up<input type="date" id="newFollowUpNextDate"></label>
-        </div>
-        <div id="currentNextFollowUpHint" class="followup-current-hint"></div>
-        <div class="followup-meta-row">
-          <select id="newFollowUpMethod">
-            <option value="call">Phone Call</option>
-            <option value="text">Text</option>
-            <option value="email">Email</option>
-            <option value="in_person">In Person</option>
-            <option value="voicemail">Voicemail</option>
+    <div class="customer-modal-grid">
+      <div class="customer-modal-col">
+        <label class="customer-stage-label">Stage
+          <select id="customerStageSelect">
+            <option value="lead">Lead</option>
+            <option value="havent_heard_back">Haven't Heard Back</option>
+            <option value="negotiating">Negotiating</option>
+            <option value="verbally_agreed">Verbally Agreed</option>
+            <option value="signed">Signed</option>
+            <option value="active">Active Customer</option>
+            <option value="lost">Lost</option>
           </select>
-          <select id="newFollowUpReached">
-            <option value="yes">Reached them</option>
-            <option value="no">Didn't reach them</option>
-          </select>
+        </label>
+        <div id="customerSummaryTiles" class="crm-stat-tiles"></div>
+        <div class="crm-next-box">
+          <div class="crm-section-title">Next follow-up</div>
+          <div class="crm-next-row">
+            <input type="date" id="customerNextFollowUpDate">
+            <button type="button" class="crm-chip-btn" data-next-days="2">+2 days</button>
+            <button type="button" class="crm-chip-btn" data-next-days="7">+1 week</button>
+            <button type="button" class="crm-chip-btn" data-next-days="14">+2 weeks</button>
+            <button type="button" class="crm-chip-btn crm-chip-clear" id="customerNextClearBtn">Clear</button>
+          </div>
         </div>
-        <textarea id="newFollowUpNote" placeholder="How did the contact go?"></textarea>
-        <button class="add-row-btn" onclick="addFollowUp()">+ Add Follow-Up</button>
+        <div class="customer-contact-grid">
+          <label class="followup-field-label">Phone
+            <span class="customer-contact-field"><input type="tel" id="customerPhoneInput" placeholder="(801) 555-1234"><a id="customerPhoneLink" href="#" style="display:none;">Call</a></span>
+          </label>
+          <label class="followup-field-label">Email
+            <span class="customer-contact-field"><input type="email" id="customerEmailInput" placeholder="name@company.com"><a id="customerEmailLink" href="#" style="display:none;">Email</a></span>
+          </label>
+        </div>
+        <div id="customerDraftProposalRow" class="customer-draft-row" style="display:none;">
+          <span id="customerDraftProposalLabel"></span>
+          <button type="button" class="draft-proposal-link" onclick="openDraftProposalFromCustomer()">Continue Draft →</button>
+        </div>
+        <div id="signedChecklistSection" class="signed-checklist" style="display:none;">
+          <div class="signed-checklist-title">Get Them Onboarded</div>
+          <label><input type="checkbox" id="customerScheduledCheck"> Scheduled first service</label>
+          <label><input type="checkbox" id="customerPaymentCheck"> Payment method / card on file</label>
+        </div>
+        <div id="lostReasonSection" class="lost-reason-section" style="display:none;">
+          <div class="lost-reason-title">Why Lost?</div>
+          <select id="customerLostReasonSelect">
+            <option value="">Select a reason…</option>
+            <option value="price">Price too high</option>
+            <option value="competitor">Chose a competitor</option>
+            <option value="timing">Bad timing / not ready</option>
+            <option value="no_longer_needed">No longer needs service</option>
+            <option value="unresponsive">Went unresponsive</option>
+            <option value="other">Other</option>
+          </select>
+          <textarea id="customerLostReasonNote" placeholder="Any detail worth remembering (optional)"></textarea>
+        </div>
       </div>
-      <div id="followUpList" class="followup-list"></div>
+      <div class="customer-modal-col">
+        <div class="crm-log-box">
+          <div class="crm-section-title">Log a contact</div>
+          <div class="followup-date-row">
+            <label class="followup-field-label">Date<input type="date" id="newFollowUpDate"></label>
+            <label class="followup-field-label">How
+              <select id="newFollowUpMethod">
+                <option value="call">Phone Call</option>
+                <option value="text">Text</option>
+                <option value="email">Email</option>
+                <option value="in_person">In Person</option>
+                <option value="voicemail">Voicemail</option>
+              </select>
+            </label>
+          </div>
+          <textarea id="newFollowUpNote" placeholder="How did it go? (optional)"></textarea>
+          <div class="crm-log-buttons">
+            <button type="button" class="crm-log-btn reached" onclick="addFollowUp('yes')">✓ Reached them</button>
+            <button type="button" class="crm-log-btn missed" onclick="addFollowUp('no')">✗ Didn't reach</button>
+          </div>
+          <div id="crmLogStatus" class="followup-current-hint"></div>
+        </div>
+        <div class="crm-section-title">History</div>
+        <div id="followUpList" class="followup-list"></div>
+      </div>
     </div>
     <div class="modal-actions customer-modal-actions">
       <button id="customerDeleteBtn" class="modal-cancel">Delete Customer</button>
@@ -1732,6 +1851,26 @@ async function sendSignatureNotificationEmail(state){
     });
   } catch (err) {
     console.error('Signature notification email failed to send', err);
+  }
+}
+
+// Reuses the same EmailJS template as proposal signings (only the
+// property_name wording differs) so the owner gets notified of NET 30
+// applications too -- submitNet30Application() previously never called any
+// email function at all, so they went through silently.
+async function sendNet30NotificationEmail(fields){
+  if (!emailNotifyConfigured) return;
+  try {
+    const company = (fields.net30CompanyName || '').trim() || '(company not entered)';
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      property_name: 'NET 30 Credit Application — ' + company,
+      client_name: fields.net30ApplicantName || '',
+      print_name: fields.net30ApplicantName || '',
+      signed_date: fields.net30Date || '',
+      signing_link: window.location.href
+    });
+  } catch (err) {
+    console.error('NET 30 notification email failed to send', err);
   }
 }
 
@@ -3239,7 +3378,7 @@ async function saveProposal(silent){
       currentProposalId = id;
     }
 
-    await ensureCrmCustomerExists(state.propName);
+    await ensureCrmCustomerExists(state.propName, { phone: state.phone, email: state.email });
     await renderSidebar();
     if (silent) {
       const t = new Date();
@@ -3475,6 +3614,7 @@ async function submitNet30Application(){
       return;
     }
     if (!res.ok) throw new Error('submit failed: ' + res.status);
+    sendNet30NotificationEmail(fields);
     lockNet30Form();
     document.getElementById('net30Banner').textContent = '✓ Thank you -- your NET 30 application has been submitted.';
     document.getElementById('net30StatusText').textContent = 'Submitted. Thank you!';
@@ -3893,6 +4033,17 @@ const CRM_STAGES = [
   { id: 'active', label: 'Active Customer' }
 ];
 const CRM_LOST_STAGE = { id: 'lost', label: 'Lost' };
+// A virtual tab, not a real stage: everyone across the pre-signed stages
+// who needs a call right now (see crmAttentionInfo()).
+const CRM_ATTENTION_TAB = { id: '__attention__', label: 'Needs Attention' };
+// Past these, there's nothing left to chase -- a leftover reminder date on
+// one of them isn't "due" anymore.
+const CRM_SETTLED_STAGES = ['signed', 'active', 'lost'];
+// With no follow-up scheduled, this many days of silence counts as "gone
+// quiet" and lands the customer in Needs Attention.
+const CRM_STALE_DAYS = 7;
+// Board cards show this many history entries; the rest sit behind "Show all".
+const CRM_HISTORY_PREVIEW_COUNT = 5;
 
 // One-time-per-customer remap from the old 5-stage pipeline to the new
 // one, applied lazily wherever a stage id is read (see
@@ -3903,9 +4054,118 @@ function remapLegacyStage(stage){
   return LEGACY_STAGE_MAP[stage] || stage || 'lead';
 }
 
+const FOLLOWUP_METHOD_LABELS = { call: 'Phone Call', text: 'Text', email: 'Email', in_person: 'In Person', voicemail: 'Voicemail' };
+const CRM_LOST_REASON_LABELS = {
+  price: 'Price too high', competitor: 'Chose a competitor', timing: 'Bad timing / not ready',
+  no_longer_needed: 'No longer needs service', unresponsive: 'Went unresponsive', other: 'Other'
+};
+
 let crmIndexCache = [];
-let crmActiveStage = 'lead';
+// null until the first render picks a sensible landing tab (Needs
+// Attention if anything's waiting, otherwise Lead) -- after that the tab
+// you're on is yours, and renders never move you off it.
+let crmActiveStage = null;
 let openCustomerId = null;
+let crmRecordCache = {};      // id -> { record } -- full records for the board's history display
+let crmExpandedHistory = {};  // id -> true once "Show all" was clicked on that card
+let crmRenderSeq = 0;         // lets a slow, stale board render notice a newer one superseded it
+let crmSearchQuery = '';
+let crmSearchTimer = null;
+let editingFollowUpId = null; // which logged entry is in inline-edit mode inside the modal
+let crmLogInFlight = false;   // blocks double-clicks from logging the same contact twice
+
+/* ---------- date helpers ---------- */
+
+// Local calendar date as YYYY-MM-DD. (new Date().toISOString().slice(0,10)
+// is the UTC date -- after ~6pm in Utah that's already "tomorrow".)
+function localDateStr(d){
+  d = d || new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function addDaysStr(n){
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return localDateStr(d);
+}
+
+const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+function fmtWeekdayDate(dateStr){
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return WEEKDAY_NAMES[new Date(y, m - 1, d).getDay()] + ' ' + m + '/' + d;
+}
+
+// Date-only comparison (no time component) so "due today" means the
+// calendar date, not the next 24 hours from whatever time it is now.
+function daysUntil(dateStr){
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const target = new Date(y, m - 1, d);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target - today) / 86400000);
+}
+
+// "today" / "yesterday" / "6 days ago" / "tomorrow" / "in 3 days"
+function describeDaysAgo(dateStr){
+  const until = daysUntil(dateStr);
+  if (until === null) return '';
+  if (until === 0) return 'today';
+  if (until === -1) return 'yesterday';
+  if (until < -1) return (-until) + ' days ago';
+  if (until === 1) return 'tomorrow';
+  return 'in ' + until + ' days';
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : str;
+  return div.innerHTML;
+}
+
+// escapeHtml() leaves quotes alone, which is fine between tags but not
+// inside an attribute value.
+function escapeAttr(str){
+  return escapeHtml(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* ---------- follow-up log helpers ---------- */
+
+function newFollowUpId(){
+  return 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+// Entries logged before edit/delete existed have no id. Stamp them so
+// each one can be addressed individually. Returns true if anything changed.
+function ensureFollowUpIds(record){
+  let changed = false;
+  (record.followUps || []).forEach(f => {
+    if (!f.id) { f.id = newFollowUpId(); changed = true; }
+  });
+  return changed;
+}
+
+// Newest contact date first. A plain sort is stable, so entries sharing a
+// date keep their stored order (most recently added first).
+function sortedFollowUps(record){
+  return (record.followUps || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+}
+
+function followUpStats(record){
+  const list = sortedFollowUps(record);
+  const reached = list.filter(f => f.reached === 'yes');
+  return {
+    attempts: list.length,
+    reachedCount: reached.length,
+    lastAttemptDate: list.length ? list[0].date : null,
+    lastReachedDate: reached.length ? reached[0].date : null,
+    latest: list[0] || null
+  };
+}
+
+/* ---------- storage ---------- */
 
 async function getCustomerIndex(){
   // Returns null if the index key has never been written -- distinct
@@ -3939,43 +4199,34 @@ async function loadCustomerRecord(id){
   }
 }
 
+// The index entry is everything the board needs to decide WHERE a
+// customer belongs and whether they need attention, without fetching every
+// full record: stage, contact info, attempt counts, last-contact dates,
+// and the scheduled next follow-up.
 function summarizeCustomer(record){
-  const lastFollowUp = (record.followUps && record.followUps.length) ? record.followUps[0] : null;
+  const s = followUpStats(record);
   return {
     id: record.id,
     name: record.name,
     stage: remapLegacyStage(record.stage),
-    lastFollowUpDate: lastFollowUp ? lastFollowUp.date : null,
-    lastFollowUpNote: lastFollowUp ? lastFollowUp.note : null,
-    lastFollowUpMethod: lastFollowUp ? lastFollowUp.method : null,
-    lastFollowUpReached: lastFollowUp ? lastFollowUp.reached : null,
+    phone: record.phone || '',
+    email: record.email || '',
+    createdAt: record.createdAt || null,
+    followUpCount: s.attempts,
+    reachedCount: s.reachedCount,
+    lastFollowUpDate: s.lastAttemptDate,
+    lastReachedDate: s.lastReachedDate,
+    lastFollowUpNote: s.latest ? s.latest.note : null,
+    lastFollowUpMethod: s.latest ? s.latest.method : null,
+    lastFollowUpReached: s.latest ? s.latest.reached : null,
     nextFollowUpDate: record.nextFollowUpDate || null,
     updatedAt: record.updatedAt || record.createdAt || new Date().toISOString()
   };
 }
 
-// Date-only comparison (no time component) so "due today" means the
-// calendar date, not the next 24 hours from whatever time it is now.
-function daysUntil(dateStr){
-  if (!dateStr) return null;
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const target = new Date(y, m - 1, d);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  target.setHours(0, 0, 0, 0);
-  return Math.round((target - today) / 86400000);
-}
-
-function formatDueBadge(dateStr){
-  const days = daysUntil(dateStr);
-  if (days === null) return null;
-  if (days < 0) return { label: 'Overdue ' + Math.abs(days) + 'd', className: 'due-overdue' };
-  if (days === 0) return { label: 'Due Today', className: 'due-today' };
-  return { label: 'Follow up ' + fmtPlainDate(dateStr), className: 'due-future' };
-}
-
 async function saveCustomerRecord(record){
   await dbStorage.set('crm-customer:' + record.id, JSON.stringify(record), true);
+  crmRecordCache[record.id] = { record: record };
   // Only this one customer's summary changes -- read-modify-write the
   // index, but never anyone else's full record.
   const index = (await getCustomerIndex()) || [];
@@ -3986,6 +4237,7 @@ async function saveCustomerRecord(record){
 
 async function deleteCustomerRecord(id){
   try { await dbStorage.delete('crm-customer:' + id, true); } catch (err) {}
+  delete crmRecordCache[id];
   const index = (await getCustomerIndex()) || [];
   await setCustomerIndex(index.filter(c => c.id !== id));
 }
@@ -4016,6 +4268,94 @@ async function ensureCrmMigrated(){
   return newIndex;
 }
 
+// Index entries written before the board tracked attempt counts / contact
+// info don't have those fields, so attention flags and counts would read
+// wrong for them. Rebuild the whole index once, from the full records, in
+// a single write (rather than one read-modify-write per customer).
+async function rebuildCrmIndexIfStale(){
+  if (!crmIndexCache.some(c => c.followUpCount === undefined)) return;
+  const records = await Promise.all(crmIndexCache.map(c => loadCustomerRecord(c.id)));
+  const rebuilt = crmIndexCache.map((old, i) => {
+    const rec = records[i];
+    if (!rec) return Object.assign({ followUpCount: old.lastFollowUpDate ? 1 : 0, reachedCount: 0 }, old);
+    crmRecordCache[rec.id] = { record: rec };
+    return summarizeCustomer(rec);
+  });
+  await setCustomerIndex(rebuilt);
+  crmIndexCache = rebuilt;
+}
+
+// Full records for whichever customers the board is about to draw (the
+// history on each card needs them). Cached by id; an entry is reused only
+// while it's still the version the index says is current.
+async function getCrmRecords(ids){
+  const out = {};
+  await Promise.all(ids.map(async id => {
+    const summary = crmIndexCache.find(c => c.id === id);
+    const cached = crmRecordCache[id];
+    if (cached && summary && (cached.record.updatedAt || cached.record.createdAt) === summary.updatedAt) {
+      out[id] = cached.record;
+      return;
+    }
+    const rec = await loadCustomerRecord(id);
+    if (rec) { crmRecordCache[id] = { record: rec }; out[id] = rec; }
+  }));
+  return out;
+}
+
+/* ---------- attention / sorting ---------- */
+
+// Who needs a call, and why. null means "on track" (or past the point of
+// chasing). urgency sorts most-pressing first. Three ways in:
+//   due    - a follow-up date is today or past
+//   stale  - nothing scheduled and no contact in CRM_STALE_DAYS+ days
+//   never  - added a day or more ago and never contacted at all
+// This is the safety net for the one thing reminders can't catch on their
+// own: forgetting to set a date.
+function crmAttentionInfo(c){
+  if (CRM_SETTLED_STAGES.includes(remapLegacyStage(c.stage))) return null;
+  const nextDays = daysUntil(c.nextFollowUpDate);
+  if (nextDays !== null) {
+    if (nextDays > 0) return null;
+    return {
+      kind: 'due', urgency: nextDays - 10000,
+      label: nextDays === 0 ? 'Follow-up due today' : 'Follow-up overdue by ' + (-nextDays) + (nextDays === -1 ? ' day' : ' days'),
+      short: nextDays === 0 ? 'due today' : 'overdue ' + (-nextDays) + 'd'
+    };
+  }
+  if (c.lastFollowUpDate) {
+    const ago = Math.max(0, -daysUntil(c.lastFollowUpDate));
+    if (ago < CRM_STALE_DAYS) return null;
+    return { kind: 'stale', urgency: -ago, label: 'No follow-up scheduled — last contact ' + ago + ' days ago', short: ago + 'd since contact' };
+  }
+  const createdAgo = c.createdAt ? Math.max(0, -daysUntil(localDateStr(new Date(c.createdAt)))) : CRM_STALE_DAYS;
+  if (createdAgo < 1) return null;
+  return { kind: 'never', urgency: -createdAgo, label: 'Never contacted — added ' + createdAgo + (createdAgo === 1 ? ' day' : ' days') + ' ago', short: 'never contacted' };
+}
+
+// Most pressing first: needs-attention (most overdue / stalest on top),
+// then scheduled-for-later (soonest first), then everything else by most
+// recently touched.
+function crmSortKey(c){
+  const att = crmAttentionInfo(c);
+  if (att) return [0, att.urgency];
+  const nd = daysUntil(c.nextFollowUpDate);
+  if (nd !== null && !CRM_SETTLED_STAGES.includes(remapLegacyStage(c.stage))) return [1, nd];
+  return [2, -new Date(c.updatedAt || 0).getTime()];
+}
+
+function crmCompare(a, b){
+  const ka = crmSortKey(a), kb = crmSortKey(b);
+  return (ka[0] - kb[0]) || (ka[1] - kb[1]);
+}
+
+function crmStageLabel(id){
+  const s = CRM_STAGES.concat([CRM_LOST_STAGE]).find(x => x.id === id);
+  return s ? s.label : id;
+}
+
+/* ---------- board ---------- */
+
 async function toggleCustomersView(force){
   const view = document.getElementById('customersView');
   const isOpen = view.style.display !== 'none';
@@ -4031,28 +4371,52 @@ async function toggleCustomersView(force){
 
 async function renderCustomers(){
   crmIndexCache = await ensureCrmMigrated();
+  await rebuildCrmIndexIfStale();
   await syncCrmWithSignedProposals();
+  if (crmActiveStage === null) {
+    crmActiveStage = crmIndexCache.some(c => crmAttentionInfo(c)) ? CRM_ATTENTION_TAB.id : 'lead';
+  }
   renderCrmTabs();
-  renderCrmList();
   renderCrmDueBanner();
+  await renderCrmList();
 }
 
-// A customer past Signed/Active/Lost has nothing left to chase, so a
-// leftover next-follow-up date on one of those doesn't count as due --
-// it's just whatever was last set before they moved on.
+// Cheaper than renderCustomers(): re-reads just the index and redraws.
+// Used after quick actions on the board itself.
+async function refreshCrmBoard(){
+  crmIndexCache = (await getCustomerIndex()) || [];
+  renderCrmTabs();
+  renderCrmDueBanner();
+  await renderCrmList();
+}
+
 function renderCrmDueBanner(){
   const banner = document.getElementById('crmDueBanner');
-  const due = crmIndexCache.filter(c => {
-    if (['signed', 'active', 'lost'].includes(remapLegacyStage(c.stage))) return false;
-    const days = daysUntil(c.nextFollowUpDate);
-    return days !== null && days <= 0;
-  });
-  if (!due.length) { banner.style.display = 'none'; banner.innerHTML = ''; return; }
+  const needing = crmIndexCache
+    .map(c => ({ c: c, a: crmAttentionInfo(c) }))
+    .filter(x => x.a)
+    .sort((x, y) => x.a.urgency - y.a.urgency);
+  if (!needing.length) { banner.style.display = 'none'; banner.innerHTML = ''; return; }
   banner.style.display = 'flex';
-  const chips = due.map(c => `<button type="button" class="crm-due-chip" data-id="${c.id}">${escapeHtml(c.name || '(untitled)')}</button>`).join('');
-  banner.innerHTML = `<span class="crm-due-banner-title">⏰ ${due.length} follow-up${due.length > 1 ? 's' : ''} due</span><span class="crm-due-banner-list">${chips}</span>`;
+  const MAX_CHIPS = 6;
+  const chips = needing.slice(0, MAX_CHIPS).map(x =>
+    `<button type="button" class="crm-due-chip" data-id="${escapeAttr(x.c.id)}">${escapeHtml(x.c.name || '(untitled)')} <span class="crm-due-chip-note">· ${escapeHtml(x.a.short)}</span></button>`
+  ).join('');
+  const more = needing.length > MAX_CHIPS ? `<span class="crm-due-more">+${needing.length - MAX_CHIPS} more</span>` : '';
+  const viewAll = crmActiveStage !== CRM_ATTENTION_TAB.id
+    ? '<button type="button" class="crm-due-viewall">View all →</button>' : '';
+  banner.innerHTML = `<span class="crm-due-banner-title">⏰ ${needing.length} need${needing.length === 1 ? 's' : ''} a follow-up</span><span class="crm-due-banner-list">${chips}${more}</span>${viewAll}`;
   banner.querySelectorAll('.crm-due-chip').forEach(chip => {
     chip.addEventListener('click', () => openCustomerModal(chip.dataset.id));
+  });
+  const viewAllBtn = banner.querySelector('.crm-due-viewall');
+  if (viewAllBtn) viewAllBtn.addEventListener('click', () => {
+    crmActiveStage = CRM_ATTENTION_TAB.id;
+    crmSearchQuery = '';
+    document.getElementById('crmSearchInput').value = '';
+    renderCrmTabs();
+    renderCrmDueBanner();
+    renderCrmList();
   });
 }
 
@@ -4093,92 +4457,238 @@ async function syncCrmWithSignedProposals(){
 
 function renderCrmTabs(){
   const tabsEl = document.getElementById('crmTabs');
-  tabsEl.innerHTML = CRM_STAGES.map(stage => {
-    const count = crmIndexCache.filter(c => (c.stage || 'lead') === stage.id).length;
+  const attentionCount = crmIndexCache.filter(c => crmAttentionInfo(c)).length;
+  const attnActive = crmActiveStage === CRM_ATTENTION_TAB.id ? ' active' : '';
+  const attnHot = attentionCount ? ' crm-tab-hot' : '';
+  let html = `<button type="button" class="crm-tab crm-tab-attention${attnHot}${attnActive}" data-stage="${CRM_ATTENTION_TAB.id}">${CRM_ATTENTION_TAB.label} <span class="crm-tab-count">${attentionCount}</span></button>`;
+  html += CRM_STAGES.map(stage => {
+    const count = crmIndexCache.filter(c => remapLegacyStage(c.stage) === stage.id).length;
     const activeClass = stage.id === crmActiveStage ? ' active' : '';
     return `<button type="button" class="crm-tab${activeClass}" data-stage="${stage.id}">${stage.label} <span class="crm-tab-count">${count}</span></button>`;
   }).join('');
-  const lostCount = crmIndexCache.filter(c => (c.stage || 'lead') === CRM_LOST_STAGE.id).length;
+  const lostCount = crmIndexCache.filter(c => remapLegacyStage(c.stage) === CRM_LOST_STAGE.id).length;
   const lostActiveClass = crmActiveStage === CRM_LOST_STAGE.id ? ' active' : '';
-  tabsEl.innerHTML += `<button type="button" class="crm-tab crm-tab-lost${lostActiveClass}" data-stage="${CRM_LOST_STAGE.id}">${CRM_LOST_STAGE.label} <span class="crm-tab-count">${lostCount}</span></button>`;
+  html += `<button type="button" class="crm-tab crm-tab-lost${lostActiveClass}" data-stage="${CRM_LOST_STAGE.id}">${CRM_LOST_STAGE.label} <span class="crm-tab-count">${lostCount}</span></button>`;
+  tabsEl.innerHTML = html;
   tabsEl.querySelectorAll('.crm-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       crmActiveStage = btn.dataset.stage;
+      crmSearchQuery = '';
+      document.getElementById('crmSearchInput').value = '';
       renderCrmTabs();
+      renderCrmDueBanner();
       renderCrmList();
     });
   });
 }
 
-let crmSearchQuery = '';
-
+// Debounced: each keystroke would otherwise trigger a fresh board render.
 function handleCrmSearch(value){
   crmSearchQuery = value;
-  renderCrmList();
+  clearTimeout(crmSearchTimer);
+  crmSearchTimer = setTimeout(renderCrmList, 150);
 }
 
-function renderCrmList(){
+// Everything searchable about a customer, lowercased: name, contact info,
+// the lost reason, and EVERY note in their history (not just the latest).
+function crmSearchHaystack(record){
+  const notes = (record.followUps || []).map(f => f.note || '');
+  return [record.name, record.phone, record.email, record.lostReasonNote].concat(notes).join(' ').toLowerCase();
+}
+
+function followUpEntryHtml(f, editable){
+  const methodLabel = f.method ? (FOLLOWUP_METHOD_LABELS[f.method] || f.method) : '';
+  const reachedLabel = f.reached === 'yes' ? 'Reached' : (f.reached === 'no' ? "Didn't reach" : '');
+  const reachedClass = f.reached === 'yes' ? 'reached-yes' : (f.reached === 'no' ? 'reached-no' : '');
+  const metaBits = [methodLabel, reachedLabel].filter(Boolean);
+  const noteHtml = f.note ? escapeHtml(f.note) : '<span class="followup-entry-nonote">(no note)</span>';
+  const actions = editable
+    ? `<span class="followup-entry-actions"><button type="button" data-action="edit-entry" data-fid="${escapeAttr(f.id)}">Edit</button><button type="button" data-action="delete-entry" data-fid="${escapeAttr(f.id)}">Delete</button></span>`
+    : '';
+  return `
+    <div class="followup-entry" data-fid="${escapeAttr(f.id || '')}">
+      <div class="followup-entry-date">${fmtPlainDate(f.date)}${metaBits.length ? ' · <span class="followup-entry-meta ' + reachedClass + '">' + escapeHtml(metaBits.join(' · ')) + '</span>' : ''}${actions}</div>
+      <div class="followup-entry-note">${noteHtml}</div>
+    </div>`;
+}
+
+function crmContactHtml(record){
+  const bits = [];
+  if (record.phone) bits.push(`<a href="tel:${escapeAttr(record.phone.replace(/[^0-9+]/g, ''))}">📞 ${escapeHtml(record.phone)}</a>`);
+  if (record.email) bits.push(`<a href="mailto:${escapeAttr(record.email)}">✉ ${escapeHtml(record.email)}</a>`);
+  return bits.length ? bits.join('') : '<span class="crm-contact-empty">No phone or email yet — open to add</span>';
+}
+
+function crmStatsChipsHtml(record){
+  const s = followUpStats(record);
+  if (!s.attempts) return '<span class="crm-stat crm-stat-muted">No contact logged yet</span>';
+  return `<span class="crm-stat">${s.attempts} attempt${s.attempts === 1 ? '' : 's'} · ${s.reachedCount} reached</span>`
+    + `<span class="crm-stat">Last contact ${describeDaysAgo(s.lastAttemptDate)}</span>`
+    + (s.lastReachedDate
+      ? `<span class="crm-stat crm-stat-good">Last reached ${describeDaysAgo(s.lastReachedDate)}</span>`
+      : '<span class="crm-stat crm-stat-bad">Never reached</span>');
+}
+
+function crmNextRowHtml(record){
+  return `<div class="crm-next-row">
+      <span class="crm-next-label">Next follow-up</span>
+      <input type="date" class="crm-next-date" value="${escapeAttr(record.nextFollowUpDate || '')}">
+      <button type="button" class="crm-chip-btn" data-action="next-chip" data-days="2">+2 days</button>
+      <button type="button" class="crm-chip-btn" data-action="next-chip" data-days="7">+1 week</button>
+      <button type="button" class="crm-chip-btn" data-action="next-chip" data-days="14">+2 weeks</button>
+      ${record.nextFollowUpDate ? '<button type="button" class="crm-chip-btn crm-chip-clear" data-action="next-clear">Clear</button>' : ''}
+    </div>`;
+}
+
+// One customer on the board: who they are and how to reach them, how
+// contact has gone, when the next one is due, and their actual notes --
+// all visible without opening anything.
+function renderCrmCard(c, record, showStage){
+  const att = crmAttentionInfo(c);
+  const cardClass = att ? (att.kind === 'due' ? ' attn-due' : ' attn-stale') : '';
+  const stage = remapLegacyStage(record.stage);
+  const history = sortedFollowUps(record);
+  const expanded = !!crmExpandedHistory[record.id];
+  const shown = expanded ? history : history.slice(0, CRM_HISTORY_PREVIEW_COUNT);
+  let historyHtml;
+  if (!history.length) {
+    historyHtml = '<div class="followup-empty">No follow-ups logged yet.</div>';
+  } else {
+    historyHtml = shown.map(f => followUpEntryHtml(f, false)).join('');
+    if (history.length > CRM_HISTORY_PREVIEW_COUNT) {
+      historyHtml += `<button type="button" class="crm-link-btn" data-action="toggle-history">${expanded ? 'Show fewer' : 'Show all ' + history.length + ' entries'}</button>`;
+    }
+  }
+  let extra = '';
+  if (stage === 'signed') {
+    extra = `<div class="crm-stats"><span class="crm-stat ${record.scheduled ? 'crm-stat-good' : 'crm-stat-bad'}">${record.scheduled ? '✓' : '☐'} Scheduled</span><span class="crm-stat ${record.paymentOnFile ? 'crm-stat-good' : 'crm-stat-bad'}">${record.paymentOnFile ? '✓' : '☐'} Payment on file</span></div>`;
+  } else if (stage === 'lost' && (record.lostReason || record.lostReasonNote)) {
+    const reason = CRM_LOST_REASON_LABELS[record.lostReason] || '';
+    extra = `<div class="crm-lost-line">Lost${reason ? ': ' + escapeHtml(reason) : ''}${record.lostReasonNote ? ' — ' + escapeHtml(record.lostReasonNote) : ''}</div>`;
+  }
+  const quickLog = stage === 'lost' ? '' : `
+      <div class="crm-card-actions">
+        <button type="button" class="crm-action-btn" data-action="quick-noanswer">☎ No answer</button>
+        <button type="button" class="crm-action-btn" data-action="quick-voicemail">Left voicemail</button>
+        <button type="button" class="crm-action-btn crm-action-primary" data-action="log-contact">＋ Log contact</button>
+      </div>`;
+  return `
+    <div class="crm-card${cardClass}" data-id="${escapeAttr(record.id)}">
+      <div class="crm-card-main">
+        <div class="crm-card-head">
+          <span class="crm-card-name">${escapeHtml(record.name || '(untitled)')}</span>
+          ${showStage ? `<span class="crm-stage-pill">${escapeHtml(crmStageLabel(stage))}</span>` : ''}
+        </div>
+        ${att ? `<div class="crm-attn-line ${att.kind === 'due' ? 'attn-due' : 'attn-stale'}">${escapeHtml(att.label)}</div>` : ''}
+        <div class="crm-card-contact">${crmContactHtml(record)}</div>
+        <div class="crm-stats">${crmStatsChipsHtml(record)}</div>
+        ${extra}
+        ${stage === 'lost' ? '' : crmNextRowHtml(record)}
+        ${quickLog}
+      </div>
+      <div class="crm-card-history">${historyHtml}</div>
+    </div>`;
+}
+
+async function renderCrmList(){
+  const seq = ++crmRenderSeq;
   const listEl = document.getElementById('crmList');
   const query = crmSearchQuery.trim().toLowerCase();
-  const inStage = crmIndexCache
-    .filter(c => (c.stage || 'lead') === crmActiveStage)
-    .filter(c => !query || [c.name, c.lastFollowUpNote].join(' ').toLowerCase().includes(query))
-    .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
 
-  if (!inStage.length) {
-    listEl.innerHTML = query
-      ? '<div class="crm-list-empty">No customers match "' + escapeHtml(crmSearchQuery.trim()) + '".</div>'
-      : '<div class="crm-list-empty">No customers here yet.</div>';
+  let candidates;
+  if (query) candidates = crmIndexCache.slice();   // searching looks across every stage
+  else if (crmActiveStage === CRM_ATTENTION_TAB.id) candidates = crmIndexCache.filter(c => crmAttentionInfo(c));
+  else candidates = crmIndexCache.filter(c => remapLegacyStage(c.stage) === crmActiveStage);
+
+  const needFetch = candidates.some(c => {
+    const cached = crmRecordCache[c.id];
+    return !(cached && (cached.record.updatedAt || cached.record.createdAt) === c.updatedAt);
+  });
+  if (needFetch && !listEl.querySelector('.crm-card')) {
+    listEl.innerHTML = '<div class="crm-list-empty">Loading…</div>';
+  }
+  const records = await getCrmRecords(candidates.map(c => c.id));
+  if (seq !== crmRenderSeq) return;   // a newer render took over while we were loading
+
+  let rows = candidates.filter(c => records[c.id]).map(c => ({ c: c, record: records[c.id] }));
+  if (query) rows = rows.filter(r => crmSearchHaystack(r.record).includes(query));
+  rows.sort((a, b) => crmCompare(a.c, b.c));
+
+  if (!rows.length) {
+    if (query) listEl.innerHTML = '<div class="crm-list-empty">No customers match "' + escapeHtml(crmSearchQuery.trim()) + '".</div>';
+    else if (crmActiveStage === CRM_ATTENTION_TAB.id) listEl.innerHTML = '<div class="crm-list-empty">Nobody needs a follow-up right now. 🎉</div>';
+    else listEl.innerHTML = '<div class="crm-list-empty">No customers here yet.</div>';
     return;
   }
+  const showStage = !!query || crmActiveStage === CRM_ATTENTION_TAB.id;
+  const searchNote = query ? `<div class="crm-search-note">${rows.length} result${rows.length === 1 ? '' : 's'} across all stages</div>` : '';
+  listEl.innerHTML = searchNote + rows.map(r => renderCrmCard(r.c, r.record, showStage)).join('');
+}
 
-  listEl.innerHTML = inStage.map(c => {
-    let notePreview;
-    if (c.lastFollowUpDate) {
-      const reachedBadge = c.lastFollowUpReached === 'yes' ? '<span class="crm-reached-badge reached-yes">Reached</span>'
-        : c.lastFollowUpReached === 'no' ? '<span class="crm-reached-badge reached-no">No answer</span>' : '';
-      notePreview = `<span class="crm-note-preview">${reachedBadge} ${fmtPlainDate(c.lastFollowUpDate)}: ${escapeHtml(truncate(c.lastFollowUpNote || '', 90))}</span>`;
-    } else {
-      notePreview = '<span class="crm-note-preview crm-note-empty">No follow-ups logged yet</span>';
+// Board interactions are delegated from the list itself (set up once)
+// rather than rewired onto every card on every render.
+(function wireCrmBoardEvents(){
+  const listEl = document.getElementById('crmList');
+  listEl.addEventListener('click', async (e) => {
+    const card = e.target.closest('.crm-card');
+    const actionEl = e.target.closest('[data-action]');
+    if (actionEl && card) {
+      const id = card.dataset.id;
+      const action = actionEl.dataset.action;
+      if (action === 'next-chip') await setNextFollowUp(id, addDaysStr(Number(actionEl.dataset.days)));
+      else if (action === 'next-clear') await setNextFollowUp(id, null);
+      else if (action === 'quick-noanswer') await quickLogFollowUp(id, 'call', 'no');
+      else if (action === 'quick-voicemail') await quickLogFollowUp(id, 'voicemail', 'no');
+      else if (action === 'log-contact') { await openCustomerModal(id); document.getElementById('newFollowUpNote').focus(); }
+      else if (action === 'toggle-history') { crmExpandedHistory[id] = !crmExpandedHistory[id]; await renderCrmList(); }
+      return;
     }
-    const dueBadgeData = formatDueBadge(c.nextFollowUpDate);
-    const dueBadge = dueBadgeData ? `<span class="crm-due-badge ${dueBadgeData.className}">${dueBadgeData.label}</span>` : '';
-    return `
-      <div class="crm-row" data-id="${c.id}">
-        <div class="crm-row-name">${escapeHtml(c.name || '(untitled)')} ${dueBadge}</div>
-        ${notePreview}
-      </div>
-    `;
-  }).join('');
-
-  listEl.querySelectorAll('.crm-row').forEach(rowEl => {
-    rowEl.addEventListener('click', () => openCustomerModal(rowEl.dataset.id));
+    // Links, date pickers, etc. do their own thing; only a click on the
+    // card's plain surface opens the customer.
+    if (e.target.closest('a, input, select, textarea, button')) return;
+    if (card) openCustomerModal(card.dataset.id);
   });
-}
+  listEl.addEventListener('change', async (e) => {
+    if (!e.target.classList.contains('crm-next-date')) return;
+    const card = e.target.closest('.crm-card');
+    if (card) await setNextFollowUp(card.dataset.id, e.target.value || null);
+  });
+})();
 
-function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = str == null ? '' : str;
-  return div.innerHTML;
-}
+/* ---------- creating customers ---------- */
 
-function truncate(str, len){
-  if (!str) return '';
-  return str.length > len ? str.slice(0, len).trim() + '…' : str;
-}
-
-async function ensureCrmCustomerExists(propName){
+// A proposal save creates the customer if none matches by name. Contact
+// info from the proposal only ever fills BLANKS (never overwrites what's
+// already on the customer), and only when the index entry says the field
+// is genuinely empty -- an entry from before contact info was tracked is
+// left alone so every autosave doesn't trigger a record fetch.
+async function ensureCrmCustomerExists(propName, contact){
   const name = (propName || '').trim();
   if (!name) return;
+  const phone = ((contact && contact.phone) || '').trim();
+  const email = ((contact && contact.email) || '').trim();
   try {
     const index = await ensureCrmMigrated();
-    const exists = index.some(c => (c.name || '').trim().toLowerCase() === name.toLowerCase());
-    if (exists) return;
+    const existing = index.find(c => (c.name || '').trim().toLowerCase() === name.toLowerCase());
+    if (existing) {
+      if ((phone && existing.phone === '') || (email && existing.email === '')) {
+        const rec = await loadCustomerRecord(existing.id);
+        if (rec) {
+          let changed = false;
+          if (phone && !rec.phone) { rec.phone = phone; changed = true; }
+          if (email && !rec.email) { rec.email = email; changed = true; }
+          if (changed) await saveCustomerRecord(rec);
+        }
+      }
+      return;
+    }
     const now = new Date().toISOString();
     await saveCustomerRecord({
       id: 'c' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
       name: name,
       stage: 'lead',
+      phone: phone,
+      email: email,
       followUps: [],
       createdAt: now,
       updatedAt: now
@@ -4206,24 +4716,72 @@ async function addCustomer(){
   openCustomerModal(customer.id);
 }
 
+/* ---------- next follow-up + quick logging (shared by board and modal) ---------- */
+
+async function setNextFollowUp(id, dateStr){
+  const customer = await loadCustomerRecord(id);
+  if (!customer) return;
+  customer.nextFollowUpDate = dateStr || null;
+  customer.updatedAt = new Date().toISOString();
+  await saveCustomerRecord(customer);
+  // While the modal is open, the board behind it refreshes when it closes.
+  if (openCustomerId === id) refreshCustomerModalPanels(customer);
+  else await refreshCrmBoard();
+}
+
+// After an attempt that went nowhere, make sure a follow-up is scheduled
+// rather than leaving the customer overdue ("I just called!") or
+// unscheduled: if nothing's coming up, default to two days out. An
+// already-scheduled future date is never touched. Returns the date set,
+// or null if nothing changed.
+function autoScheduleAfterMiss(customer){
+  const days = daysUntil(customer.nextFollowUpDate);
+  if (days !== null && days > 0) return null;
+  customer.nextFollowUpDate = addDaysStr(2);
+  return customer.nextFollowUpDate;
+}
+
+async function quickLogFollowUp(id, method, reached){
+  if (crmLogInFlight) return;
+  crmLogInFlight = true;
+  try {
+    const customer = await loadCustomerRecord(id);
+    if (!customer) return;
+    ensureFollowUpIds(customer);
+    if (!customer.followUps) customer.followUps = [];
+    customer.followUps.unshift({ id: newFollowUpId(), date: localDateStr(), method: method, reached: reached, note: '' });
+    if (reached === 'no') autoScheduleAfterMiss(customer);
+    customer.updatedAt = new Date().toISOString();
+    await saveCustomerRecord(customer);
+    await refreshCrmBoard();
+  } finally {
+    crmLogInFlight = false;
+  }
+}
+
+/* ---------- customer modal ---------- */
+
 let customerDraftProposalId = null;
 
 async function openCustomerModal(id){
   const customer = await loadCustomerRecord(id);
   if (!customer) { showAlert('Could not load that customer.'); return; }
+  // Entries from before edit/delete existed need ids to be addressable.
+  if (ensureFollowUpIds(customer)) await saveCustomerRecord(customer);
   openCustomerId = id;
+  editingFollowUpId = null;
   document.getElementById('customerNameInput').value = customer.name || '';
   document.getElementById('customerStageSelect').value = remapLegacyStage(customer.stage);
-  const dateInput = document.getElementById('newFollowUpDate');
-  dateInput.value = new Date().toISOString().slice(0, 10);
-  document.getElementById('newFollowUpNextDate').value = '';
+  document.getElementById('customerPhoneInput').value = customer.phone || '';
+  document.getElementById('customerEmailInput').value = customer.email || '';
+  refreshContactLinks(customer);
+  document.getElementById('newFollowUpDate').value = localDateStr();
   document.getElementById('newFollowUpMethod').value = 'call';
-  document.getElementById('newFollowUpReached').value = 'yes';
   document.getElementById('newFollowUpNote').value = '';
-  renderFollowUpList(customer);
+  document.getElementById('crmLogStatus').textContent = '';
+  refreshCustomerModalPanels(customer);
   refreshSignedChecklist(customer);
   refreshLostReasonSection(customer);
-  refreshCurrentNextFollowUpHint(customer);
 
   customerDraftProposalId = null;
   const draftRow = document.getElementById('customerDraftProposalRow');
@@ -4253,29 +4811,130 @@ async function closeCustomerModal(){
   await commitDraftFollowUp();
   document.getElementById('customerModalOverlay').classList.remove('open');
   openCustomerId = null;
+  editingFollowUpId = null;
   renderCustomers();
 }
 
-const FOLLOWUP_METHOD_LABELS = { call: 'Phone Call', text: 'Text', email: 'Email', in_person: 'In Person', voicemail: 'Voicemail' };
+function refreshContactLinks(customer){
+  const phoneLink = document.getElementById('customerPhoneLink');
+  const emailLink = document.getElementById('customerEmailLink');
+  const phone = (customer.phone || '').trim();
+  const email = (customer.email || '').trim();
+  phoneLink.style.display = phone ? 'inline' : 'none';
+  phoneLink.href = phone ? 'tel:' + phone.replace(/[^0-9+]/g, '') : '#';
+  emailLink.style.display = email ? 'inline' : 'none';
+  emailLink.href = email ? 'mailto:' + email : '#';
+}
+
+// The four numbers at the top of a customer: how much contact there's
+// been, how recent, whether it ever actually connected, and what's next.
+function renderCustomerSummary(customer){
+  const s = followUpStats(customer);
+  const nextDays = daysUntil(customer.nextFollowUpDate);
+  const nextOverdue = nextDays !== null && nextDays <= 0;
+  const settled = CRM_SETTLED_STAGES.includes(remapLegacyStage(customer.stage));
+  let nextValue, nextSub;
+  if (nextDays === null) { nextValue = 'Not scheduled'; nextSub = settled ? '' : 'Pick a date below'; }
+  else {
+    nextValue = fmtWeekdayDate(customer.nextFollowUpDate);
+    nextSub = nextDays < 0 ? 'Overdue by ' + (-nextDays) + (nextDays === -1 ? ' day' : ' days') : (nextDays === 0 ? 'Due today' : describeDaysAgo(customer.nextFollowUpDate));
+  }
+  const tile = (label, value, sub, cls) => `<div class="crm-stat-tile ${cls || ''}"><div class="crm-stat-tile-label">${label}</div><div class="crm-stat-tile-value">${value}</div><div class="crm-stat-tile-sub">${sub || '&nbsp;'}</div></div>`;
+  document.getElementById('customerSummaryTiles').innerHTML =
+    tile('Attempts', String(s.attempts), s.reachedCount + ' reached')
+    + tile('Last contact', s.lastAttemptDate ? describeDaysAgo(s.lastAttemptDate) : 'Never', s.lastAttemptDate ? fmtPlainDate(s.lastAttemptDate) : '', s.lastAttemptDate ? '' : 'warn')
+    + tile('Last reached', s.lastReachedDate ? describeDaysAgo(s.lastReachedDate) : 'Never', s.lastReachedDate ? fmtPlainDate(s.lastReachedDate) : (s.attempts ? 'No one has picked up' : ''), s.lastReachedDate ? 'good' : (s.attempts ? 'warn' : ''))
+    + tile('Next follow-up', nextValue, nextSub, nextOverdue && !settled ? 'warn' : '');
+}
+
+function refreshNextFollowUpControls(customer){
+  document.getElementById('customerNextFollowUpDate').value = customer.nextFollowUpDate || '';
+  document.getElementById('customerNextClearBtn').style.display = customer.nextFollowUpDate ? 'inline-block' : 'none';
+}
+
+// Everything in the modal that reflects the customer's log/schedule.
+function refreshCustomerModalPanels(customer){
+  renderCustomerSummary(customer);
+  refreshNextFollowUpControls(customer);
+  renderFollowUpList(customer);
+}
+
+function followUpEditFormHtml(f){
+  const methods = Object.keys(FOLLOWUP_METHOD_LABELS).map(k => `<option value="${k}"${f.method === k ? ' selected' : ''}>${FOLLOWUP_METHOD_LABELS[k]}</option>`).join('');
+  return `
+    <div class="followup-entry editing" data-fid="${escapeAttr(f.id)}">
+      <div class="followup-edit-grid">
+        <input type="date" class="fe-date" value="${escapeAttr(f.date || '')}">
+        <select class="fe-method">${methods}</select>
+        <select class="fe-reached">
+          <option value="yes"${f.reached === 'yes' ? ' selected' : ''}>Reached</option>
+          <option value="no"${f.reached === 'no' ? ' selected' : ''}>Didn't reach</option>
+          <option value=""${!f.reached ? ' selected' : ''}>Not recorded</option>
+        </select>
+      </div>
+      <textarea class="fe-note" placeholder="Note (optional)">${escapeHtml(f.note || '')}</textarea>
+      <div class="followup-edit-buttons">
+        <button type="button" class="crm-chip-btn" data-action="save-entry" data-fid="${escapeAttr(f.id)}">Save</button>
+        <button type="button" class="crm-chip-btn" data-action="cancel-edit">Cancel</button>
+      </div>
+    </div>`;
+}
 
 function renderFollowUpList(customer){
   const list = document.getElementById('followUpList');
-  if (!customer.followUps || !customer.followUps.length) {
+  const entries = sortedFollowUps(customer);
+  if (!entries.length) {
     list.innerHTML = '<div class="followup-empty">No follow-ups logged yet.</div>';
     return;
   }
-  list.innerHTML = customer.followUps.map(f => {
-    const methodLabel = f.method ? FOLLOWUP_METHOD_LABELS[f.method] || f.method : '';
-    const reachedLabel = f.reached === 'yes' ? 'Reached' : (f.reached === 'no' ? "Didn't reach" : '');
-    const reachedClass = f.reached === 'yes' ? 'reached-yes' : (f.reached === 'no' ? 'reached-no' : '');
-    const metaBits = [methodLabel, reachedLabel].filter(Boolean);
-    return `
-    <div class="followup-entry">
-      <div class="followup-entry-date">${fmtPlainDate(f.date)}${metaBits.length ? ' · <span class="followup-entry-meta ' + reachedClass + '">' + escapeHtml(metaBits.join(' · ')) + '</span>' : ''}</div>
-      <div class="followup-entry-note">${escapeHtml(f.note)}</div>
-    </div>
-  `;
-  }).join('');
+  list.innerHTML = entries.map(f => f.id === editingFollowUpId ? followUpEditFormHtml(f) : followUpEntryHtml(f, true)).join('');
+}
+
+document.getElementById('followUpList').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn || !openCustomerId) return;
+  const action = btn.dataset.action;
+  const fid = btn.dataset.fid;
+  if (action === 'edit-entry') {
+    editingFollowUpId = fid;
+    const customer = await loadCustomerRecord(openCustomerId);
+    if (customer) renderFollowUpList(customer);
+  } else if (action === 'cancel-edit') {
+    editingFollowUpId = null;
+    const customer = await loadCustomerRecord(openCustomerId);
+    if (customer) renderFollowUpList(customer);
+  } else if (action === 'save-entry') {
+    await saveFollowUpEdit(fid, btn.closest('.followup-entry'));
+  } else if (action === 'delete-entry') {
+    await deleteFollowUp(fid);
+  }
+});
+
+async function saveFollowUpEdit(fid, entryEl){
+  const customer = await loadCustomerRecord(openCustomerId);
+  if (!customer) return;
+  const f = (customer.followUps || []).find(x => x.id === fid);
+  if (!f) return;
+  f.date = entryEl.querySelector('.fe-date').value || f.date;
+  f.method = entryEl.querySelector('.fe-method').value;
+  f.reached = entryEl.querySelector('.fe-reached').value;
+  f.note = entryEl.querySelector('.fe-note').value.trim();
+  customer.updatedAt = new Date().toISOString();
+  await saveCustomerRecord(customer);
+  editingFollowUpId = null;
+  refreshCustomerModalPanels(customer);
+}
+
+async function deleteFollowUp(fid){
+  const ok = await showConfirm('Delete this follow-up entry? This cannot be undone.');
+  if (!ok) return;
+  const customer = await loadCustomerRecord(openCustomerId);
+  if (!customer) return;
+  customer.followUps = (customer.followUps || []).filter(x => x.id !== fid);
+  customer.updatedAt = new Date().toISOString();
+  await saveCustomerRecord(customer);
+  if (editingFollowUpId === fid) editingFollowUpId = null;
+  refreshCustomerModalPanels(customer);
 }
 
 // Shows the "Scheduled" / "Payment on file" checklist only once a
@@ -4313,17 +4972,6 @@ async function handleSignedChecklistChange(){
 document.getElementById('customerScheduledCheck').addEventListener('change', handleSignedChecklistChange);
 document.getElementById('customerPaymentCheck').addEventListener('change', handleSignedChecklistChange);
 
-// The date input itself always resets blank when the modal opens (blank
-// means "no change" on save, not "clear it") -- so without this, there'd
-// be no way to see whether a reminder is already set before deciding
-// whether to update it.
-function refreshCurrentNextFollowUpHint(customer){
-  const hint = document.getElementById('currentNextFollowUpHint');
-  hint.textContent = customer.nextFollowUpDate
-    ? 'Currently set for ' + fmtPlainDate(customer.nextFollowUpDate) + '. Leave blank above to keep it.'
-    : '';
-}
-
 // Shown only once a customer is marked Lost -- a quick reason now is
 // worth far more than trying to remember why months later when looking
 // back for patterns (too expensive, chose a competitor, and so on).
@@ -4341,69 +4989,93 @@ async function saveCustomerModalFields(){
   if (!openCustomerId) return;
   // Changing the stage is exactly the "move it to a new section" action
   // that was silently discarding whatever note was typed but not yet
-  // committed with "+ Add Follow-Up" -- this textarea has no autosave of
-  // its own, so switching stages just abandoned it. Capture any drafted
-  // note as its own journal entry first, so moving a customer never loses
-  // what you just wrote about them.
+  // committed with a Reached / Didn't reach button -- this textarea has
+  // no autosave of its own, so switching stages just abandoned it.
+  // Capture any drafted note as its own journal entry first, so moving a
+  // customer never loses what you just wrote about them.
   await commitDraftFollowUp();
   const customer = await loadCustomerRecord(openCustomerId);
   if (!customer) return;
   customer.name = document.getElementById('customerNameInput').value.trim() || '(untitled)';
   customer.stage = document.getElementById('customerStageSelect').value;
+  customer.phone = document.getElementById('customerPhoneInput').value.trim();
+  customer.email = document.getElementById('customerEmailInput').value.trim();
   customer.lostReason = document.getElementById('customerLostReasonSelect').value;
   customer.lostReasonNote = document.getElementById('customerLostReasonNote').value.trim();
   customer.updatedAt = new Date().toISOString();
   await saveCustomerRecord(customer);
+  refreshContactLinks(customer);
   refreshSignedChecklist(customer);
   refreshLostReasonSection(customer);
+  renderCustomerSummary(customer);
 }
 
 document.getElementById('customerNameInput').addEventListener('change', saveCustomerModalFields);
 document.getElementById('customerStageSelect').addEventListener('change', saveCustomerModalFields);
+document.getElementById('customerPhoneInput').addEventListener('change', saveCustomerModalFields);
+document.getElementById('customerEmailInput').addEventListener('change', saveCustomerModalFields);
 document.getElementById('customerLostReasonSelect').addEventListener('change', saveCustomerModalFields);
 document.getElementById('customerLostReasonNote').addEventListener('change', saveCustomerModalFields);
 
-// Commits whatever is currently typed in the follow-up note box as a new
-// journal entry, if anything's there. Shared by the explicit "+ Add
-// Follow-Up" button, by changing the stage/name (saveCustomerModalFields),
-// and by closing the modal -- so a drafted note is captured no matter how
-// you leave it, instead of only when you remember to click Add.
-async function commitDraftFollowUp(){
+// The next follow-up is its own field on the customer, saved the moment
+// it changes -- not a side effect of logging a note, so setting a date
+// never depends on having something to write.
+document.getElementById('customerNextFollowUpDate').addEventListener('change', (e) => {
+  if (openCustomerId) setNextFollowUp(openCustomerId, e.target.value || null);
+});
+document.getElementById('customerNextClearBtn').addEventListener('click', () => {
+  if (openCustomerId) setNextFollowUp(openCustomerId, null);
+});
+document.querySelectorAll('#customerModalOverlay [data-next-days]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (openCustomerId) setNextFollowUp(openCustomerId, addDaysStr(Number(btn.dataset.nextDays)));
+  });
+});
+
+// Logs whatever's in the contact form as a journal entry. Two ways in:
+//  - explicitly (the "Reached them" / "Didn't reach" buttons): `reached`
+//    is 'yes' or 'no', and the note can be empty -- most missed calls have
+//    nothing to say.
+//  - implicitly (closing the modal or changing the stage with a note
+//    typed but not yet logged): only if there's a note, recorded without
+//    a reached/not-reached answer since none was given. This is what stops
+//    a drafted note from being lost no matter how you leave the form.
+async function commitDraftFollowUp(reached){
   if (!openCustomerId) return null;
+  const explicit = reached === 'yes' || reached === 'no';
   const noteVal = document.getElementById('newFollowUpNote').value.trim();
-  if (!noteVal) return null;
+  if (!explicit && !noteVal) return null;
   const customer = await loadCustomerRecord(openCustomerId);
   if (!customer) return null;
-  const dateVal = document.getElementById('newFollowUpDate').value;
-  const nextDateVal = document.getElementById('newFollowUpNextDate').value;
+  ensureFollowUpIds(customer);
   if (!customer.followUps) customer.followUps = [];
   customer.followUps.unshift({
-    date: dateVal || new Date().toISOString().slice(0, 10),
+    id: newFollowUpId(),
+    date: document.getElementById('newFollowUpDate').value || localDateStr(),
     method: document.getElementById('newFollowUpMethod').value,
-    reached: document.getElementById('newFollowUpReached').value,
+    reached: explicit ? reached : '',
     note: noteVal
   });
-  // Leaving "Next Follow-Up" blank means "no change" rather than "clear
-  // it" -- logging today's contact shouldn't silently wipe out a
-  // reminder you already set for later unless you're actually updating it.
-  if (nextDateVal) customer.nextFollowUpDate = nextDateVal;
+  const autoDate = reached === 'no' ? autoScheduleAfterMiss(customer) : null;
   customer.updatedAt = new Date().toISOString();
   await saveCustomerRecord(customer);
   document.getElementById('newFollowUpNote').value = '';
-  document.getElementById('newFollowUpNextDate').value = '';
-  renderFollowUpList(customer);
-  refreshCurrentNextFollowUpHint(customer);
+  document.getElementById('newFollowUpDate').value = localDateStr();
+  refreshCustomerModalPanels(customer);
+  const status = document.getElementById('crmLogStatus');
+  if (autoDate) status.textContent = 'Logged. Next follow-up set to ' + fmtWeekdayDate(autoDate) + ' — change it above if you want a different day.';
+  else if (explicit) status.textContent = reached === 'yes' ? 'Logged. Set the next follow-up above so this one doesn\'t slip.' : 'Logged.';
   return customer;
 }
 
-async function addFollowUp(){
-  if (!openCustomerId) return;
-  const noteVal = document.getElementById('newFollowUpNote').value.trim();
-  if (!noteVal) {
-    showAlert('Add a quick note about how the contact went before saving.');
-    return;
+async function addFollowUp(reached){
+  if (!openCustomerId || crmLogInFlight) return;
+  crmLogInFlight = true;
+  try {
+    await commitDraftFollowUp(reached);
+  } finally {
+    crmLogInFlight = false;
   }
-  await commitDraftFollowUp();
 }
 
 document.getElementById('customerDeleteBtn').addEventListener('click', async () => {
