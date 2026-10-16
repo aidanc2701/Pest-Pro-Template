@@ -932,6 +932,7 @@
   .crm-stat-muted{font-style:italic; font-weight:500;}
   .crm-stat-good{background:#E4F3E6; color:#2E7D42;}
   .crm-stat-bad{background:#FBE7E2; color:#B2472A;}
+  .crm-stat-info{background:#E4EEF7; color:#2B6CA3;}
   .crm-lost-line{margin-top:9px; font-size:12.5px; color:#B2472A; font-weight:600;}
   .crm-next-row{display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:11px;}
   .crm-next-label{font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:var(--secondary); width:100%;}
@@ -3464,6 +3465,7 @@ async function setProposalStatus(id, status, evt){
       item.sentAt = new Date().toISOString();
     }
     await setIndex(index);
+    if (status === 'sent') await logProposalSentToCrm(item);
     if (id === currentProposalId) {
       if (status === 'accepted') lockEditorForSignedProposal();
       else unlockEditorFromSignedProposal();
@@ -4054,7 +4056,7 @@ function remapLegacyStage(stage){
   return LEGACY_STAGE_MAP[stage] || stage || 'lead';
 }
 
-const FOLLOWUP_METHOD_LABELS = { call: 'Phone Call', text: 'Text', email: 'Email', in_person: 'In Person', voicemail: 'Voicemail' };
+const FOLLOWUP_METHOD_LABELS = { call: 'Phone Call', text: 'Text', email: 'Email', in_person: 'In Person', voicemail: 'Voicemail', proposal: 'Proposal Sent' };
 const CRM_LOST_REASON_LABELS = {
   price: 'Price too high', competitor: 'Chose a competitor', timing: 'Bad timing / not ready',
   no_longer_needed: 'No longer needs service', unresponsive: 'Went unresponsive', other: 'Other'
@@ -4161,6 +4163,9 @@ function followUpStats(record){
     reachedCount: reached.length,
     lastAttemptDate: list.length ? list[0].date : null,
     lastReachedDate: reached.length ? reached[0].date : null,
+    // Calls/texts/etc. -- everything except a proposal going out, which is
+    // a contact but not an attempt to get someone on the phone.
+    outreach: list.filter(f => f.method !== 'proposal').length,
     latest: list[0] || null
   };
 }
@@ -4220,6 +4225,7 @@ function summarizeCustomer(record){
     lastFollowUpMethod: s.latest ? s.latest.method : null,
     lastFollowUpReached: s.latest ? s.latest.reached : null,
     nextFollowUpDate: record.nextFollowUpDate || null,
+    proposalSentAt: record.proposalSentAt || null,
     updatedAt: record.updatedAt || record.createdAt || new Date().toISOString()
   };
 }
@@ -4240,6 +4246,67 @@ async function deleteCustomerRecord(id){
   delete crmRecordCache[id];
   const index = (await getCustomerIndex()) || [];
   await setCustomerIndex(index.filter(c => c.id !== id));
+}
+
+// Writes several customers at once with a single index update, instead of
+// one read-modify-write of the shared index per customer.
+async function saveCustomerRecordsBatch(records){
+  await Promise.all(records.map(r => dbStorage.set('crm-customer:' + r.id, JSON.stringify(r), true)));
+  records.forEach(r => { crmRecordCache[r.id] = { record: r }; });
+  const index = (await getCustomerIndex()) || [];
+  const fresh = new Map(records.map(r => [r.id, summarizeCustomer(r)]));
+  await setCustomerIndex(index.map(c => fresh.get(c.id) || c));
+}
+
+// A proposal going out IS a contact. Adds a "Proposal Sent" entry to the
+// customer's log for each proposal not already logged, and records the
+// newest send date (that date is what the board sorts by). The ids of
+// proposals already logged are remembered on the customer separately from
+// the log itself, so deleting an entry later doesn't make it come back.
+// Returns true if anything changed.
+function applyProposalSendsToRecord(record, proposals){
+  let changed = false;
+  if (!record.loggedProposalIds) record.loggedProposalIds = [];
+  proposals.forEach(p => {
+    if (!p.sentAt) return;
+    if (!record.loggedProposalIds.includes(p.id)) {
+      ensureFollowUpIds(record);
+      if (!record.followUps) record.followUps = [];
+      const totals = (p.initialTotal || p.recurringTotal) ? 'Initial ' + (p.initialTotal || '$0.00') + ' · Recurring ' + (p.recurringTotal || '$0.00') : '';
+      const detail = p.jobType ? p.jobType + (totals ? ' (' + totals + ')' : '') : totals;
+      record.followUps.unshift({
+        id: newFollowUpId(), date: localDateStr(new Date(p.sentAt)), method: 'proposal', reached: '',
+        note: 'Proposal sent' + (detail ? ' — ' + detail : ''), proposalId: p.id
+      });
+      record.loggedProposalIds.push(p.id);
+      changed = true;
+    }
+    if (!record.proposalSentAt || new Date(p.sentAt) > new Date(record.proposalSentAt)) {
+      record.proposalSentAt = p.sentAt;
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+// Called the moment a proposal is marked Sent.
+async function logProposalSentToCrm(item){
+  try {
+    const name = (item.propName || '').trim();
+    if (!name || name === '(untitled)') return;
+    await ensureCrmCustomerExists(name);
+    const index = (await getCustomerIndex()) || [];
+    const summary = index.find(c => (c.name || '').trim().toLowerCase() === name.toLowerCase());
+    if (!summary) return;
+    const rec = await loadCustomerRecord(summary.id);
+    if (!rec) return;
+    if (applyProposalSendsToRecord(rec, [item])) {
+      rec.updatedAt = new Date().toISOString();
+      await saveCustomerRecord(rec);
+    }
+  } catch (err) {
+    console.error('Could not log proposal send to CRM', err);
+  }
 }
 
 async function ensureCrmMigrated(){
@@ -4349,6 +4416,19 @@ function crmCompare(a, b){
   return (ka[0] - kb[0]) || (ka[1] - kb[1]);
 }
 
+// For working down a stage tab day after day: newest proposal sent first,
+// and the order never changes as you log contacts or move dates around
+// (unlike the urgency order, where a card jumps as soon as it's updated).
+// Customers with no proposal sent yet follow, newest-added first.
+function crmCompareBySent(a, b){
+  const ta = a.proposalSentAt ? new Date(a.proposalSentAt).getTime() : null;
+  const tb = b.proposalSentAt ? new Date(b.proposalSentAt).getTime() : null;
+  if (ta !== null && tb !== null) return tb - ta;
+  if (ta !== null) return -1;
+  if (tb !== null) return 1;
+  return new Date(b.createdAt || b.updatedAt || 0).getTime() - new Date(a.createdAt || a.updatedAt || 0).getTime();
+}
+
 function crmStageLabel(id){
   const s = CRM_STAGES.concat([CRM_LOST_STAGE]).find(x => x.id === id);
   return s ? s.label : id;
@@ -4453,6 +4533,32 @@ async function syncCrmWithSignedProposals(){
     await saveCustomerRecord(record);
   }
   crmIndexCache = (await getCustomerIndex()) || [];
+
+  // Proposals sent before the CRM tracked sends (or from another device)
+  // still count as contact: catch each customer up to their newest send.
+  const sendsByName = {};
+  proposalIndex.filter(p => p.sentAt && (p.status === 'sent' || p.status === 'accepted')).forEach(p => {
+    const key = (p.propName || '').trim().toLowerCase();
+    if (key) (sendsByName[key] = sendsByName[key] || []).push(p);
+  });
+  const behind = crmIndexCache.filter(c => {
+    const sends = sendsByName[(c.name || '').trim().toLowerCase()];
+    if (!sends) return false;
+    const newest = Math.max.apply(null, sends.map(p => new Date(p.sentAt).getTime()));
+    return !c.proposalSentAt || new Date(c.proposalSentAt).getTime() < newest;
+  });
+  if (!behind.length) return;
+  const records = await Promise.all(behind.map(c => loadCustomerRecord(c.id)));
+  const changed = [];
+  records.forEach((rec, i) => {
+    if (!rec) return;
+    if (applyProposalSendsToRecord(rec, sendsByName[(behind[i].name || '').trim().toLowerCase()])) {
+      rec.updatedAt = new Date().toISOString();
+      changed.push(rec);
+    }
+  });
+  if (changed.length) await saveCustomerRecordsBatch(changed);
+  crmIndexCache = (await getCustomerIndex()) || [];
 }
 
 function renderCrmTabs(){
@@ -4521,12 +4627,18 @@ function crmContactHtml(record){
 
 function crmStatsChipsHtml(record){
   const s = followUpStats(record);
-  if (!s.attempts) return '<span class="crm-stat crm-stat-muted">No contact logged yet</span>';
-  return `<span class="crm-stat">${s.attempts} attempt${s.attempts === 1 ? '' : 's'} · ${s.reachedCount} reached</span>`
+  const sentChip = record.proposalSentAt
+    ? `<span class="crm-stat crm-stat-info">📄 Proposal sent ${fmtWeekdayDate(localDateStr(new Date(record.proposalSentAt)))} · ${describeDaysAgo(localDateStr(new Date(record.proposalSentAt)))}</span>`
+    : '';
+  if (!s.attempts) return sentChip + '<span class="crm-stat crm-stat-muted">No contact logged yet</span>';
+  let reachedChip;
+  if (s.lastReachedDate) reachedChip = `<span class="crm-stat crm-stat-good">Last reached ${describeDaysAgo(s.lastReachedDate)}</span>`;
+  else if (s.outreach) reachedChip = '<span class="crm-stat crm-stat-bad">Never reached</span>';
+  else reachedChip = '<span class="crm-stat crm-stat-muted">No conversation yet</span>';
+  return sentChip
+    + `<span class="crm-stat">${s.attempts} contact${s.attempts === 1 ? '' : 's'} · ${s.reachedCount} reached</span>`
     + `<span class="crm-stat">Last contact ${describeDaysAgo(s.lastAttemptDate)}</span>`
-    + (s.lastReachedDate
-      ? `<span class="crm-stat crm-stat-good">Last reached ${describeDaysAgo(s.lastReachedDate)}</span>`
-      : '<span class="crm-stat crm-stat-bad">Never reached</span>');
+    + reachedChip;
 }
 
 function crmNextRowHtml(record){
@@ -4612,7 +4724,10 @@ async function renderCrmList(){
 
   let rows = candidates.filter(c => records[c.id]).map(c => ({ c: c, record: records[c.id] }));
   if (query) rows = rows.filter(r => crmSearchHaystack(r.record).includes(query));
-  rows.sort((a, b) => crmCompare(a.c, b.c));
+  // Needs Attention is a to-do list, so it stays most-urgent-first; every
+  // other view (stage tabs, search) is ordered by when the proposal went out.
+  const byUrgency = !query && crmActiveStage === CRM_ATTENTION_TAB.id;
+  rows.sort((a, b) => byUrgency ? crmCompare(a.c, b.c) : crmCompareBySent(a.c, b.c));
 
   if (!rows.length) {
     if (query) listEl.innerHTML = '<div class="crm-list-empty">No customers match "' + escapeHtml(crmSearchQuery.trim()) + '".</div>';
@@ -4841,9 +4956,9 @@ function renderCustomerSummary(customer){
   }
   const tile = (label, value, sub, cls) => `<div class="crm-stat-tile ${cls || ''}"><div class="crm-stat-tile-label">${label}</div><div class="crm-stat-tile-value">${value}</div><div class="crm-stat-tile-sub">${sub || '&nbsp;'}</div></div>`;
   document.getElementById('customerSummaryTiles').innerHTML =
-    tile('Attempts', String(s.attempts), s.reachedCount + ' reached')
+    tile('Contacts', String(s.attempts), s.reachedCount + ' reached')
     + tile('Last contact', s.lastAttemptDate ? describeDaysAgo(s.lastAttemptDate) : 'Never', s.lastAttemptDate ? fmtPlainDate(s.lastAttemptDate) : '', s.lastAttemptDate ? '' : 'warn')
-    + tile('Last reached', s.lastReachedDate ? describeDaysAgo(s.lastReachedDate) : 'Never', s.lastReachedDate ? fmtPlainDate(s.lastReachedDate) : (s.attempts ? 'No one has picked up' : ''), s.lastReachedDate ? 'good' : (s.attempts ? 'warn' : ''))
+    + tile('Last reached', s.lastReachedDate ? describeDaysAgo(s.lastReachedDate) : 'Never', s.lastReachedDate ? fmtPlainDate(s.lastReachedDate) : (s.outreach ? 'No one has picked up' : ''), s.lastReachedDate ? 'good' : (s.outreach ? 'warn' : ''))
     + tile('Next follow-up', nextValue, nextSub, nextOverdue && !settled ? 'warn' : '');
 }
 
