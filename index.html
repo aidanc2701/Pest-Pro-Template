@@ -1639,6 +1639,11 @@ I certify that I am authorized to execute this agreement on behalf of the above 
     </div>
   </div>
 
+  <label class="onetime-toggle">
+    <input type="checkbox" id="hideInitialCheckbox" onchange="toggleInitialSection()">
+    Hide the Initial Visit pricing section &mdash; this quote isn't split into initial and recurring
+  </label>
+
   <div class="section" id="pricingInitialSection">
     <h2>Pricing &mdash; Initial Visit</h2>
     <table class="pricing" id="pricingTableInitial">
@@ -2270,6 +2275,11 @@ brandSelect.addEventListener('change', ()=>{
     : 'Pest Pro Pest Control · 3335 S 900 E STE 200, Salt Lake City, UT 84106 · (801) 810-PEST (7378) · pestproutah.com';
   autoSelectTermsTemplate();
 });
+
+function toggleInitialSection(){
+  const hide = document.getElementById('hideInitialCheckbox').checked;
+  document.getElementById('pricingInitialSection').style.display = hide ? 'none' : '';
+}
 
 function toggleRecurringSection(){
   const isOneTime = document.getElementById('oneTimeJobCheckbox').checked;
@@ -3057,6 +3067,7 @@ function collectFormState(){
   state.brand = document.getElementById('brandSelect').value;
   state.clientType = document.getElementById('clientType').value;
   state.oneTimeJob = document.getElementById('oneTimeJobCheckbox').checked;
+  state.hideInitialPricing = document.getElementById('hideInitialCheckbox').checked;
   state.includeMgmtCo = document.getElementById('includeMgmtCo').checked;
   state.includeInspectionNotes = document.getElementById('includeInspectionNotes').checked;
   state.includeServiceMethodology = document.getElementById('includeServiceMethodology').checked;
@@ -3126,6 +3137,8 @@ function applyFormState(state){
   }
   document.getElementById('oneTimeJobCheckbox').checked = !!state.oneTimeJob;
   toggleRecurringSection();
+  document.getElementById('hideInitialCheckbox').checked = !!state.hideInitialPricing;
+  toggleInitialSection();
 
   const setOptional = (checkboxId, contentId, val) => {
     const cb = document.getElementById(checkboxId);
@@ -3247,6 +3260,10 @@ function undoLastChange(){
 }
 
 function moneyLabel(kind){
+  const hidden = kind === 'initial'
+    ? document.getElementById('hideInitialCheckbox').checked
+    : document.getElementById('oneTimeJobCheckbox').checked;
+  if (hidden) return '—';
   const el = document.getElementById(kind === 'initial' ? 'initialTotal' : 'recurringTotal');
   return el ? el.textContent : '$0.00';
 }
@@ -3756,6 +3773,8 @@ async function startNewProposal(){
   applyClientType();
   document.getElementById('oneTimeJobCheckbox').checked = false;
   toggleRecurringSection();
+  document.getElementById('hideInitialCheckbox').checked = false;
+  toggleInitialSection();
   [
     ['includeInspectionNotes', 'inspectionNotesContent'],
     ['includeServiceMethodology', 'serviceMethodologyContent'],
