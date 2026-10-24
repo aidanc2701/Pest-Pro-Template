@@ -13,6 +13,41 @@
 const SUPABASE_URL = 'https://girqzwoadjovqeudypnw.supabase.co';
 const ID_PATTERN = /^p[0-9]+-[a-z0-9]+$/;
 
+// The NET 30 credit application lives in the same record as the proposal
+// but is filled in through a separate link (functions/api/net30.js). Keep
+// this list in sync with NET30_FIELDS there. A proposal save carries a
+// full copy of the form from whoever's browser sent it, which may be a
+// stale one that loaded before the NET 30 was submitted -- so these fields
+// are never taken from the request, only from what's already stored.
+const NET30_FIELDS = [
+  'net30CompanyName', 'net30CompanyAddress', 'net30Email', 'net30Phone',
+  'net30Dba', 'net30Website', 'net30DbNumber', 'net30OrgType', 'net30Fein',
+  'net30YearsInBusiness', 'net30ApContactName', 'net30ApBillingAddress',
+  'net30ApEmail', 'net30ApPhone', 'net30PaymentCycle', 'net30ApplicantName',
+  'net30ApplicantTitle', 'net30SigLine', 'net30Date'
+];
+
+async function fetchValue(env, key) {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/kv_store?key=eq.${encodeURIComponent(key)}&select=value`,
+    { headers: serviceHeaders(env) }
+  );
+  if (!res.ok) throw new Error('lookup failed');
+  const rows = await res.json();
+  return rows.length ? rows[0].value : null;
+}
+
+// Non-empty NET 30 values from the standalone submission copy (preferred)
+// or the stored proposal.
+function net30Authority(stored, submission) {
+  const out = {};
+  NET30_FIELDS.forEach(f => {
+    const v = (submission && submission[f]) || (stored && stored[f]);
+    if (v) out[f] = v;
+  });
+  return out;
+}
+
 function serviceHeaders(env) {
   return {
     apikey: env.SUPABASE_SERVICE_ROLE_KEY,
@@ -39,7 +74,18 @@ export async function onRequestGet({ request, env }) {
   if (!res.ok) return json({ error: 'lookup failed' }, 502);
   const rows = await res.json();
   if (!rows.length) return json({ error: 'not found' }, 404);
-  return json({ value: rows[0].value });
+  let value = rows[0].value;
+  // If the NET 30 was submitted, the standalone copy is the source of
+  // truth for it -- even if some later save clobbered the proposal record.
+  try {
+    const subRaw = await fetchValue(env, 'net30-submission:' + id);
+    if (subRaw) {
+      const state = JSON.parse(value);
+      Object.assign(state, net30Authority(state, JSON.parse(subRaw)));
+      value = JSON.stringify(state);
+    }
+  } catch (err) { /* serve the record as stored */ }
+  return json({ value });
 }
 
 export async function onRequestPost({ request, env }) {
@@ -61,6 +107,21 @@ export async function onRequestPost({ request, env }) {
   const item = index.find(i => i.id === id);
   if (!item) return json({ error: 'not found' }, 404);
   if (item.status === 'accepted') return json({ error: 'already signed' }, 409);
+
+  // Never let this request overwrite a NET 30 that's already been
+  // submitted. Refuse to save at all (rather than guess) if we can't check.
+  try {
+    const [storedRaw, subRaw] = await Promise.all([
+      fetchValue(env, 'proposal-data:' + id),
+      fetchValue(env, 'net30-submission:' + id)
+    ]);
+    Object.assign(body.state, net30Authority(
+      storedRaw ? JSON.parse(storedRaw) : {},
+      subRaw ? JSON.parse(subRaw) : null
+    ));
+  } catch (err) {
+    return json({ error: 'lookup failed' }, 502);
+  }
 
   const saveRes = await fetch(`${SUPABASE_URL}/rest/v1/kv_store`, {
     method: 'POST',

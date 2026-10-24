@@ -278,7 +278,22 @@
     border-radius:4px; font-family:var(--sans); font-size:14px; color:var(--ink); padding:7px 8px;
   }
   .net30-fillable:focus{outline:none; border-color:var(--accent); background:rgba(240,178,110,.24);}
-  .net30-fillable:disabled{background:transparent; border-color:var(--line); color:var(--ink);}
+  /* Locked (already submitted) fields: Safari fades disabled text and ignores
+     `color` for it, so set the fill color and opacity explicitly. */
+  .net30-fillable:disabled{
+    background:transparent; border-color:var(--line); color:var(--ink);
+    -webkit-text-fill-color:var(--ink); opacity:1;
+  }
+  /* Browsers paint autofilled fields blue (and keep doing it after the form
+     is locked). Cover that with the form's own colors instead. */
+  .net30-fillable:-webkit-autofill, .net30-fillable:-webkit-autofill:hover, .net30-fillable:-webkit-autofill:focus{
+    -webkit-text-fill-color:var(--ink); caret-color:var(--ink);
+    -webkit-box-shadow:0 0 0 1000px #FDF3E7 inset; box-shadow:0 0 0 1000px #FDF3E7 inset;
+    transition:background-color 99999s ease-out;
+  }
+  .net30-fillable:disabled:-webkit-autofill{
+    -webkit-box-shadow:0 0 0 1000px var(--paper) inset; box-shadow:0 0 0 1000px var(--paper) inset;
+  }
   .net30-org-type{display:flex; flex-wrap:wrap; font-family:var(--sans); font-size:13.5px; color:var(--ink); margin-top:10px;}
   .field .net30-org-type label{display:flex; align-items:center; cursor:pointer; white-space:nowrap; margin:5px 28px 5px 0;}
   .field .net30-org-type label:last-child{margin-right:0;}
@@ -3121,6 +3136,7 @@ function applyFormState(state){
   });
   renderSignaturePad('client');
   renderSignaturePad('rep');
+  renderSignaturePad('net30');
 
   const brandSelect = document.getElementById('brandSelect');
   if (state.brand) {
@@ -3339,6 +3355,22 @@ async function duplicateSignedProposal(id){
   }
 }
 
+// The NET 30 application is filled in by the client through its own link,
+// never from this editor -- but the editor's form still carries (blank)
+// copies of those fields and would save them over a submitted application.
+// Whatever's already stored wins when it has a value; the standalone copy
+// made at submission time is the fallback if the record itself was wiped.
+// A failed read throws, so the save fails instead of writing blind.
+async function preserveNet30Fields(state, id, indexItem){
+  const prev = await dbStorage.get('proposal-data:' + id, true);
+  let source = prev && prev.value ? JSON.parse(prev.value) : {};
+  if (!source.net30SigLine && indexItem && indexItem.net30Signed) {
+    const copy = await dbStorage.get('net30-submission:' + id, true);
+    if (copy && copy.value) source = Object.assign({}, source, JSON.parse(copy.value));
+  }
+  NET30_FIELD_KEYS.forEach(k => { if (source[k]) state[k] = source[k]; });
+}
+
 async function saveProposal(silent){
   if (editorLockedSigned) {
     if (!silent) showAlert('This proposal has been signed and is locked. Click "Duplicate to Edit" at the top to make changes in a new copy.');
@@ -3359,6 +3391,21 @@ async function saveProposal(silent){
     const isUpdate = !!currentProposalId;
     const id = currentProposalId || ('p' + Date.now() + '-' + Math.random().toString(36).slice(2,8));
     const savedAt = new Date().toISOString();
+
+    if (isUpdate) {
+      // This editor holds a snapshot from whenever the proposal was opened.
+      // A client may have acted since -- signed it, or submitted the NET 30
+      // -- and saving that stale snapshot would silently wipe their work.
+      const indexNow = await getIndex();
+      const itemNow = indexNow.find(i => i.id === id);
+      if (itemNow && itemNow.status === 'accepted') {
+        statusEl.textContent = 'Not saved — proposal was signed';
+        await showAlert('This proposal was signed while it was open here, so it is now locked and your latest edits were NOT saved (saving them would have erased the client\'s signature). Reloading the signed version. Use "Duplicate to Edit" if you need to make changes in a copy.');
+        await loadProposal(id, 'accepted');
+        return;
+      }
+      await preserveNet30Fields(state, id, itemNow);
+    }
 
     await dbStorage.set('proposal-data:' + id, JSON.stringify(state), true);
 

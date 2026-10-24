@@ -64,6 +64,23 @@ export async function onRequestPost({ request, env }) {
   });
   if (!saveRes.ok) return json({ error: 'save failed' }, 502);
 
+  // A standalone copy of just this submission, under its own key. The
+  // proposal record is rewritten wholesale by every proposal save, so this
+  // copy is what can't be clobbered by one -- readers prefer it for the
+  // NET 30 fields (see functions/api/proposal.js). Best-effort: the
+  // application is already safely saved in the record above.
+  try {
+    const submission = { submittedAt: new Date().toISOString() };
+    NET30_FIELDS.forEach(f => { if (f in state) submission[f] = state[f]; });
+    await fetch(`${SUPABASE_URL}/rest/v1/kv_store`, {
+      method: 'POST',
+      headers: { ...serviceHeaders(env), 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({ key: 'net30-submission:' + id, value: JSON.stringify(submission), updated_at: new Date().toISOString() })
+    });
+  } catch (err) {
+    console.error('Could not write standalone NET 30 copy', err);
+  }
+
   // Best-effort: flag this proposal's index entry as NET30-signed so the
   // owner can see it was submitted from the Saved Proposals list, instead
   // of having to open each client link to check. The application itself
