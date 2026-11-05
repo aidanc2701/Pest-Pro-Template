@@ -1100,6 +1100,41 @@
   }
   .followup-edit-buttons{display:flex; gap:6px;}
   .followup-empty{font-family:var(--sans); font-size:12.5px; color:var(--secondary); font-style:italic;}
+  /* ---- Private notes: yellow "sticky note" look so it's obvious this is
+     owner-only. Hidden in print as a precaution. ---- */
+  .crm-private{background:#FFF8DC; border:1px solid #EBDC9A; border-radius:8px; font-family:var(--sans);}
+  .crm-private-section{margin-top:18px; padding:14px 16px; display:flex; flex-direction:column; gap:10px;}
+  .crm-private-head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+  .crm-private-head .crm-section-title{color:#8A6D12;}
+  .crm-private-sub{font-size:11.5px; color:#8A6D12; font-style:italic;}
+  .crm-private-add{display:flex; flex-direction:column; gap:7px;}
+  .crm-private-add-row{display:flex; gap:8px;}
+  .crm-private-add select, .modal-box .crm-private-add input[type="text"], .crm-private-add textarea, .crm-private-note.editing select, .crm-private-note.editing input, .crm-private-note.editing textarea{
+    font-family:var(--sans); font-size:13px; padding:6px 8px; border-radius:6px; border:1px solid #E3D48A; background:#fff; color:var(--ink);
+  }
+  .modal-box .crm-private-add input[type="text"]{flex:1; min-width:0; width:auto; margin:0;}
+  .crm-private-add textarea, .crm-private-note.editing textarea{resize:vertical; min-height:70px;}
+  .crm-private-add .crm-log-btn{align-self:flex-start; padding:7px 16px; flex:none; color:#8A6D12; border-color:#E3D48A;}
+  .crm-private-add .crm-log-btn:hover{background:#FFF1B8;}
+  .crm-private-list{display:flex; flex-direction:column; gap:10px;}
+  .crm-private-note{border-left:3px solid #E3C94A; padding:2px 0 2px 10px;}
+  .crm-private-note.editing{display:flex; flex-direction:column; gap:6px; border-left-color:#E3D48A;}
+  .crm-private-note-head{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:11.5px;}
+  .crm-private-kind{font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; border-radius:9px; padding:1px 8px; background:rgba(0,0,0,.07); color:var(--secondary);}
+  .crm-private-kind.kind-pricing{background:#E4F3E6; color:#2E7D42;}
+  .crm-private-kind.kind-job{background:#E4EEF7; color:#2B6CA3;}
+  .crm-private-title{font-weight:700; color:var(--ink); font-size:13px;}
+  .crm-private-date{color:var(--secondary); font-weight:600;}
+  .crm-private-text{font-size:13px; color:var(--ink); margin-top:2px; white-space:pre-wrap; overflow-wrap:anywhere;}
+  .crm-private-empty{font-size:12.5px; color:#8A6D12; font-style:italic; opacity:.85;}
+  .crm-private-edit-row{display:flex; gap:6px; flex-wrap:wrap;}
+  .crm-private-edit-row input{flex:1; min-width:120px;}
+  /* The same notes, shown on a customer's board card */
+  .crm-card-private{grid-column:1 / -1; padding:10px 14px; display:flex; flex-direction:column; gap:9px;}
+  .crm-private-cardhead{display:flex; align-items:center; gap:8px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; color:#8A6D12;}
+  .crm-private-count{background:#EBDC9A; color:#6E5610; border-radius:9px; padding:0 8px; font-size:10.5px;}
+  .crm-private-cardhead .crm-private-sub{text-transform:none; letter-spacing:normal; font-weight:500;}
+  @media print{ .crm-private{display:none !important;} }
   .customer-modal-actions{justify-content:space-between; margin-top:18px;}
   #customerDeleteBtn{color:#B23A48; border-color:#B23A48;}
 
@@ -1545,6 +1580,25 @@ I certify that I am authorized to execute this agreement on behalf of the above 
         <div class="crm-section-title">History</div>
         <div id="followUpList" class="followup-list"></div>
       </div>
+    </div>
+    <div class="crm-private crm-private-section">
+      <div class="crm-private-head">
+        <span class="crm-section-title">🔒 Private notes</span>
+        <span class="crm-private-sub">Only you can see these — never shown to the customer, on proposals, or in print.</span>
+      </div>
+      <div class="crm-private-add">
+        <div class="crm-private-add-row">
+          <select id="privateNoteKind">
+            <option value="pricing">Pricing</option>
+            <option value="job">Job notes</option>
+            <option value="other">Other</option>
+          </select>
+          <input type="text" id="privateNoteTitle" placeholder="Job or label (optional) — e.g. Annual wasp treatment">
+        </div>
+        <textarea id="privateNoteText" placeholder="How you priced it, what the job involves, things to remember…"></textarea>
+        <button type="button" class="crm-log-btn" onclick="addPrivateNote()">+ Add private note</button>
+      </div>
+      <div id="privateNotesList" class="crm-private-list"></div>
     </div>
     <div class="modal-actions customer-modal-actions">
       <button id="customerDeleteBtn" class="modal-cancel">Delete Customer</button>
@@ -4112,6 +4166,8 @@ const CRM_SETTLED_STAGES = ['signed', 'active', 'lost'];
 const CRM_STALE_DAYS = 7;
 // Board cards show this many history entries; the rest sit behind "Show all".
 const CRM_HISTORY_PREVIEW_COUNT = 5;
+const CRM_PRIVATE_PREVIEW_COUNT = 2;
+const PRIVATE_NOTE_KINDS = { pricing: 'Pricing', job: 'Job notes', other: 'Other' };
 
 // One-time-per-customer remap from the old 5-stage pipeline to the new
 // one, applied lazily wherever a stage id is read (see
@@ -4141,6 +4197,9 @@ let crmSearchQuery = '';
 let crmSearchTimer = null;
 let editingFollowUpId = null; // which logged entry is in inline-edit mode inside the modal
 let crmLogInFlight = false;   // blocks double-clicks from logging the same contact twice
+let crmExpandedNotes = {};    // id -> true once "Show all" was clicked on that card's private notes
+let editingPrivateNoteId = null;
+let crmNoteInFlight = false;
 
 /* ---------- date helpers ---------- */
 
@@ -4665,7 +4724,69 @@ function handleCrmSearch(value){
 // the lost reason, and EVERY note in their history (not just the latest).
 function crmSearchHaystack(record){
   const notes = (record.followUps || []).map(f => f.note || '');
-  return [record.name, record.phone, record.email, record.lostReasonNote].concat(notes).join(' ').toLowerCase();
+  const priv = (record.privateNotes || []).map(n => (n.title || '') + ' ' + (n.text || ''));
+  return [record.name, record.phone, record.email, record.lostReasonNote].concat(notes, priv).join(' ').toLowerCase();
+}
+
+/* ---------- private notes ----------
+   Owner-only notes on a customer (how a job was priced, job details). They
+   live ONLY on the customer record (crm-customer:<id>) -- the one place
+   the public signing/NET 30 endpoints never read or write and the database
+   only serves to a signed-in user -- and are deliberately NOT part of the
+   proposal's saved state, the summary index, any email, or print. */
+
+function sortedPrivateNotes(record){
+  return (record.privateNotes || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+}
+
+function newPrivateNoteId(){
+  return 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function privateNoteHtml(n, editable){
+  const kind = PRIVATE_NOTE_KINDS[n.kind] || 'Note';
+  const actions = editable
+    ? `<span class="followup-entry-actions"><button type="button" data-action="edit-note" data-nid="${escapeAttr(n.id)}">Edit</button><button type="button" data-action="delete-note" data-nid="${escapeAttr(n.id)}">Delete</button></span>`
+    : '';
+  return `
+    <div class="crm-private-note" data-nid="${escapeAttr(n.id)}">
+      <div class="crm-private-note-head">
+        <span class="crm-private-kind kind-${escapeAttr(n.kind || 'other')}">${escapeHtml(kind)}</span>
+        ${n.title ? `<span class="crm-private-title">${escapeHtml(n.title)}</span>` : ''}
+        <span class="crm-private-date">${fmtPlainDate(n.date)}</span>${actions}
+      </div>
+      <div class="crm-private-text">${escapeHtml(n.text)}</div>
+    </div>`;
+}
+
+function privateNoteEditFormHtml(n){
+  const kinds = Object.keys(PRIVATE_NOTE_KINDS).map(k => `<option value="${k}"${n.kind === k ? ' selected' : ''}>${PRIVATE_NOTE_KINDS[k]}</option>`).join('');
+  return `
+    <div class="crm-private-note editing" data-nid="${escapeAttr(n.id)}">
+      <div class="crm-private-edit-row">
+        <select class="pn-kind">${kinds}</select>
+        <input type="text" class="pn-title" placeholder="Job or label (optional)" value="${escapeAttr(n.title || '')}">
+      </div>
+      <textarea class="pn-text">${escapeHtml(n.text || '')}</textarea>
+      <div class="followup-edit-buttons">
+        <button type="button" class="crm-chip-btn" data-action="save-note" data-nid="${escapeAttr(n.id)}">Save</button>
+        <button type="button" class="crm-chip-btn" data-action="cancel-note-edit">Cancel</button>
+      </div>
+    </div>`;
+}
+
+// The block on a board card: newest couple of notes, rest behind "Show all".
+function crmCardPrivateNotesHtml(record){
+  const notes = sortedPrivateNotes(record);
+  if (!notes.length) return '';
+  const expanded = !!crmExpandedNotes[record.id];
+  const shown = expanded ? notes : notes.slice(0, CRM_PRIVATE_PREVIEW_COUNT);
+  const toggle = notes.length > CRM_PRIVATE_PREVIEW_COUNT
+    ? `<button type="button" class="crm-link-btn" data-action="toggle-notes">${expanded ? 'Show fewer' : 'Show all ' + notes.length + ' notes'}</button>` : '';
+  return `<div class="crm-private crm-card-private">
+      <div class="crm-private-cardhead">🔒 Private notes <span class="crm-private-count">${notes.length}</span><span class="crm-private-sub">only you can see these</span></div>
+      ${shown.map(n => privateNoteHtml(n, false)).join('')}${toggle}
+    </div>`;
 }
 
 function followUpEntryHtml(f, editable){
@@ -4744,11 +4865,13 @@ function renderCrmCard(c, record, showStage){
     const reason = CRM_LOST_REASON_LABELS[record.lostReason] || '';
     extra = `<div class="crm-lost-line">Lost${reason ? ': ' + escapeHtml(reason) : ''}${record.lostReasonNote ? ' — ' + escapeHtml(record.lostReasonNote) : ''}</div>`;
   }
-  const quickLog = stage === 'lost' ? '' : `
+  const noteBtn = '<button type="button" class="crm-action-btn" data-action="add-note">🔒 Add note</button>';
+  const quickLog = stage === 'lost' ? `<div class="crm-card-actions">${noteBtn}</div>` : `
       <div class="crm-card-actions">
         <button type="button" class="crm-action-btn" data-action="quick-noanswer">☎ No answer</button>
         <button type="button" class="crm-action-btn" data-action="quick-voicemail">Left voicemail</button>
         <button type="button" class="crm-action-btn crm-action-primary" data-action="log-contact">＋ Log contact</button>
+        ${noteBtn}
       </div>`;
   return `
     <div class="crm-card${cardClass}" data-id="${escapeAttr(record.id)}">
@@ -4765,6 +4888,7 @@ function renderCrmCard(c, record, showStage){
         ${quickLog}
       </div>
       <div class="crm-card-history">${historyHtml}</div>
+      ${crmCardPrivateNotesHtml(record)}
     </div>`;
 }
 
@@ -4822,6 +4946,13 @@ async function renderCrmList(){
       else if (action === 'quick-voicemail') await quickLogFollowUp(id, 'voicemail', 'no');
       else if (action === 'log-contact') { await openCustomerModal(id); document.getElementById('newFollowUpNote').focus(); }
       else if (action === 'toggle-history') { crmExpandedHistory[id] = !crmExpandedHistory[id]; await renderCrmList(); }
+      else if (action === 'toggle-notes') { crmExpandedNotes[id] = !crmExpandedNotes[id]; await renderCrmList(); }
+      else if (action === 'add-note') {
+        await openCustomerModal(id);
+        const box = document.getElementById('privateNoteText');
+        box.scrollIntoView({ block: 'center' });
+        box.focus();
+      }
       return;
     }
     // Links, date pickers, etc. do their own thing; only a click on the
@@ -4960,6 +5091,10 @@ async function openCustomerModal(id){
   document.getElementById('newFollowUpMethod').value = 'call';
   document.getElementById('newFollowUpNote').value = '';
   document.getElementById('crmLogStatus').textContent = '';
+  editingPrivateNoteId = null;
+  document.getElementById('privateNoteKind').value = 'pricing';
+  document.getElementById('privateNoteTitle').value = '';
+  document.getElementById('privateNoteText').value = '';
   refreshCustomerModalPanels(customer);
   refreshSignedChecklist(customer);
   refreshLostReasonSection(customer);
@@ -4990,6 +5125,7 @@ async function openDraftProposalFromCustomer(){
 
 async function closeCustomerModal(){
   await commitDraftFollowUp();
+  await commitDraftPrivateNote();
   document.getElementById('customerModalOverlay').classList.remove('open');
   openCustomerId = null;
   editingFollowUpId = null;
@@ -5038,6 +5174,93 @@ function refreshCustomerModalPanels(customer){
   renderCustomerSummary(customer);
   refreshNextFollowUpControls(customer);
   renderFollowUpList(customer);
+  renderPrivateNotes(customer);
+}
+
+function renderPrivateNotes(customer){
+  const list = document.getElementById('privateNotesList');
+  const notes = sortedPrivateNotes(customer);
+  if (!notes.length) {
+    list.innerHTML = '<div class="crm-private-empty">No private notes yet.</div>';
+    return;
+  }
+  list.innerHTML = notes.map(n => n.id === editingPrivateNoteId ? privateNoteEditFormHtml(n) : privateNoteHtml(n, true)).join('');
+}
+
+document.getElementById('privateNotesList').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn || !openCustomerId) return;
+  const action = btn.dataset.action;
+  const nid = btn.dataset.nid;
+  if (action === 'edit-note' || action === 'cancel-note-edit') {
+    editingPrivateNoteId = action === 'edit-note' ? nid : null;
+    const customer = await loadCustomerRecord(openCustomerId);
+    if (customer) renderPrivateNotes(customer);
+  } else if (action === 'save-note') {
+    await savePrivateNoteEdit(nid, btn.closest('.crm-private-note'));
+  } else if (action === 'delete-note') {
+    await deletePrivateNote(nid);
+  }
+});
+
+async function savePrivateNoteEdit(nid, el){
+  const text = el.querySelector('.pn-text').value.trim();
+  if (!text) { showAlert('A note can\'t be empty -- use Delete to remove it.'); return; }
+  const customer = await loadCustomerRecord(openCustomerId);
+  if (!customer) return;
+  const n = (customer.privateNotes || []).find(x => x.id === nid);
+  if (!n) return;
+  n.kind = el.querySelector('.pn-kind').value;
+  n.title = el.querySelector('.pn-title').value.trim();
+  n.text = text;
+  customer.updatedAt = new Date().toISOString();
+  await saveCustomerRecord(customer);
+  editingPrivateNoteId = null;
+  renderPrivateNotes(customer);
+}
+
+async function deletePrivateNote(nid){
+  const ok = await showConfirm('Delete this private note? This cannot be undone.');
+  if (!ok) return;
+  const customer = await loadCustomerRecord(openCustomerId);
+  if (!customer) return;
+  customer.privateNotes = (customer.privateNotes || []).filter(x => x.id !== nid);
+  customer.updatedAt = new Date().toISOString();
+  await saveCustomerRecord(customer);
+  if (editingPrivateNoteId === nid) editingPrivateNoteId = null;
+  renderPrivateNotes(customer);
+}
+
+// Saves whatever's typed in the add-note box, if anything is. Shared by the
+// "+ Add private note" button and by closing the popup / changing the
+// stage, so a note you typed is never lost just because you didn't press Add.
+async function commitDraftPrivateNote(){
+  if (!openCustomerId) return null;
+  const text = document.getElementById('privateNoteText').value.trim();
+  if (!text) return null;
+  const customer = await loadCustomerRecord(openCustomerId);
+  if (!customer) return null;
+  if (!customer.privateNotes) customer.privateNotes = [];
+  customer.privateNotes.unshift({
+    id: newPrivateNoteId(),
+    kind: document.getElementById('privateNoteKind').value,
+    title: document.getElementById('privateNoteTitle').value.trim(),
+    text: text,
+    date: localDateStr()
+  });
+  customer.updatedAt = new Date().toISOString();
+  await saveCustomerRecord(customer);
+  document.getElementById('privateNoteText').value = '';
+  document.getElementById('privateNoteTitle').value = '';
+  renderPrivateNotes(customer);
+  return customer;
+}
+
+async function addPrivateNote(){
+  if (!openCustomerId || crmNoteInFlight) return;
+  if (!document.getElementById('privateNoteText').value.trim()) { showAlert('Type the note first.'); return; }
+  crmNoteInFlight = true;
+  try { await commitDraftPrivateNote(); } finally { crmNoteInFlight = false; }
 }
 
 function followUpEditFormHtml(f){
@@ -5175,6 +5398,7 @@ async function saveCustomerModalFields(){
   // Capture any drafted note as its own journal entry first, so moving a
   // customer never loses what you just wrote about them.
   await commitDraftFollowUp();
+  await commitDraftPrivateNote();
   const customer = await loadCustomerRecord(openCustomerId);
   if (!customer) return;
   customer.name = document.getElementById('customerNameInput').value.trim() || '(untitled)';
