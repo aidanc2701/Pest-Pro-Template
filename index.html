@@ -1134,6 +1134,19 @@
   .crm-private-cardhead{display:flex; align-items:center; gap:8px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; color:#8A6D12;}
   .crm-private-count{background:#EBDC9A; color:#6E5610; border-radius:9px; padding:0 8px; font-size:10.5px;}
   .crm-private-cardhead .crm-private-sub{text-transform:none; letter-spacing:normal; font-weight:500;}
+  /* The same block inside a Saved Proposals card */
+  .sidebar-card .sidebar-private{margin-top:10px; padding:10px 12px; display:flex; flex-direction:column; gap:8px;}
+  .sidebar-private .crm-private-cardhead{flex-wrap:wrap; row-gap:2px;}
+  .sidebar-private .crm-private-label{white-space:nowrap;}
+  .sidebar-private .crm-private-add-row{flex-wrap:wrap;}
+  .sidebar-private .crm-private-add input[type="text"]{
+    flex:1; min-width:120px; font-family:var(--sans); font-size:13px; padding:6px 8px; border-radius:6px;
+    border:1px solid #E3D48A; background:#fff; color:var(--ink);
+  }
+  .sidebar-private.collapsed .crm-private-text{
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .sidebar-private .crm-link-btn{color:#8A6D12;}
   @media print{ .crm-private{display:none !important;} }
   .customer-modal-actions{justify-content:space-between; margin-top:18px;}
   #customerDeleteBtn{color:#B23A48; border-color:#B23A48;}
@@ -4016,7 +4029,15 @@ function handleProposalSearch(value){
   renderSidebar();
 }
 
-async function renderSidebar(){
+let sidebarRenderSeq = 0;
+let sidebarNotesOpen = {};     // proposal id -> true while its private-notes panel is expanded
+let sidebarNoteDrafts = {};    // proposal id -> what's typed in its add-note form (survives re-renders)
+let sidebarEditingNote = null; // { pid, nid } while a note is being edited inline
+let sidebarNoteBusy = false;
+
+async function renderSidebar(opts){
+  const keepScroll = !!(opts && opts.keepScroll);
+  const seq = ++sidebarRenderSeq;
   const listEl = document.getElementById('sidebarList');
   const badge = document.getElementById('savedCountBadge');
   const index = await getIndex();
@@ -4044,6 +4065,12 @@ async function renderSidebar(){
     return;
   }
 
+  // Everything async happens BEFORE the cards are built, so the clear +
+  // rebuild below is one uninterrupted step (no half-drawn lists), and a
+  // slower, older render that finishes late can't overwrite a newer one.
+  const notesByPid = await loadSidebarNotes(filtered);
+  if (seq !== sidebarRenderSeq) return;
+  const prevScroll = listEl.scrollTop;
   listEl.innerHTML = '';
   filtered.forEach(item=>{
     const status = item.status || 'draft';
@@ -4089,6 +4116,7 @@ async function renderSidebar(){
       <div class="card-actions" style="margin-top:6px;">
         <button class="net30-link-btn">${item.net30Signed ? '📋 NET 30 Application ✓' : '📋 NET 30 Application'}</button>
       </div>
+      ${sidebarNotesHtml(item, notesByPid[item.id])}
     `;
     card.querySelector('.load-btn').addEventListener('click', ()=>loadProposal(item.id, status));
     card.querySelector('.sign-link-btn').addEventListener('click', (e)=>copySigningLink(item.id, e));
@@ -4104,7 +4132,181 @@ async function renderSidebar(){
     if (rejectBtn) rejectBtn.addEventListener('click', (e)=>setProposalStatus(item.id, 'rejected', e));
     listEl.appendChild(card);
   });
+  if (keepScroll) listEl.scrollTop = prevScroll;
 }
+
+/* ---------- private notes on each proposal card ----------
+   The notes belong to the CUSTOMER (matched to the proposal by name, same
+   as the rest of the CRM) and are read/written only through the signed-in
+   owner's CRM storage -- never the proposal record the client's link can
+   open. This panel is just another window onto them. */
+
+async function loadSidebarNotes(items){
+  const out = {};
+  try {
+    const cidx = await getCustomerIndex();
+    if (!cidx) return out;
+    crmIndexCache = cidx;
+    await rebuildCrmIndexIfStale();
+    const byName = new Map(crmIndexCache.map(c => [(c.name || '').trim().toLowerCase(), c]));
+    const wanted = new Set();
+    items.forEach(item => {
+      const c = byName.get((item.propName || '').trim().toLowerCase());
+      if (c && c.privateNoteCount > 0) wanted.add(c.id);
+    });
+    const records = await getCrmRecords(Array.from(wanted));
+    items.forEach(item => {
+      const c = byName.get((item.propName || '').trim().toLowerCase());
+      out[item.id] = { notes: c && records[c.id] ? sortedPrivateNotes(records[c.id]) : [] };
+    });
+  } catch (err) {
+    console.error('Could not load private notes for the proposal list', err);
+  }
+  return out;
+}
+
+function sidebarNotesHtml(item, info){
+  const notes = info ? info.notes : [];
+  const pid = item.id;
+  const head = `<div class="crm-private-cardhead"><span class="crm-private-label">🔒 Private notes</span>${notes.length ? `<span class="crm-private-count">${notes.length}</span>` : ''}<span class="crm-private-sub">only you can see these</span></div>`;
+  if (!sidebarNotesOpen[pid]) {
+    const preview = notes.length ? privateNoteHtml(notes[0], false) : '<div class="crm-private-empty">No private notes yet.</div>';
+    const label = notes.length ? 'Open &amp; edit notes' + (notes.length > 1 ? ' (+' + (notes.length - 1) + ' more)' : '') : '+ Add private note';
+    return `<div class="crm-private sidebar-private collapsed" data-pid="${escapeAttr(pid)}">${head}${preview}<button type="button" class="crm-link-btn" data-action="sb-notes-toggle">${label}</button></div>`;
+  }
+  const draft = sidebarNoteDrafts[pid] || {};
+  const kinds = Object.keys(PRIVATE_NOTE_KINDS).map(k => `<option value="${k}"${(draft.kind || 'pricing') === k ? ' selected' : ''}>${PRIVATE_NOTE_KINDS[k]}</option>`).join('');
+  const title = draft.title !== undefined ? draft.title : (item.jobType || '');
+  const list = notes.length
+    ? notes.map(n => (sidebarEditingNote && sidebarEditingNote.nid === n.id) ? privateNoteEditFormHtml(n) : privateNoteHtml(n, true)).join('')
+    : '<div class="crm-private-empty">No private notes yet.</div>';
+  return `<div class="crm-private sidebar-private" data-pid="${escapeAttr(pid)}">${head}
+      <div class="crm-private-add">
+        <div class="crm-private-add-row">
+          <select class="sb-kind">${kinds}</select>
+          <input type="text" class="sb-title" placeholder="Job or label (optional)" value="${escapeAttr(title)}">
+        </div>
+        <textarea class="sb-text" placeholder="How you priced it, what the job involves, things to remember…">${escapeHtml(draft.text || '')}</textarea>
+        <button type="button" class="crm-log-btn" data-action="sb-note-add">+ Add private note</button>
+      </div>
+      <div class="crm-private-list">${list}</div>
+      <button type="button" class="crm-link-btn" data-action="sb-notes-toggle">Close notes</button>
+    </div>`;
+}
+
+// The customer behind a proposal (matched by name), plus the proposal's
+// index entry. Creates the customer when asked and one doesn't exist yet.
+async function sidebarCustomerFor(pid, createIfMissing){
+  const index = await getIndex();
+  const item = index.find(i => i.id === pid);
+  if (!item) return null;
+  const name = (item.propName || '').trim();
+  if (!name || name === '(untitled)') {
+    showAlert('Give this proposal a customer / property name first -- private notes are attached to the customer.');
+    return null;
+  }
+  if (createIfMissing) await ensureCrmCustomerExists(name);
+  const cidx = (await getCustomerIndex()) || [];
+  const summary = cidx.find(c => (c.name || '').trim().toLowerCase() === name.toLowerCase());
+  if (!summary) return null;
+  const record = await loadCustomerRecord(summary.id);
+  return record ? { item: item, record: record } : null;
+}
+
+async function sidebarAddNote(pid, block){
+  const text = block.querySelector('.sb-text').value.trim();
+  if (!text) { showAlert('Type the note first.'); return; }
+  if (sidebarNoteBusy) return;
+  sidebarNoteBusy = true;
+  try {
+    const found = await sidebarCustomerFor(pid, true);
+    if (!found) return;
+    if (!found.record.privateNotes) found.record.privateNotes = [];
+    found.record.privateNotes.unshift({
+      id: newPrivateNoteId(),
+      kind: block.querySelector('.sb-kind').value,
+      title: block.querySelector('.sb-title').value.trim(),
+      text: text,
+      date: localDateStr(),
+      proposalId: pid
+    });
+    found.record.updatedAt = new Date().toISOString();
+    await saveCustomerRecord(found.record);
+    delete sidebarNoteDrafts[pid];
+    await renderSidebar({ keepScroll: true });
+  } finally {
+    sidebarNoteBusy = false;
+  }
+}
+
+async function sidebarSaveNoteEdit(pid, nid, el){
+  const text = el.querySelector('.pn-text').value.trim();
+  if (!text) { showAlert('A note can\'t be empty -- use Delete to remove it.'); return; }
+  const found = await sidebarCustomerFor(pid, false);
+  if (!found) return;
+  const n = (found.record.privateNotes || []).find(x => x.id === nid);
+  if (!n) return;
+  n.kind = el.querySelector('.pn-kind').value;
+  n.title = el.querySelector('.pn-title').value.trim();
+  n.text = text;
+  found.record.updatedAt = new Date().toISOString();
+  await saveCustomerRecord(found.record);
+  sidebarEditingNote = null;
+  await renderSidebar({ keepScroll: true });
+}
+
+async function sidebarDeleteNote(pid, nid){
+  const ok = await showConfirm('Delete this private note? This cannot be undone.');
+  if (!ok) return;
+  const found = await sidebarCustomerFor(pid, false);
+  if (!found) return;
+  found.record.privateNotes = (found.record.privateNotes || []).filter(x => x.id !== nid);
+  found.record.updatedAt = new Date().toISOString();
+  await saveCustomerRecord(found.record);
+  if (sidebarEditingNote && sidebarEditingNote.nid === nid) sidebarEditingNote = null;
+  await renderSidebar({ keepScroll: true });
+}
+
+(function wireSidebarNotes(){
+  const listEl = document.getElementById('sidebarList');
+  // Keep what's typed in a note form across list re-renders (an autosave
+  // or a search keystroke redraws the whole list).
+  const remember = (e) => {
+    const block = e.target.closest('.sidebar-private');
+    if (!block || !e.target.matches('.sb-kind, .sb-title, .sb-text')) return;
+    sidebarNoteDrafts[block.dataset.pid] = {
+      kind: block.querySelector('.sb-kind').value,
+      title: block.querySelector('.sb-title').value,
+      text: block.querySelector('.sb-text').value
+    };
+  };
+  listEl.addEventListener('input', remember);
+  listEl.addEventListener('change', remember);
+  listEl.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-action]');
+    const block = e.target.closest('.sidebar-private');
+    if (!btn || !block) return;
+    const pid = block.dataset.pid;
+    const action = btn.dataset.action;
+    if (action === 'sb-notes-toggle') {
+      sidebarNotesOpen[pid] = !sidebarNotesOpen[pid];
+      sidebarEditingNote = null;
+      await renderSidebar({ keepScroll: true });
+    } else if (action === 'sb-note-add') {
+      await sidebarAddNote(pid, block);
+    } else if (action === 'edit-note') {
+      sidebarEditingNote = { pid: pid, nid: btn.dataset.nid };
+      await renderSidebar({ keepScroll: true });
+    } else if (action === 'cancel-note-edit') {
+      sidebarEditingNote = null;
+      await renderSidebar({ keepScroll: true });
+    } else if (action === 'save-note') {
+      await sidebarSaveNoteEdit(pid, btn.dataset.nid, btn.closest('.crm-private-note'));
+    } else if (action === 'delete-note') {
+      await sidebarDeleteNote(pid, btn.dataset.nid);
+    }
+  });
+})();
 
 function toggleSidebar(force){
   const sidebar = document.getElementById('proposalSidebar');
@@ -4351,6 +4553,7 @@ function summarizeCustomer(record){
     lastFollowUpReached: s.latest ? s.latest.reached : null,
     nextFollowUpDate: record.nextFollowUpDate || null,
     proposalSentAt: record.proposalSentAt || null,
+    privateNoteCount: (record.privateNotes || []).length,
     updatedAt: record.updatedAt || record.createdAt || new Date().toISOString()
   };
 }
@@ -4465,7 +4668,7 @@ async function ensureCrmMigrated(){
 // wrong for them. Rebuild the whole index once, from the full records, in
 // a single write (rather than one read-modify-write per customer).
 async function rebuildCrmIndexIfStale(){
-  if (!crmIndexCache.some(c => c.followUpCount === undefined)) return;
+  if (!crmIndexCache.some(c => c.followUpCount === undefined || c.privateNoteCount === undefined)) return;
   const records = await Promise.all(crmIndexCache.map(c => loadCustomerRecord(c.id)));
   const rebuilt = crmIndexCache.map((old, i) => {
     const rec = records[i];
