@@ -2072,6 +2072,13 @@ function sanitizeInlineHtml(html){
   return temp.innerHTML;
 }
 
+// Used in two places: as a clause of the Termite Plan terms template, and as
+// the clause the Guarantee box inserts when "Termites" is chosen with any
+// other terms template. Self-contained on purpose -- no "see clause 7"
+// references, since clauses can be removed or reordered per proposal.
+const TERMITE_PLAN_TEMPLATE_ID = 'pestpro-termite-plan';
+const TERMITE_PLAN_GUARANTEE = `Termite Guarantee: While your Termite Bait Station Protection Plan is active and your account is in good standing, if live termite activity is found in the protected structure, Pest Pro will apply a targeted liquid (spray) treatment to the area of the active infestation at no additional charge. This guarantee covers treatment only. Pest Pro does not repair, pay for, or reimburse any damage to the structure, its contents, or finishes, whether that damage existed before our work or is caused by termites at any time. The guarantee is void if access to the bait stations is blocked, if a station is damaged, moved, removed, or buried and not replaced, if another company treats the property for termites, or if conditions identified in writing by Pest Pro are not corrected within thirty (30) days. Please report any signs of termite activity within fourteen (14) days of noticing them, as stations are inspected once per year.`;
+
 const termsLibrary = [
   {
     id: 'standard-default',
@@ -2129,6 +2136,28 @@ const termsLibrary = [
       `Confidentiality: Each party agrees to keep confidential any non-public business, financial, or operational information disclosed by the other party in connection with this agreement, and to use such information solely for purposes of performing under this agreement.`,
       `Dispute Resolution & Arbitration: In the event of any dispute, claim, or controversy arising out of or relating to this agreement or the services performed, both parties agree to first attempt resolution through good-faith negotiation. If a resolution cannot be reached within 30 days, the dispute shall be submitted to binding arbitration in the state of Utah in accordance with the rules of the American Arbitration Association. The decision of the arbitrator shall be final and binding. Each party shall bear its own costs of arbitration unless the arbitrator determines otherwise. Nothing in this clause prevents either party from seeking emergency injunctive relief in a court of competent jurisdiction. These terms and conditions apply to all services performed and are incorporated by reference into any signed service agreement.`
     ]
+  },
+  {
+    id: TERMITE_PLAN_TEMPLATE_ID,
+    label: 'Pest Pro — Termite Plan Terms & Conditions',
+    // Picked automatically for a residential Pest Pro proposal whose job
+    // type mentions termites (see autoSelectTermsTemplate).
+    autoFor: { brand: 'pp', clientType: 'residential', jobMatch: /termite/i },
+    preamble: `These terms apply to the Termite Bait Station Protection Plan described in this proposal. Pest Pro is a registered trade name of Pearson Environmental Services, LLC, a Utah limited liability company. All references to "Pest Pro" in this agreement refer to Pearson Environmental Services, LLC, doing business as Pest Pro.`,
+    clauses: [
+      `Proposal and Pricing: This proposal is valid for 30 days from the date listed above. Acceptance of this proposal constitutes agreement to these terms and conditions. Pricing is based on the inspection already completed and may be adjusted if site conditions differ materially from that inspection.`,
+      `Work Performed: All work is performed by licensed, insured technicians in accordance with Utah state regulations, and products are applied according to their labels. Services are limited to those listed in the Scope of Service. Buildings or areas not listed, such as detached structures or later additions, are not included.`,
+      TERMITE_PLAN_GUARANTEE,
+      `Reported-Activity Visits: Up to two reported-activity visits per plan year are included at no charge. Additional visits are $129 each. A visit that confirms live termite activity does not count toward the limit, and its fee is waived.`,
+      `Payment and Automatic Payment: The installation fee is due in full when the work is completed and may be paid by credit or debit card, check, ACH, or cash. The first-year Protection Plan fee shown in the Pricing section may be paid in full at completion by any of the same methods, or in twelve equal monthly payments beginning the month after installation. For either option, enrollment in automatic payment with a card or bank account on file is required, and by accepting this proposal you authorize Pest Pro to charge that payment method for the amounts and schedule selected. If a payment is not received, we will notify you and your coverage will remain active while you resolve it. Your account is in good standing unless a payment is more than thirty (30) days past due, in which case Pest Pro may, at its discretion, void the guarantee until your account is brought current.`,
+      `Plan Term, Renewal, and Cancellation: The Protection Plan has a minimum term of twelve (12) months from the date of installation. After the first 12 months, the plan renews automatically each year and is billed on the selected cycle until you cancel in writing with thirty (30) days' notice. Pest Pro will give notice of any rate change at least 30 days before it takes effect. Coverage ends on the effective date of cancellation. If you chose monthly payments and cancel before all twelve payments have been made, an early cancellation charge equal to fifty percent (50%) of the remaining monthly payments becomes due. Plan fees that have been paid are non-refundable.`,
+      `Bait Stations: Bait stations installed under this proposal remain the property of Pest Pro. Please do not move, remove, cover, or bury a station, and let us know before any landscaping or construction near them. If a station is damaged, moved, removed, or buried by you, your contractors, or your landscaping, the guarantee is void until the station is replaced and you pay for the replacement at Pest Pro's then-current price. If the Protection Plan is cancelled or coverage ends, Pest Pro will remove the stations from the property and the guarantee no longer applies from that date. Please keep stations accessible so removal can be completed. If access to the stations is refused or unavailable for removal, Pest Pro may charge a fee of $100.`,
+      `Underground Lines and Hidden Items: The property owner is responsible for identifying and disclosing the location of underground utilities, irrigation lines, radiant heating, post-tension cables, and similar items in areas to be drilled or trenched. Pest Pro is not responsible for damage to lines or systems that were not disclosed or marked by the owner before work began.`,
+      `Drilling, Trenching, and Site Restoration: Holes drilled in concrete will be filled with standard concrete patch material. Color matching, sealing, or restoration of stamped, stained, or decorative concrete is not included. Soil disturbed by trenching will be backfilled and left level; replanting, sod, or other landscape restoration is not included. Loose river rock and accessible, loose-laid flagstone moved to complete treatment will be returned as close to the original position and appearance as reasonably possible. Exact placement and leveling cannot be guaranteed, and professional stone resetting, restoration of bedding or joints, and landscape fabric repair or replacement are not included.`,
+      `Not Transferable: The Protection Plan, bait stations, and guarantee are specific to your property and to the number and placement of stations installed there. They cannot be transferred to a new owner or to another property. If you sell or transfer the property, please tell Pest Pro. Coverage ends when ownership changes, and a sale does not cancel the 12-month minimum term or the early cancellation charge described under Plan Term, Renewal, and Cancellation unless Pest Pro agrees otherwise in writing. A new owner may request their own inspection and plan, priced for that property.`,
+      `Your Responsibilities: To keep the guarantee in effect, please keep soil, mulch, wood, and stored items from contacting or piling against the foundation, correct moisture or leak problems, and tell Pest Pro before any construction, additions, or landscaping near the structure or the stations.`,
+      `Limits and Governing Law: Termite control is an ongoing process. Pest Pro does not guarantee that termites will never return, only the treatment described in the guarantee above. Pest Pro's total liability for any claim arising out of services under this agreement is limited to the amount you paid for the Protection Plan in the twelve (12) months before the claim. This agreement is governed by the laws of the State of Utah, and any disputes will be resolved in the courts of Salt Lake County, Utah.`
+    ]
   }
 ];
 
@@ -2170,30 +2199,66 @@ function renderTermsTemplate(templateId){
     frag.appendChild(li);
   });
   list.prepend(frag);
+  // Keep the Guarantee box's termite clause consistent with the template:
+  // the termite plan terms already contain it (a second copy would appear
+  // twice), while any other template needs it added. (Not while restoring
+  // a saved proposal -- that restores the saved clause itself.)
+  if (!isRestoringState && document.getElementById('warrantyTypeSelect').value === 'termites') {
+    const wli = document.getElementById('warrantyLegalLi');
+    if (template.id === TERMITE_PLAN_TEMPLATE_ID) {
+      if (wli && wli.dataset.default === warrantyLibrary.termites.legalClause) wli.remove();
+    } else if (!wli) {
+      setWarrantyLegalClause(warrantyLibrary.termites.legalClause);
+    }
+  }
 }
 
 function onTermsTemplateChange(){
   renderTermsTemplate(document.getElementById('termsTemplateSelect').value);
 }
 
-function autoSelectTermsTemplate(){
+// What the Job Type currently reads, including text typed under "Other (custom)".
+function currentJobTypeText(){
+  const sel = document.getElementById('jobType').value;
+  return sel === 'Other (custom)' ? document.getElementById('jobTypeCustomInput').value : sel;
+}
+
+function autoSelectTermsTemplate(opts){
   if (isRestoringState) return;
   const brand = document.getElementById('brandSelect').value;
   const clientType = document.getElementById('clientType').value;
+  const jobText = currentJobTypeText();
   const match = termsLibrary.find(t =>
     t.autoFor &&
     t.autoFor.brand === brand &&
-    (!('clientType' in t.autoFor) || t.autoFor.clientType === clientType)
+    (!('clientType' in t.autoFor) || t.autoFor.clientType === clientType) &&
+    (!t.autoFor.jobMatch || t.autoFor.jobMatch.test(jobText))
   );
-  renderTermsTemplate(match ? match.id : 'standard-default');
+  const targetId = match ? match.id : 'standard-default';
+  if (opts && opts.fromJobType) {
+    // Changing the Job Type shouldn't wipe edits: only swap templates if the
+    // current terms are still exactly what the template shipped with.
+    if (targetId === document.getElementById('termsTemplateSelect').value) return;
+    if (!termsClausesUnmodified()) return;
+  }
+  renderTermsTemplate(targetId);
+}
+
+// True while every template clause is still the shipped text and none has
+// been removed.
+function termsClausesUnmodified(){
+  const template = termsLibrary.find(t => t.id === document.getElementById('termsTemplateSelect').value);
+  const lis = document.querySelectorAll('#termsList li.template-clause');
+  if (!template || lis.length !== template.clauses.length) return false;
+  return Array.from(lis).every(li => li.querySelector('.clause-text').textContent === li.dataset.default);
 }
 
 /* ===== Guarantee / Warranty marketing box + auto-inserted legal clause ===== */
 
 const warrantyLibrary = {
   termites: {
-    blurb: 'Backed by our 3-Year Termite Guarantee — if they come back, so do we, at no cost to you.',
-    legalClause: `Termite Guarantee: Pest Pro provides a 3-year guarantee against termite reinfestation at the treated structure for trenching and drilling treatment methods. If termite activity returns within the guarantee period, Pest Pro will re-treat the affected area at no additional cost. This guarantee covers retreatment only and does not cover repair of structural damage, whether pre-existing or resulting from termite activity.`
+    blurb: 'Protected by our Termite Bait Station Protection Plan — if live termite activity is found while your plan is active, we treat the area at no additional charge.',
+    legalClause: TERMITE_PLAN_GUARANTEE
   },
   wildlife: {
     blurb: 'Every wildlife exclusion job includes our 2-Year Entry Point Guarantee — sealed for good, or we fix it free.',
@@ -2240,7 +2305,9 @@ function onWarrantyTypeChange(){
   const entry = warrantyLibrary[type];
   if (!entry) return;
   notesField.textContent = entry.blurb;
-  setWarrantyLegalClause(entry.legalClause);
+  // With the Termite Plan terms active, the guarantee is already a clause.
+  const planAlreadyHasIt = type === 'termites' && document.getElementById('termsTemplateSelect').value === TERMITE_PLAN_TEMPLATE_ID;
+  setWarrantyLegalClause(planAlreadyHasIt ? null : entry.legalClause);
 }
 
 populateTermsTemplateSelect();
@@ -2258,6 +2325,7 @@ const jobTypes = [
   "Bird Exclusion - Solar Panel Mesh",
   "Bird Control - Optical Gel Deterrent",
   "Bird Control - Scent Deterrent",
+  "Termite Treatment",
   "Other (custom)"
 ];
 
@@ -2343,6 +2411,9 @@ function updateJobTag(){
 }
 jobSelect.addEventListener('change', updateJobTag);
 jobTypeCustomInput.addEventListener('input', updateJobTag);
+// The job type can decide which terms apply (e.g. termite plan terms).
+jobSelect.addEventListener('change', () => autoSelectTermsTemplate({ fromJobType: true }));
+jobTypeCustomInput.addEventListener('input', () => autoSelectTermsTemplate({ fromJobType: true }));
 
 const brandSelect = document.getElementById('brandSelect');
 brandSelect.addEventListener('change', ()=>{
